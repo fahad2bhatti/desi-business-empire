@@ -46,6 +46,8 @@ class StageState {
     this.sold = 0,
     this.queue = 0,
     this.queueCarry = 0,
+    this.serveCarry = 0,
+    this.costCarry = 0,
     this.staff = const {},
     this.lines = const {},
   });
@@ -65,6 +67,12 @@ class StageState {
   final int queueCarry;
   final DateTime customersUpdatedAt;
 
+  /// Remainder of helper serving not yet a whole customer (milli-customers).
+  final int serveCarry;
+
+  /// Remainder of rent + wages not yet a whole paisa (paisa x ms / 60000).
+  final int costCarry;
+
   /// role -> count.
   final Map<String, int> staff;
 
@@ -80,6 +88,8 @@ class StageState {
     int? queue,
     int? queueCarry,
     DateTime? customersUpdatedAt,
+    int? serveCarry,
+    int? costCarry,
     Map<String, int>? staff,
     Map<String, LineState>? lines,
   }) =>
@@ -88,6 +98,8 @@ class StageState {
         queue: queue ?? this.queue,
         queueCarry: queueCarry ?? this.queueCarry,
         customersUpdatedAt: customersUpdatedAt ?? this.customersUpdatedAt,
+        serveCarry: serveCarry ?? this.serveCarry,
+        costCarry: costCarry ?? this.costCarry,
         staff: staff ?? this.staff,
         lines: lines ?? this.lines,
       );
@@ -103,6 +115,7 @@ class GameState {
     required this.cashPaisa,
     required this.upgrades,
     required this.stages,
+    required this.lastSettledAt,
     this.workReadyAt,
   });
 
@@ -113,6 +126,7 @@ class GameState {
       cashPaisa: config.startCashPaisa,
       upgrades: const {},
       stages: {first.id: StageState.opened(first, now)},
+      lastSettledAt: now,
     );
   }
 
@@ -126,6 +140,9 @@ class GameState {
   /// Only unlocked stages are present.
   final Map<String, StageState> stages;
 
+  /// Time up to which wages, rent and automation have been settled.
+  final DateTime lastSettledAt;
+
   /// When the free recovery action can be used again.
   final DateTime? workReadyAt;
 
@@ -136,6 +153,7 @@ class GameState {
     int? cashPaisa,
     Map<String, int>? upgrades,
     Map<String, StageState>? stages,
+    DateTime? lastSettledAt,
     DateTime? workReadyAt,
   }) =>
       GameState(
@@ -143,6 +161,7 @@ class GameState {
         cashPaisa: cashPaisa ?? this.cashPaisa,
         upgrades: upgrades ?? this.upgrades,
         stages: stages ?? this.stages,
+        lastSettledAt: lastSettledAt ?? this.lastSettledAt,
         workReadyAt: workReadyAt ?? this.workReadyAt,
       );
 

@@ -32,4 +32,5 @@ After an approved decision, record date, decision, rationale and affected files.
 2026-11-21: Initial documentation drafted from conversation. No technical proposal has received explicit founder approval yet.
 2026-11-21: Founder approved: hybrid pacing (active early, manager-run idle later); Claude writes the code directly; stack Riverpod + Drift + go_router; Phase 0 deliverables first. Affects: architecture.md, technical-architecture-document.md.
 2026-11-21: Economy v0 drafted and checked with a pacing simulation (assets/config/economy_v0.json). Draft values, to be tuned in playtests. Takeaway requires the stall manager; offline costs accrue only while a stage is running.
-2026-11-21: Batch 1 code written (core money/clock, economy config + validator, pure GameEngine commands, unit tests). Not yet verified on the founder's machine.
+2026-11-21: Batch 1 verified on founder's machine: flutter analyze clean, 29 tests passed.
+2026-11-21: Batch 2 written: advanceTo settlement (wages, rent, staff automation, 4h offline cap, stock-limited, costs stop when a business runs dry, costs never push cash below zero; unpaid remainder forgiven). Per-second deterministic stepping, max 14,400 steps per offline settlement. Not yet verified.

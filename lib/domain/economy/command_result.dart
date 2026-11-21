@@ -1,6 +1,6 @@
 import 'game_state.dart';
 
-enum LedgerType { stockPurchase, sale, upgrade, hire, stageUnlock, work }
+enum LedgerType { stockPurchase, sale, upgrade, hire, stageUnlock, work, wages, rent }
 
 /// One money movement. The repository stores these with the new state in
 /// the same database transaction.

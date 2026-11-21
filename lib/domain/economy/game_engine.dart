@@ -23,8 +23,8 @@ class LineStats {
 /// new state (revision + 1) and its ledger entries, or [Failure] and the
 /// caller keeps the old state.
 ///
-/// Not here yet (next batch): wages, rent and automated/offline settlement
-/// (`advanceTo`).
+/// Time-based settlement (wages, rent, staff automation, offline) lives in
+/// `settlement.dart` as `advanceTo`.
 class GameEngine {
   const GameEngine(this.config);
 
@@ -235,7 +235,7 @@ class GameEngine {
 
   // ---------- helpers ----------
 
-  static const _carryUnit = 60000 * 1000; // ms per minute x milli-customers
+  static const carryUnit = 60000 * 1000; // ms per minute x milli-customers
 
   /// Finishes batches whose time is up and adds customers who arrived.
   StageState _refresh(GameState s, StageDef def, DateTime now) {
@@ -252,8 +252,8 @@ class GameEngine {
     final total = st.queueCarry + elapsedMs * perMinMilli;
     return st.copyWith(
       lines: lines,
-      queue: math.min(config.maxQueue, st.queue + total ~/ _carryUnit),
-      queueCarry: total % _carryUnit,
+      queue: math.min(config.maxQueue, st.queue + total ~/ carryUnit),
+      queueCarry: total % carryUnit,
       customersUpdatedAt: now,
     );
   }
