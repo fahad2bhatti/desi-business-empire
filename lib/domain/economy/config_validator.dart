@@ -58,5 +58,69 @@ List<String> validateConfig(EconomyConfig c) {
     check(p.rentPaisaPerSec > 0, '$where: rent must be > 0');
     check(p.maxOwned >= 1, '$where: maxOwned must be >= 1');
   }
+  final goalIds = <String>{};
+  for (final g in c.goals) {
+    final where = 'goal ${g.id}';
+    check(goalIds.add(g.id), '$where: duplicate id');
+    check(g.target > 0, '$where: target must be > 0');
+    check(g.rewardPaisa > 0, '$where: reward must be > 0');
+    if (g.type == GoalType.businessLevel) {
+      check(
+        g.businessId != null && c.business(g.businessId!) != null,
+        '$where: needs a valid business',
+      );
+      check(g.target <= c.maxLevel, '$where: level above maxLevel');
+    }
+    if (g.type == GoalType.businessesOwned) {
+      check(
+        g.target <= c.businesses.length,
+        '$where: more businesses than exist',
+      );
+    }
+  }
+  check(
+    c.lifestyleSellRefund > 0 && c.lifestyleSellRefund <= 1,
+    'lifestyleSellRefund must be in (0, 1]',
+  );
+  for (final i in c.lifestyle) {
+    final where = 'lifestyle ${i.id}';
+    check(ids.add(i.id), '$where: duplicate id');
+    check(i.pricePaisa > 0, '$where: price must be > 0');
+    check(i.incomeBonusPercent > 0, '$where: bonus must be > 0');
+    check(
+      i.kind == 'vehicle' || i.kind == 'luxury',
+      '$where: kind must be vehicle or luxury',
+    );
+  }
+  check(c.homes.isNotEmpty, 'no homes');
+  for (final (i, h) in c.homes.indexed) {
+    final where = 'home ${h.id}';
+    check(ids.add(h.id), '$where: duplicate id');
+    if (i == 0) {
+      check(
+        h.pricePaisa == 0 && h.incomeBonusPercent == 0,
+        '$where: the first home must be free with no bonus',
+      );
+    } else {
+      final prev = c.homes[i - 1];
+      check(
+        h.pricePaisa > prev.pricePaisa,
+        '$where: must cost more than ${prev.id}',
+      );
+      check(
+        h.incomeBonusPercent > prev.incomeBonusPercent,
+        '$where: bonus must grow',
+      );
+    }
+  }
+  for (final g in c.goals.where((g) => g.type == GoalType.homeLevel)) {
+    check(g.target < c.homes.length, 'goal ${g.id}: home level does not exist');
+  }
+  for (final g in c.goals.where((g) => g.type == GoalType.lifestyleOwned)) {
+    check(
+      g.target <= c.lifestyle.length,
+      'goal ${g.id}: more items than exist',
+    );
+  }
   return errors;
 }

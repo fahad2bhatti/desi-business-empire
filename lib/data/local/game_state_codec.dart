@@ -15,6 +15,9 @@ Map<String, Object?> encodeGameState(GameState s) => {
   'properties': s.properties,
   'totalEarnedPaisa': s.totalEarnedPaisa,
   'taps': s.taps,
+  'claimedGoals': s.claimedGoals.toList()..sort(),
+  'lifestyle': s.lifestyle.toList()..sort(),
+  'homeLevel': s.homeLevel,
 };
 
 int _int(Object? v) => (v as num).toInt();
@@ -34,7 +37,19 @@ GameState decodeGameState(Map<String, Object?> j, EconomyConfig config) {
     properties: _intMap(j['properties']),
     totalEarnedPaisa: _int(j['totalEarnedPaisa']),
     taps: _int(j['taps']),
+    // Added after v2 shipped; older v2 saves simply have none.
+    claimedGoals: {
+      for (final id in (j['claimedGoals'] ?? const []) as List) id as String,
+    },
+    lifestyle: {
+      for (final id in (j['lifestyle'] ?? const []) as List) id as String,
+    },
+    homeLevel: _int(j['homeLevel'] ?? 0),
   );
+  if (s.homeLevel < 0 ||
+      (s.homeLevel > 0 && s.homeLevel >= config.homes.length)) {
+    throw FormatException('bad home ${s.homeLevel}');
+  }
   if (s.cashPaisa < 0 || s.totalEarnedPaisa < 0 || s.taps < 0) {
     throw const FormatException('negative counter');
   }
@@ -43,6 +58,11 @@ GameState decodeGameState(Map<String, Object?> j, EconomyConfig config) {
         e.value < 1 ||
         e.value > config.maxLevel) {
       throw FormatException('bad business ${e.key}');
+    }
+  }
+  for (final id in s.lifestyle) {
+    if (config.item(id) == null) {
+      throw FormatException('bad lifestyle item $id');
     }
   }
   for (final e in s.properties.entries) {

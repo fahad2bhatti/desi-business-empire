@@ -74,11 +74,11 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
               children: [
                 for (final (id, color) in [
                   ('samosa', p.street),
+                  ('taxi', p.transport),
                   ('kiryana', p.shops),
                   ('factory', p.companies),
-                  ('plaza', p.property),
                 ]) ...[
-                  SignTile(icon: iconFor(id), color: color, size: 56),
+                  SignTile(icon: iconFor(id), dot: color, size: 56),
                   const SizedBox(width: AppSpacing.s12),
                 ],
               ],
@@ -111,8 +111,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             const SizedBox(height: AppSpacing.s16),
             FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: p.gold,
-                foregroundColor: p.onGold,
+                minimumSize: const Size.fromHeight(52),
               ),
               onPressed: _error == null && !_saving ? _start : null,
               child: const Text(S.start),

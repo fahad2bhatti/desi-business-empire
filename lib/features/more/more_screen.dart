@@ -6,6 +6,7 @@ import '../../app/game_controller.dart';
 import '../../app/prefs.dart';
 import '../../app/theme.dart';
 import '../../core/strings.dart';
+import '../common/widgets.dart';
 
 /// "More" tab: accounts, settings, tutorial replay, privacy, reset.
 class MoreScreen extends ConsumerWidget {
@@ -57,6 +58,30 @@ class MoreScreen extends ConsumerWidget {
               onTap: () => _editName(context, ref, prefs.businessName ?? ''),
             ),
           ]),
+          const SizedBox(height: AppSpacing.s24),
+          const SectionTitle(S.appearance),
+          SegmentedButton<ThemeMode>(
+            showSelectedIcon: false,
+            segments: const [
+              ButtonSegment(
+                value: ThemeMode.dark,
+                icon: Icon(Icons.dark_mode_outlined),
+                label: Text(S.themeDark),
+              ),
+              ButtonSegment(
+                value: ThemeMode.light,
+                icon: Icon(Icons.light_mode_outlined),
+                label: Text(S.themeLight),
+              ),
+              ButtonSegment(
+                value: ThemeMode.system,
+                icon: Icon(Icons.phone_android),
+                label: Text(S.themeSystem),
+              ),
+            ],
+            selected: {prefs.themeMode},
+            onSelectionChanged: (v) => notifier.setThemeMode(v.first),
+          ),
           const SizedBox(height: AppSpacing.s24),
           group([
             SwitchListTile(
@@ -145,7 +170,7 @@ class MoreScreen extends ConsumerWidget {
               FilledButton(
                 style: FilledButton.styleFrom(
                   backgroundColor: p.danger,
-                  foregroundColor: p.background,
+                  foregroundColor: p.onDanger,
                 ),
                 onPressed: () => Navigator.pop(context, true),
                 child: Text(action),

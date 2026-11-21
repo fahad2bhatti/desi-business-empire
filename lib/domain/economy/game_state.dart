@@ -11,6 +11,9 @@ class GameState {
     this.properties = const {},
     this.totalEarnedPaisa = 0,
     this.taps = 0,
+    this.claimedGoals = const {},
+    this.lifestyle = const {},
+    this.homeLevel = 0,
   });
 
   factory GameState.newGame(EconomyConfig config, DateTime now) => GameState(
@@ -41,6 +44,15 @@ class GameState {
   /// Times "Work" was tapped.
   final int taps;
 
+  /// Goals whose reward has been collected.
+  final Set<String> claimedGoals;
+
+  /// Vehicles and luxury items owned.
+  final Set<String> lifestyle;
+
+  /// Index into the config's homes: where the player lives now.
+  final int homeLevel;
+
   int level(String businessId) => businesses[businessId] ?? 0;
   int owned(String propertyId) => properties[propertyId] ?? 0;
 
@@ -53,6 +65,9 @@ class GameState {
     Map<String, int>? properties,
     int? totalEarnedPaisa,
     int? taps,
+    Set<String>? claimedGoals,
+    Set<String>? lifestyle,
+    int? homeLevel,
   }) => GameState(
     revision: revision ?? this.revision,
     cashPaisa: cashPaisa ?? this.cashPaisa,
@@ -62,5 +77,8 @@ class GameState {
     properties: properties ?? this.properties,
     totalEarnedPaisa: totalEarnedPaisa ?? this.totalEarnedPaisa,
     taps: taps ?? this.taps,
+    claimedGoals: claimedGoals ?? this.claimedGoals,
+    lifestyle: lifestyle ?? this.lifestyle,
+    homeLevel: homeLevel ?? this.homeLevel,
   );
 }

@@ -1,40 +1,82 @@
 # Design
 
 ## Overview
-Desi Business Empire is an idle tycoon game. Creative north star: **a night bazaar of glowing shop signs**. Deep navy ground, raised panels, gold money that counts up, green income, and one signal colour per kind of business. The game must feel like a game (headings, icons, colour, movement), not a document.
+Desi Business Empire is an idle tycoon game. Creative north star: **calm finance app meets desi bazaar**. Two themes (dark default, light optional). One clear focal element per screen holds the player's attention. Everything else recedes.
 
-## Colors
-`AppPalette.night` in `lib/app/theme.dart`, read with `context.palette`. Dark only.
-- Ground `#0D1117`, surface `#161B24`, raised `#1F2632`.
-- Ink `#F3F5F8`, muted `#9AA4B2` (>= 6:1 on surfaces).
-- Gold `#F5C451`: cash, prices, upgrade buttons, the Work button. Text on gold `#2B1F00`.
-- Income green `#4CD787`: income per second and Buy buttons. Text on green `#00210F`.
-- Danger `#FF7A70`: selling and errors.
-- Category signals: Street `#FF9447`, Shops `#5AA9FF`, Companies `#B794FF`, Property `#3ED6C4`.
+## Themes
+`AppPalette.dark` and `AppPalette.light` in `lib/app/theme.dart`, read with `context.palette`.
+Theme mode is stored in prefs (key `themeMode`, default dark). The user switches in More → Appearance via `SegmentedButton<ThemeMode>`.
+
+### Dark palette (`AppPalette.dark`)
+| Token | Value |
+|---|---|
+| background | `#0E1217` |
+| surface | `#161C23` |
+| surfaceRaised | `#1E2630` |
+| ink | `#EEF2F6` |
+| inkMuted | `#94A0AE` |
+| accent | `#3A6AD9` |
+| accentInk | `#8DB0FF` |
+| income | `#3DC985` |
+| danger | `#F2706A` |
+
+### Light palette (`AppPalette.light`)
+| Token | Value |
+|---|---|
+| background | `#F3F5F8` |
+| surface | `#FFFFFF` |
+| surfaceRaised | `#E9EDF2` |
+| ink | `#121820` |
+| inkMuted | `#56616E` |
+| accent | `#2F5FD0` |
+| accentInk | `#2A55BD` |
+| income | `#0B7341` |
+| danger | `#BF332A` |
+
+Category dots: Street `#C85A00`, Transport `#1A74C4`, Shops `#7B3FC4`, Companies `#1A8A6E`, Property `#1A74C4`.
+
+## Focus Rule — one accent element per screen
+Each screen has exactly **one** focal element that uses the full accent fill:
+- Either a `FocusCard` (accent background, `onAccent` text, white action button with accent text, optional progress bar).
+- Or a single recommended row, which gets a `FilledButton` plus a 1.5 px accent border.
+Everything else uses `FilledButton.tonal` (neutral grey).
+
+**Green is only for income values. Red is only for Sell / errors.** Accent blue is only for the focus element.
 
 ## Typography
-System font through the theme `TextTheme`. Money and headings are heavy (700-800); body 400. `displaySmall` 34 for the cash counter, `headlineSmall` 24, `titleLarge` 20, `titleMedium` 16, `bodyMedium` 14, `labelSmall` 11 for navigation. Every number uses tabular figures (`style.numbers`). Money is shown in the South Asian system with `formatShort` (K, lakh, crore, arab, kharab); exact values with `formatRs` where precision matters.
+System font through the theme `TextTheme`. Money and headings are heavy (700-800); body 400.
+`displaySmall` 34 for the cash counter; `headlineSmall` 24; `titleLarge` 20; `titleMedium` 16; `bodyMedium` 14; `labelSmall` 11 for navigation. Every number uses tabular figures (`style.numbers`). Money uses `formatShort` (K, lakh, crore, arab, kharab); exact values use `formatRs`.
 
 ## Layout
-4-point spacing via `AppSpacing`. The money header is pinned above every tab. Lists of business or property cards, 12-16 between cards.
+4-point spacing via `AppSpacing`. The money header is pinned above every tab. Lists of cards with 12–16 px between items.
 
 ## Elevation & Depth
-No shadows. Depth from ground, surface and raised steps.
+No shadows. Depth from background → surface → surfaceRaised steps. `hairline` (0.5 px) border on the money header bottom.
 
 ## Shapes
-Controls 12, sign tiles 14, cards 18.
+Controls 12 px; sign tiles 14 px; cards 18 px.
 
 ## Components
-- `MoneyHeader`: empire name, net worth, gold cash counter (animated count-up, off when animations are disabled), green income per second.
-- `SignTile`: rounded tile in the category colour with the business or property icon; dimmed when not owned. The signature element.
-- Business card: sign tile, name, level, income, next-bonus progress, gold Upgrade (+income shown) and Upgrade max, green Buy with a saving-up bar when locked, Sell in the overflow menu with confirmation.
-- Property card: sign tile, area and units owned, rent each and total, Buy and Sell.
-- Work button: the big gold tap target with a floating "+Rs 25".
-- `StatTile`, `ProgressBar`, `SectionTitle`, `NoticeBanner`.
+- `MoneyHeader`: empire name, cash in ink, income in green text, hairline bottom.
+- `FocusCard`: accent fill, `onAccent` text, white `FilledButton` with accent text, optional `LinearProgressIndicator`.
+- `SignTile`: neutral grey tile with a small category colour dot; dimmed when not owned.
+- Business card: sign tile, name, level, income, progress bar; `FilledButton` (focus row) or `FilledButton.tonal`; popup menu with Upgrade max and Sell (via `confirmSell`).
+- Property card: same pattern. Home tab uses `home_list.dart` with current home card + FocusCard for next upgrade.
+- Work button (`_WorkButton`): neutral grey tap target; income earned pops up in green.
+- `StatTile`, `ProgressBar`, `SectionTitle`, `NoticeBanner`, `ConfirmSell` dialog.
+
+## Homes
+6 tiers: Rented Room (free) → Small Flat → Family Home → Bungalow → Villa → Mansion. Income bonus is not cumulative; only the current home's bonus applies. Encoded in `homeLevel` (int 0–5).
+
+## Lifestyle & Vehicles
+11 lifestyle items (7 vehicles + 4 luxury), total +53% income bonus (cumulative across all owned items). Vehicles tab and Luxury tab inside the Property screen.
 
 ## Do's and Don'ts
 - Do keep every string in `lib/core/strings.dart` (English).
 - Do use `context.palette` and theme text styles; no hardcoded colours or sizes in widgets.
-- Do use category colour only for that category's signs and tabs.
-- Don't copy another game's art, icons or layouts (Business Empire: RichMan is a genre reference only).
-- Don't use emoji as icons or glows and gradients as decoration.
+- Do use `.withValues(alpha:)`, never `.withOpacity()`.
+- Do `dispose` controllers; add `mounted` guards after async gaps.
+- Don't use gold, gradients, or colored borders > 1 px for decoration.
+- Don't use emoji as icons.
+- Don't put any color on price text inside `FilledButton` (let it inherit).
+- Don't copy Business Empire: RichMan UI directly (genre reference only).

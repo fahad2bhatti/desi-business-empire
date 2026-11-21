@@ -50,11 +50,83 @@ class PropertyDef {
   final int maxOwned;
 }
 
+/// A vehicle or luxury item, owned once. Adds a permanent bonus to all
+/// income.
+class LifestyleDef {
+  const LifestyleDef({
+    required this.id,
+    required this.name,
+    required this.kind,
+    required this.pricePaisa,
+    required this.incomeBonusPercent,
+  });
+
+  final String id;
+  final String name;
+
+  /// `vehicle` or `luxury`.
+  final String kind;
+  final int pricePaisa;
+  final int incomeBonusPercent;
+}
+
+/// A place to live. The player moves up one home at a time; the current
+/// home adds its bonus to all income. The first home is free.
+class HomeDef {
+  const HomeDef({
+    required this.id,
+    required this.name,
+    required this.pricePaisa,
+    required this.incomeBonusPercent,
+  });
+
+  final String id;
+  final String name;
+  final int pricePaisa;
+  final int incomeBonusPercent;
+}
+
 class Milestone {
   const Milestone({required this.level, required this.multiplier});
 
   final int level;
   final int multiplier;
+}
+
+enum GoalType {
+  taps,
+  businessesOwned,
+  businessLevel,
+  totalLevels,
+  propertyUnits,
+  incomePerSecond,
+  netWorth,
+  lifestyleOwned,
+  homeLevel,
+}
+
+/// Money goal types keep their target in paisa; the rest are counts.
+const moneyGoalTypes = {GoalType.incomePerSecond, GoalType.netWorth};
+
+/// Something to achieve for a one-time cash reward.
+class GoalDef {
+  const GoalDef({
+    required this.id,
+    required this.type,
+    required this.target,
+    required this.rewardPaisa,
+    this.businessId,
+  });
+
+  final String id;
+  final GoalType type;
+
+  /// A count, a level, or paisa for money goals.
+  final int target;
+  final int rewardPaisa;
+
+  /// Only for [GoalType.businessLevel].
+  final String? businessId;
 }
 
 class EconomyConfig {
@@ -73,6 +145,10 @@ class EconomyConfig {
     required this.categories,
     required this.businesses,
     required this.properties,
+    required this.goals,
+    required this.lifestyle,
+    required this.lifestyleSellRefund,
+    this.homes = const [],
   });
 
   final int version;
@@ -102,10 +178,40 @@ class EconomyConfig {
   final List<BusinessDef> businesses;
   final List<PropertyDef> properties;
 
+  /// In display order within each type.
+  final List<GoalDef> goals;
+
+  /// Cheapest first.
+  final List<LifestyleDef> lifestyle;
+
+  /// Share of the price returned when an item is sold.
+  final double lifestyleSellRefund;
+
+  /// Cheapest first; index 0 is where every player starts.
+  final List<HomeDef> homes;
+
   BusinessDef? business(String id) {
     for (final b in businesses) {
       if (b.id == id) {
         return b;
+      }
+    }
+    return null;
+  }
+
+  LifestyleDef? item(String id) {
+    for (final i in lifestyle) {
+      if (i.id == id) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  GoalDef? goal(String id) {
+    for (final g in goals) {
+      if (g.id == id) {
+        return g;
       }
     }
     return null;
@@ -162,6 +268,46 @@ class EconomyConfig {
             maxOwned: _int(p['maxOwned']),
           ),
       ],
+      lifestyle: [
+        for (final i
+            in ((j['lifestyle'] ?? const []) as List)
+                .cast<Map<String, Object?>>())
+          LifestyleDef(
+            id: i['id'] as String,
+            name: i['name'] as String,
+            kind: i['kind'] as String,
+            pricePaisa: rupees(_int(i['price'])),
+            incomeBonusPercent: _int(i['incomeBonusPercent']),
+          ),
+      ],
+      lifestyleSellRefund: _double(j['lifestyleSellRefund'] ?? 0.6),
+      homes: [
+        for (final h
+            in ((j['homes'] ?? const []) as List).cast<Map<String, Object?>>())
+          HomeDef(
+            id: h['id'] as String,
+            name: h['name'] as String,
+            pricePaisa: rupees(_int(h['price'])),
+            incomeBonusPercent: _int(h['incomeBonusPercent']),
+          ),
+      ],
+      goals: [
+        for (final g
+            in ((j['goals'] ?? const []) as List).cast<Map<String, Object?>>())
+          _goal(g),
+      ],
+    );
+  }
+
+  static GoalDef _goal(Map<String, Object?> g) {
+    final type = GoalType.values.byName(g['type'] as String);
+    final target = _int(g['target']);
+    return GoalDef(
+      id: g['id'] as String,
+      type: type,
+      target: moneyGoalTypes.contains(type) ? rupees(target) : target,
+      rewardPaisa: rupees(_int(g['reward'])),
+      businessId: g['business'] as String?,
     );
   }
 

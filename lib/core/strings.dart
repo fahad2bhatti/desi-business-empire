@@ -14,11 +14,32 @@ abstract final class S {
   static const tryAgain = 'Try again';
   static String perSecond(String amount) => '+$amount/s';
 
+  /// A short wait: 45s, 12 min, 3 h 5 min, 2 days.
+  static String eta(int seconds) {
+    if (seconds < 60) {
+      return '${seconds}s';
+    }
+    final d = Duration(seconds: seconds);
+    if (d.inHours < 1) {
+      return '${d.inMinutes} min';
+    }
+    if (d.inDays < 1) {
+      return duration(d);
+    }
+    return d.inDays == 1 ? '1 day' : '${d.inDays} days';
+  }
+
   // ---------- tabs ----------
   static const tabEmpire = 'Empire';
   static const tabBusinesses = 'Businesses';
-  static const tabProperty = 'Property';
+  static const tabProperty = 'Assets';
+  static const property = 'Property';
+  static const lifestyle = 'Lifestyle';
+  static const tabHome = 'Home';
+  static const tabVehicles = 'Vehicles';
+  static const tabLuxury = 'Luxury';
   static const tabMore = 'More';
+  static const tabGoals = 'Goals';
 
   // ---------- save / load ----------
   static const saveProblem =
@@ -54,6 +75,27 @@ abstract final class S {
       '$name for $cost, $gain more a second';
   static const nothingToUpgrade = 'Buy a business to start upgrading';
 
+  // ---------- next move (the focus card) ----------
+  static const focusClaim = 'Collect your rewards';
+  static String focusBuy(String name) => 'Buy $name';
+  static String focusUpgrade(String name) => 'Upgrade $name';
+  static String focusMove(String name) => 'Move to $name';
+  static String focusGain(String gain, String payback) =>
+      '+$gain/s income · pays back in $payback';
+  static String focusWaiting(String amount) => '$amount waiting for you';
+  static String readyIn(String wait) =>
+      'Ready in $wait. Work to get there faster.';
+  static const workToSave = 'Tap Work to save up for it.';
+  static const allDone = 'You own everything. Enjoy the empire.';
+  static const yourEmpire = 'Your empire';
+  static String rowBusinesses(int owned, int total) => '$owned of $total owned';
+  static String rowProperty(int units, String rent) =>
+      units == 0 ? 'No property yet' : '$units units · $rent/s rent';
+  static String rowVehicles(int owned, int total) =>
+      owned == 0 ? 'No vehicles yet' : '$owned of $total owned';
+  static String rowHome(String name, int percent) =>
+      percent == 0 ? name : '$name · +$percent% income';
+
   // ---------- businesses ----------
   static String level(int n, int max) => 'Level $n / $max';
   static String nextBonus(int level, int mult) =>
@@ -72,6 +114,11 @@ abstract final class S {
   static const keep = 'Keep';
   static String sold(String name, String value) => '$name sold for $value';
   static String locked(String progress) => '$progress of the price saved';
+  static const buyShort = 'Buy';
+  static const upgradeShort = 'Upgrade';
+  static String categorySummary(String income, int owned, int total) =>
+      'Earns $income/s · $owned of $total owned';
+  static String levelIncome(int level) => 'Level $level · ';
 
   // ---------- property ----------
   static const propertyIntro =
@@ -83,6 +130,35 @@ abstract final class S {
   static String sellUnitTitle(String name) => 'Sell one $name?';
   static String sellUnitBody(String value) =>
       'You get $value back for one unit.';
+
+  // ---------- lifestyle ----------
+  static const lifestyleIntro =
+      'Vehicles and luxuries raise all your income for good.';
+  static String lifestyleBonus(int percent) => '+$percent% on all income';
+  static String totalBonus(int percent) => 'Lifestyle bonus: +$percent% income';
+  static const owned = 'Owned';
+  static String sellItemTitle(String name) => 'Sell your $name?';
+  static String sellItemBody(String value, int percent) =>
+      'You get $value back and lose its +$percent% income bonus.';
+  static const kindVehicle = 'Vehicle';
+  static const kindLuxury = 'Luxury';
+  static String garageBonus(int percent) =>
+      'Your vehicles add +$percent% to all income';
+  static String luxuryBonus(int percent) =>
+      'Your luxuries add +$percent% to all income';
+  static String ownedOf(int n, int total) => '$n of $total';
+
+  // ---------- home ----------
+  static const yourHome = 'Your home';
+  static const allIncome = 'all income';
+  static const homes = 'Homes';
+  static const homeIntro =
+      'A better home raises all your income. Move up one step at a time.';
+  static String bonusBecomes(int percent) => 'Bonus becomes +$percent%';
+  static String moveFor(String price) => 'Move · $price';
+  static const youLiveHere = 'You live here';
+  static const topHome = 'You live in the best home there is.';
+  static String movedTo(String name) => 'Welcome to your $name';
 
   // ---------- offline ----------
   static const whileAway = 'While you were away';
@@ -137,6 +213,10 @@ abstract final class S {
   static const vibration = 'Vibration';
   static const vibrationSubtitle = 'A light tap when an action works';
   static const replayTutorial = 'Replay tutorial';
+  static const appearance = 'Appearance';
+  static const themeDark = 'Dark';
+  static const themeLight = 'Light';
+  static const themeSystem = 'Phone';
   static const privacy = 'Privacy';
   static const privacyBody =
       'All data stays on this phone. No account, ads or tracking.';
@@ -164,6 +244,10 @@ abstract final class S {
   static const entryBuyProperty = 'Bought property';
   static const entrySellProperty = 'Sold property';
   static const entryIncome = 'Income';
+  static const entryGoal = 'Goal reward';
+  static const entryBuyItem = 'Bought lifestyle item';
+  static const entrySellItem = 'Sold lifestyle item';
+  static const entryMoveHome = 'Moved home';
   static String ago(Duration d) {
     if (d.inMinutes < 1) {
       return 'just now';
@@ -174,10 +258,41 @@ abstract final class S {
     return '${d.inHours} h ago';
   }
 
+  // ---------- goals ----------
+  static String goalTaps(int n) => 'Tap Work $n times';
+  static String goalOwn(int n) =>
+      n == 1 ? 'Buy your first business' : 'Own $n businesses';
+  static String goalLevel(String business, int level) =>
+      'Get $business to level $level';
+  static String goalTotalLevels(int n) => 'Reach $n business levels in total';
+  static String goalUnits(int n) =>
+      n == 1 ? 'Buy your first property' : 'Own $n property units';
+  static String goalIncome(String amount) => 'Earn $amount every second';
+  static String goalWorth(String amount) => 'Reach a net worth of $amount';
+  static String goalLifestyle(int n) => n == 1
+      ? 'Buy your first vehicle or luxury'
+      : 'Own $n vehicles or luxuries';
+  static String goalHome(String name) => 'Move into a $name';
+  static const goalsIntro = 'Finish goals to collect cash rewards.';
+  static const readyToClaim = 'Ready to collect';
+  static const inProgress = 'In progress';
+  static const completed = 'Completed';
+  static String claimFor(String reward) => 'Collect $reward';
+  static String reward(String amount) => 'Reward $amount';
+  static String collected(String amount) => 'Collected $amount';
+  static String goalsDone(int done, int total) => '$done of $total done';
+  static const nextGoal = 'Next goal';
+  static const allGoalsDone = 'Every goal is complete.';
+  static String goalsReady(int n) =>
+      n == 1 ? '1 reward ready' : '$n rewards ready';
+  static String collectAll(String reward) => 'Collect all · $reward';
+
   // ---------- refusals ----------
   static String notEnoughMoney(int needed, int available) =>
       'Not enough cash: ${formatShort(needed)} needed, you have ${formatShort(available)}';
   static const alreadyOwned = 'You already own this';
+  static const goalNotReached = 'Goal not reached yet';
+  static const alreadyClaimed = 'Reward already collected';
   static const notOwned = 'You do not own this';
   static const maxLevelReached = 'Already at max level';
   static const maxOwnedReached = 'You own every unit';

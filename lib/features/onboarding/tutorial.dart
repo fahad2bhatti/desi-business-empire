@@ -53,21 +53,23 @@ class TutorialCoach extends ConsumerWidget {
           AppSpacing.s4,
         ),
         decoration: BoxDecoration(
-          color: p.surfaceRaised,
+          color: p.surface,
           borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(color: p.gold.withValues(alpha: 0.5)),
+          border: Border.all(color: p.accentInk.withValues(alpha: 0.5)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Icon(Icons.lightbulb, color: p.gold, size: 20),
+                Icon(Icons.lightbulb_outline, color: p.accentInk, size: 20),
                 const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: Text(
                     title,
-                    style: context.text.titleSmall?.copyWith(color: p.gold),
+                    style: context.text.titleSmall?.copyWith(
+                      color: p.accentInk,
+                    ),
                   ),
                 ),
               ],

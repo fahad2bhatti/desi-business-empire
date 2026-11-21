@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +10,7 @@ import '../features/common/widgets.dart';
 import '../features/offline/offline_summary_sheet.dart';
 import '../features/onboarding/tutorial.dart';
 import '../features/onboarding/welcome_screen.dart';
+import '../domain/economy/goals.dart';
 import 'game_controller.dart';
 import 'prefs.dart';
 import 'theme.dart';
@@ -77,72 +79,95 @@ class GameShell extends ConsumerWidget {
       return WelcomeScreen(onDone: () => shell.goBranch(0));
     }
     final engine = ref.read(gameControllerProvider.notifier).engine;
+    final ready = engine.claimableGoals(session.state);
 
-    return Scaffold(
-      body: Column(
-        children: [
-          SafeArea(
-            bottom: false,
-            child: MoneyHeader(
-              empireName: settings.businessName ?? S.defaultName,
-              cashPaisa: session.state.cashPaisa,
-              incomePaisaPerSec: engine.incomePerSec(session.state),
-              netWorthPaisa: engine.netWorth(session.state),
-            ),
-          ),
-          if (session.saveFailed)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.s16,
-                AppSpacing.s8,
-                AppSpacing.s16,
-                0,
-              ),
-              child: NoticeBanner(
-                text: S.saveProblem,
-                action: S.tryAgain,
-                onPressed: ref.read(gameControllerProvider.notifier).retrySave,
+    final overlay = context.palette.brightness == Brightness.dark
+        ? SystemUiOverlayStyle.light
+        : SystemUiOverlayStyle.dark;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlay.copyWith(statusBarColor: Colors.transparent),
+      child: Scaffold(
+        body: Column(
+          children: [
+            SafeArea(
+              bottom: false,
+              child: MoneyHeader(
+                empireName: settings.businessName ?? S.defaultName,
+                cashPaisa: session.state.cashPaisa,
+                incomePaisaPerSec: engine.incomePerSec(session.state),
+                netWorthPaisa: engine.netWorth(session.state),
               ),
             ),
-          if (session.restoredFromBackup)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.s16,
-                AppSpacing.s8,
-                AppSpacing.s16,
-                0,
+            if (session.saveFailed)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.s16,
+                  AppSpacing.s8,
+                  AppSpacing.s16,
+                  0,
+                ),
+                child: NoticeBanner(
+                  text: S.saveProblem,
+                  action: S.tryAgain,
+                  onPressed: ref
+                      .read(gameControllerProvider.notifier)
+                      .retrySave,
+                ),
               ),
-              child: NoticeBanner(text: S.restoredFromBackup),
+            if (session.restoredFromBackup)
+              const Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSpacing.s16,
+                  AppSpacing.s8,
+                  AppSpacing.s16,
+                  0,
+                ),
+                child: NoticeBanner(text: S.restoredFromBackup),
+              ),
+            Expanded(child: shell),
+          ],
+        ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: shell.currentIndex,
+          onDestinationSelected: (i) =>
+              shell.goBranch(i, initialLocation: i == shell.currentIndex),
+          destinations: [
+            const NavigationDestination(
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard),
+              label: S.tabEmpire,
             ),
-          Expanded(child: shell),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: shell.currentIndex,
-        onDestinationSelected: (i) =>
-            shell.goBranch(i, initialLocation: i == shell.currentIndex),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: S.tabEmpire,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.storefront_outlined),
-            selectedIcon: Icon(Icons.storefront),
-            label: S.tabBusinesses,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.apartment_outlined),
-            selectedIcon: Icon(Icons.apartment),
-            label: S.tabProperty,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.menu),
-            selectedIcon: Icon(Icons.menu_open),
-            label: S.tabMore,
-          ),
-        ],
+            const NavigationDestination(
+              icon: Icon(Icons.storefront_outlined),
+              selectedIcon: Icon(Icons.storefront),
+              label: S.tabBusinesses,
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.apartment_outlined),
+              selectedIcon: Icon(Icons.apartment),
+              label: S.tabProperty,
+            ),
+            NavigationDestination(
+              icon: Badge(
+                isLabelVisible: ready > 0,
+                label: Text('$ready'),
+                child: const Icon(Icons.emoji_events_outlined),
+              ),
+              selectedIcon: Badge(
+                isLabelVisible: ready > 0,
+                label: Text('$ready'),
+                child: const Icon(Icons.emoji_events),
+              ),
+              label: S.tabGoals,
+              tooltip: ready > 0 ? S.goalsReady(ready) : null,
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.menu),
+              selectedIcon: Icon(Icons.menu_open),
+              label: S.tabMore,
+            ),
+          ],
+        ),
       ),
     );
   }

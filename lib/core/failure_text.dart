@@ -11,5 +11,7 @@ String failureText(Failure f) => switch (f.reason) {
   FailReason.notOwned => S.notOwned,
   FailReason.maxLevel => S.maxLevelReached,
   FailReason.maxOwned => S.maxOwnedReached,
+  FailReason.goalNotReached => S.goalNotReached,
+  FailReason.alreadyClaimed => S.alreadyClaimed,
   FailReason.unknownId || FailReason.invalidQuantity => S.somethingWrong,
 };

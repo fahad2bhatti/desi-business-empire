@@ -39,14 +39,71 @@ void main() {
           (l1 > l2 ? l2 + 0.05 : l1 + 0.05);
     }
 
-    const p = AppPalette.night;
-    expect(contrast(p.ink, p.background), greaterThanOrEqualTo(4.5));
-    expect(contrast(p.inkMuted, p.surface), greaterThanOrEqualTo(4.5));
-    expect(contrast(p.inkMuted, p.surfaceRaised), greaterThanOrEqualTo(4.5));
-    expect(contrast(p.onGold, p.gold), greaterThanOrEqualTo(4.5));
-    expect(contrast(p.onIncome, p.income), greaterThanOrEqualTo(4.5));
-    expect(contrast(p.gold, p.surface), greaterThanOrEqualTo(4.5));
-    expect(contrast(p.income, p.surface), greaterThanOrEqualTo(4.5));
-    expect(contrast(p.danger, p.surfaceRaised), greaterThanOrEqualTo(4.5));
+    for (final p in [AppPalette.dark, AppPalette.light]) {
+      final where = p.brightness.name;
+      expect(
+        contrast(p.ink, p.background),
+        greaterThanOrEqualTo(4.5),
+        reason: where,
+      );
+      expect(
+        contrast(p.inkMuted, p.surface),
+        greaterThanOrEqualTo(4.5),
+        reason: where,
+      );
+      expect(
+        contrast(p.inkMuted, p.surfaceRaised),
+        greaterThanOrEqualTo(4.5),
+        reason: where,
+      );
+      expect(
+        contrast(p.onAccent, p.accent),
+        greaterThanOrEqualTo(4.5),
+        reason: where,
+      );
+      expect(
+        contrast(p.accentInk, p.surface),
+        greaterThanOrEqualTo(4.5),
+        reason: where,
+      );
+      expect(
+        contrast(p.income, p.surface),
+        greaterThanOrEqualTo(4.5),
+        reason: where,
+      );
+      expect(
+        contrast(p.income, p.surfaceRaised),
+        greaterThanOrEqualTo(4.5),
+        reason: where,
+      );
+      expect(
+        contrast(p.danger, p.surface),
+        greaterThanOrEqualTo(4.5),
+        reason: where,
+      );
+      expect(
+        contrast(p.onDanger, p.danger),
+        greaterThanOrEqualTo(4.5),
+        reason: where,
+      );
+    }
+  });
+
+  testWidgets('money header renders in the light theme too', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: buildAppTheme(AppPalette.light),
+        home: const Scaffold(
+          body: MoneyHeader(
+            empireName: 'Chaudhry Group',
+            cashPaisa: 34000000,
+            incomePaisaPerSec: 4700,
+            netWorthPaisa: 40000000,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Rs 3.4 lakh'), findsOneWidget);
   });
 }

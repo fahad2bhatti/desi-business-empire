@@ -4,8 +4,9 @@ import '../../app/theme.dart';
 import '../../core/money.dart';
 import '../../core/strings.dart';
 
-/// Always-visible cash counter: gold cash that counts up as income arrives,
-/// green income per second, and net worth.
+/// Always-visible cash counter: cash in plain ink that counts up as income
+/// arrives, green income per second, and net worth. No accent here: the
+/// header is context, the focus lives on the screen below.
 class MoneyHeader extends StatelessWidget {
   const MoneyHeader({
     super.key,
@@ -36,10 +37,7 @@ class MoneyHeader extends StatelessWidget {
           AppSpacing.s16,
         ),
         decoration: BoxDecoration(
-          color: p.surface,
-          borderRadius: const BorderRadius.vertical(
-            bottom: Radius.circular(AppRadius.card),
-          ),
+          border: Border(bottom: BorderSide(color: p.hairline)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,8 +63,6 @@ class MoneyHeader extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Icons.payments, color: p.gold, size: 28),
-                const SizedBox(width: AppSpacing.s8),
                 Expanded(
                   child: TweenAnimationBuilder<double>(
                     tween: Tween(end: cashPaisa.toDouble()),
@@ -77,29 +73,17 @@ class MoneyHeader extends StatelessWidget {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         formatShort(value.round()),
-                        style: context.text.displaySmall
-                            ?.copyWith(color: p.gold)
-                            .numbers,
+                        style: context.text.displaySmall.numbers,
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.s8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.s8,
-                    vertical: AppSpacing.s4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: p.income.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(AppRadius.control),
-                  ),
-                  child: Text(
-                    S.perSecond(income),
-                    style: context.text.titleSmall
-                        ?.copyWith(color: p.income)
-                        .numbers,
-                  ),
+                Text(
+                  S.perSecond(income),
+                  style: context.text.titleMedium
+                      ?.copyWith(color: p.income)
+                      .numbers,
                 ),
               ],
             ),

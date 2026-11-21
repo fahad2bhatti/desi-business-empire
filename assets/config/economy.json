@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "_note": "Money is whole PKR here; code converts to integer paisa (x100). Income and rent are per second.",
   "startCash": 500,
   "offlineCapMinutes": 240,
@@ -36,6 +36,10 @@
       "name": "Street"
     },
     {
+      "id": "transport",
+      "name": "Transport"
+    },
+    {
       "id": "shops",
       "name": "Shops"
     },
@@ -69,9 +73,44 @@
     {
       "id": "rickshaw",
       "name": "Rickshaw",
-      "category": "street",
+      "category": "transport",
       "price": 220000,
       "incomePerSecond": 95
+    },
+    {
+      "id": "taxi",
+      "name": "Taxi Service",
+      "category": "transport",
+      "price": 900000,
+      "incomePerSecond": 270
+    },
+    {
+      "id": "loader",
+      "name": "Loader Pickups",
+      "category": "transport",
+      "price": 5000000,
+      "incomePerSecond": 920
+    },
+    {
+      "id": "bus",
+      "name": "Bus Service",
+      "category": "transport",
+      "price": 30000000,
+      "incomePerSecond": 3400
+    },
+    {
+      "id": "rentacar",
+      "name": "Rent-a-Car",
+      "category": "transport",
+      "price": 250000000,
+      "incomePerSecond": 15500
+    },
+    {
+      "id": "transport",
+      "name": "Cargo Logistics",
+      "category": "transport",
+      "price": 10000000000,
+      "incomePerSecond": 200000
     },
     {
       "id": "kiryana",
@@ -107,13 +146,6 @@
       "category": "companies",
       "price": 1700000000,
       "incomePerSecond": 56000
-    },
-    {
-      "id": "transport",
-      "name": "Transport Company",
-      "category": "companies",
-      "price": 10000000000,
-      "incomePerSecond": 200000
     },
     {
       "id": "hall",
@@ -178,6 +210,375 @@
       "price": 10000000000,
       "rentPerSecond": 500000,
       "maxOwned": 10
+    }
+  ],
+  "goals": [
+    {
+      "id": "work10",
+      "type": "taps",
+      "target": 10,
+      "reward": 100
+    },
+    {
+      "id": "work100",
+      "type": "taps",
+      "target": 100,
+      "reward": 1000
+    },
+    {
+      "id": "work500",
+      "type": "taps",
+      "target": 500,
+      "reward": 10000
+    },
+    {
+      "id": "own1",
+      "type": "businessesOwned",
+      "target": 1,
+      "reward": 200
+    },
+    {
+      "id": "own3",
+      "type": "businessesOwned",
+      "target": 3,
+      "reward": 3000
+    },
+    {
+      "id": "own6",
+      "type": "businessesOwned",
+      "target": 6,
+      "reward": 200000
+    },
+    {
+      "id": "own9",
+      "type": "businessesOwned",
+      "target": 9,
+      "reward": 20000000
+    },
+    {
+      "id": "own12",
+      "type": "businessesOwned",
+      "target": 12,
+      "reward": 5000000000
+    },
+    {
+      "id": "own16",
+      "type": "businessesOwned",
+      "target": 16,
+      "reward": 50000000000
+    },
+    {
+      "id": "samosa10",
+      "type": "businessLevel",
+      "target": 10,
+      "reward": 2000,
+      "business": "samosa"
+    },
+    {
+      "id": "samosa25",
+      "type": "businessLevel",
+      "target": 25,
+      "reward": 20000,
+      "business": "samosa"
+    },
+    {
+      "id": "chai25",
+      "type": "businessLevel",
+      "target": 25,
+      "reward": 100000,
+      "business": "chai"
+    },
+    {
+      "id": "rickshaw25",
+      "type": "businessLevel",
+      "target": 25,
+      "reward": 1000000,
+      "business": "rickshaw"
+    },
+    {
+      "id": "taxi25",
+      "type": "businessLevel",
+      "target": 25,
+      "reward": 3000000,
+      "business": "taxi"
+    },
+    {
+      "id": "kiryana25",
+      "type": "businessLevel",
+      "target": 25,
+      "reward": 5000000,
+      "business": "kiryana"
+    },
+    {
+      "id": "cloth50",
+      "type": "businessLevel",
+      "target": 50,
+      "reward": 500000000,
+      "business": "cloth"
+    },
+    {
+      "id": "restaurant50",
+      "type": "businessLevel",
+      "target": 50,
+      "reward": 20000000000,
+      "business": "restaurant"
+    },
+    {
+      "id": "factory100",
+      "type": "businessLevel",
+      "target": 100,
+      "reward": 1000000000000,
+      "business": "factory"
+    },
+    {
+      "id": "levels50",
+      "type": "totalLevels",
+      "target": 50,
+      "reward": 20000
+    },
+    {
+      "id": "levels200",
+      "type": "totalLevels",
+      "target": 200,
+      "reward": 2000000
+    },
+    {
+      "id": "levels500",
+      "type": "totalLevels",
+      "target": 500,
+      "reward": 200000000
+    },
+    {
+      "id": "levels1000",
+      "type": "totalLevels",
+      "target": 1000,
+      "reward": 20000000000
+    },
+    {
+      "id": "units1",
+      "type": "propertyUnits",
+      "target": 1,
+      "reward": 10000
+    },
+    {
+      "id": "units10",
+      "type": "propertyUnits",
+      "target": 10,
+      "reward": 1000000
+    },
+    {
+      "id": "units30",
+      "type": "propertyUnits",
+      "target": 30,
+      "reward": 100000000
+    },
+    {
+      "id": "units60",
+      "type": "propertyUnits",
+      "target": 60,
+      "reward": 50000000000
+    },
+    {
+      "id": "income100",
+      "type": "incomePerSecond",
+      "target": 100,
+      "reward": 20000
+    },
+    {
+      "id": "income10k",
+      "type": "incomePerSecond",
+      "target": 10000,
+      "reward": 2000000
+    },
+    {
+      "id": "income10lakh",
+      "type": "incomePerSecond",
+      "target": 1000000,
+      "reward": 300000000
+    },
+    {
+      "id": "income1crore",
+      "type": "incomePerSecond",
+      "target": 10000000,
+      "reward": 5000000000
+    },
+    {
+      "id": "worth1lakh",
+      "type": "netWorth",
+      "target": 100000,
+      "reward": 5000
+    },
+    {
+      "id": "worth1crore",
+      "type": "netWorth",
+      "target": 10000000,
+      "reward": 500000
+    },
+    {
+      "id": "worth100crore",
+      "type": "netWorth",
+      "target": 1000000000,
+      "reward": 50000000
+    },
+    {
+      "id": "worth1kharab",
+      "type": "netWorth",
+      "target": 100000000000,
+      "reward": 5000000000
+    },
+    {
+      "id": "lifestyle1",
+      "type": "lifestyleOwned",
+      "target": 1,
+      "reward": 5000
+    },
+    {
+      "id": "lifestyle8",
+      "type": "lifestyleOwned",
+      "target": 8,
+      "reward": 10000000000
+    },
+    {
+      "id": "lifestyle11",
+      "type": "lifestyleOwned",
+      "target": 11,
+      "reward": 100000000000
+    },
+    {
+      "id": "home1",
+      "type": "homeLevel",
+      "target": 1,
+      "reward": 20000
+    },
+    {
+      "id": "home2",
+      "type": "homeLevel",
+      "target": 2,
+      "reward": 200000
+    },
+    {
+      "id": "home5",
+      "type": "homeLevel",
+      "target": 5,
+      "reward": 5000000000
+    }
+  ],
+  "lifestyleSellRefund": 0.6,
+  "lifestyle": [
+    {
+      "id": "motorbike",
+      "name": "Motorbike",
+      "kind": "vehicle",
+      "price": 50000,
+      "incomeBonusPercent": 2
+    },
+    {
+      "id": "watch",
+      "name": "Gold Watch",
+      "kind": "luxury",
+      "price": 500000,
+      "incomeBonusPercent": 3
+    },
+    {
+      "id": "car",
+      "name": "Hatchback",
+      "kind": "vehicle",
+      "price": 800000,
+      "incomeBonusPercent": 2
+    },
+    {
+      "id": "sedan",
+      "name": "Sedan",
+      "kind": "vehicle",
+      "price": 4500000,
+      "incomeBonusPercent": 3
+    },
+    {
+      "id": "jewellery",
+      "name": "Jewellery Set",
+      "kind": "luxury",
+      "price": 20000000,
+      "incomeBonusPercent": 4
+    },
+    {
+      "id": "suv",
+      "name": "SUV",
+      "kind": "vehicle",
+      "price": 30000000,
+      "incomeBonusPercent": 4
+    },
+    {
+      "id": "sportscar",
+      "name": "Sports Car",
+      "kind": "vehicle",
+      "price": 250000000,
+      "incomeBonusPercent": 5
+    },
+    {
+      "id": "painting",
+      "name": "Art Collection",
+      "kind": "luxury",
+      "price": 1500000000,
+      "incomeBonusPercent": 5
+    },
+    {
+      "id": "helicopter",
+      "name": "Helicopter",
+      "kind": "vehicle",
+      "price": 40000000000,
+      "incomeBonusPercent": 8
+    },
+    {
+      "id": "yacht",
+      "name": "Yacht",
+      "kind": "luxury",
+      "price": 80000000000,
+      "incomeBonusPercent": 7
+    },
+    {
+      "id": "jet",
+      "name": "Private Jet",
+      "kind": "vehicle",
+      "price": 500000000000,
+      "incomeBonusPercent": 10
+    }
+  ],
+  "homes": [
+    {
+      "id": "room",
+      "name": "Rented Room",
+      "price": 0,
+      "incomeBonusPercent": 0
+    },
+    {
+      "id": "flat",
+      "name": "Small Flat",
+      "price": 150000,
+      "incomeBonusPercent": 3
+    },
+    {
+      "id": "familyhome",
+      "name": "Family Home",
+      "price": 1200000,
+      "incomeBonusPercent": 5
+    },
+    {
+      "id": "bungalow",
+      "name": "Bungalow",
+      "price": 15000000,
+      "incomeBonusPercent": 8
+    },
+    {
+      "id": "villa",
+      "name": "Villa",
+      "price": 200000000,
+      "incomeBonusPercent": 11
+    },
+    {
+      "id": "mansion",
+      "name": "Mansion",
+      "price": 5000000000,
+      "incomeBonusPercent": 15
     }
   ]
 }

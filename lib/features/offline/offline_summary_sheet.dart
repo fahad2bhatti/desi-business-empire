@@ -50,15 +50,13 @@ class _OfflineSummary extends ConsumerWidget {
             Text(S.earned, style: muted),
             Row(
               children: [
-                Icon(Icons.payments, color: p.gold, size: 32),
-                const SizedBox(width: AppSpacing.s8),
                 Flexible(
                   child: FittedBox(
                     fit: BoxFit.scaleDown,
                     child: Text(
                       '+${formatShort(s.earnedPaisa)}',
                       style: context.text.displaySmall
-                          ?.copyWith(color: p.gold)
+                          ?.copyWith(color: p.income)
                           .numbers,
                     ),
                   ),
@@ -72,8 +70,7 @@ class _OfflineSummary extends ConsumerWidget {
             const SizedBox(height: AppSpacing.s24),
             FilledButton(
               style: FilledButton.styleFrom(
-                backgroundColor: p.gold,
-                foregroundColor: p.onGold,
+                minimumSize: const Size.fromHeight(52),
               ),
               onPressed: () {
                 Navigator.pop(context);

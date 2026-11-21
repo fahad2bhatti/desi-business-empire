@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/local/prefs_repository.dart';
@@ -18,6 +19,7 @@ class AppPrefs {
     this.tutorialStep = Tutorial.welcome,
     this.sound = true,
     this.haptics = true,
+    this.themeMode = ThemeMode.dark,
   });
 
   /// Chosen by the player on the welcome screen; `null` until then.
@@ -26,16 +28,21 @@ class AppPrefs {
   final bool sound;
   final bool haptics;
 
+  /// Dark by default; the player can pick light or follow the phone.
+  final ThemeMode themeMode;
+
   AppPrefs copyWith({
     String? businessName,
     int? tutorialStep,
     bool? sound,
     bool? haptics,
+    ThemeMode? themeMode,
   }) => AppPrefs(
     businessName: businessName ?? this.businessName,
     tutorialStep: tutorialStep ?? this.tutorialStep,
     sound: sound ?? this.sound,
     haptics: haptics ?? this.haptics,
+    themeMode: themeMode ?? this.themeMode,
   );
 }
 
@@ -52,6 +59,7 @@ class PrefsController extends AsyncNotifier<AppPrefs> {
   static const _tutorial = 'tutorialStep';
   static const _sound = 'sound';
   static const _haptics = 'haptics';
+  static const _theme = 'themeMode';
 
   @override
   Future<AppPrefs> build() async {
@@ -61,6 +69,7 @@ class PrefsController extends AsyncNotifier<AppPrefs> {
       tutorialStep: int.tryParse(m[_tutorial] ?? '') ?? Tutorial.welcome,
       sound: m[_sound] != 'false',
       haptics: m[_haptics] != 'false',
+      themeMode: ThemeMode.values.asNameMap()[m[_theme]] ?? ThemeMode.dark,
     );
   }
 
@@ -83,4 +92,7 @@ class PrefsController extends AsyncNotifier<AppPrefs> {
 
   Future<void> setHaptics(bool on) =>
       _save(_haptics, '$on', state.requireValue.copyWith(haptics: on));
+
+  Future<void> setThemeMode(ThemeMode mode) =>
+      _save(_theme, mode.name, state.requireValue.copyWith(themeMode: mode));
 }

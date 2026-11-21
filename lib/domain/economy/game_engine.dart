@@ -65,7 +65,40 @@ class GameEngine {
   int businessSellValue(GameState s, String id) =>
       ((s.invested[id] ?? 0) * config.businessSellRefund).round();
 
-  int incomePerSec(GameState s) {
+  /// Total bonus from vehicles and luxury items, in percent.
+  int lifestyleBonusPercent(GameState s) {
+    var bonus = 0;
+    for (final i in config.lifestyle) {
+      if (s.lifestyle.contains(i.id)) {
+        bonus += i.incomeBonusPercent;
+      }
+    }
+    return bonus;
+  }
+
+  /// The home lived in now, or null when the config has no homes.
+  HomeDef? currentHome(GameState s) =>
+      s.homeLevel < config.homes.length ? config.homes[s.homeLevel] : null;
+
+  /// The next home to move into, or null at the top of the ladder.
+  HomeDef? nextHome(GameState s) => s.homeLevel + 1 < config.homes.length
+      ? config.homes[s.homeLevel + 1]
+      : null;
+
+  int homeBonusPercent(GameState s) => currentHome(s)?.incomeBonusPercent ?? 0;
+
+  /// Lifestyle items plus the current home, in percent.
+  int totalBonusPercent(GameState s) =>
+      lifestyleBonusPercent(s) + homeBonusPercent(s);
+
+  int itemSellValue(LifestyleDef i) =>
+      (i.pricePaisa * config.lifestyleSellRefund).round();
+
+  /// Businesses plus rent, raised by the lifestyle and home bonus.
+  int incomePerSec(GameState s) =>
+      baseIncomePerSec(s) * (100 + totalBonusPercent(s)) ~/ 100;
+
+  int baseIncomePerSec(GameState s) {
     var total = 0;
     for (final b in config.businesses) {
       total += businessIncome(b, s.level(b.id));
@@ -82,6 +115,13 @@ class GameEngine {
     for (final id in s.businesses.keys) {
       worth += businessSellValue(s, id);
     }
+    for (final i in config.lifestyle) {
+      if (s.lifestyle.contains(i.id)) {
+        worth += itemSellValue(i);
+      }
+    }
+    worth += ((currentHome(s)?.pricePaisa ?? 0) * config.lifestyleSellRefund)
+        .round();
     for (final p in config.properties) {
       final n = s.owned(p.id);
       for (var i = n; i > 0; i--) {
@@ -228,6 +268,62 @@ class GameEngine {
     return _ok(s.copyWith(cashPaisa: s.cashPaisa + value, properties: props), [
       _entry(LedgerType.sellProperty, value, '$id #$n', now),
     ]);
+  }
+
+  CommandResult buyItem(GameState s, String id, DateTime now) {
+    final item = config.item(id);
+    if (item == null) {
+      return const Failure(FailReason.unknownId);
+    }
+    if (s.lifestyle.contains(id)) {
+      return const Failure(FailReason.alreadyOwned);
+    }
+    if (item.pricePaisa > s.cashPaisa) {
+      return _noFunds(item.pricePaisa, s);
+    }
+    return _ok(
+      s.copyWith(
+        cashPaisa: s.cashPaisa - item.pricePaisa,
+        lifestyle: {...s.lifestyle, id},
+      ),
+      [_entry(LedgerType.buyItem, -item.pricePaisa, id, now)],
+    );
+  }
+
+  CommandResult sellItem(GameState s, String id, DateTime now) {
+    final item = config.item(id);
+    if (item == null) {
+      return const Failure(FailReason.unknownId);
+    }
+    if (!s.lifestyle.contains(id)) {
+      return const Failure(FailReason.notOwned);
+    }
+    final value = itemSellValue(item);
+    return _ok(
+      s.copyWith(
+        cashPaisa: s.cashPaisa + value,
+        lifestyle: {...s.lifestyle}..remove(id),
+      ),
+      [_entry(LedgerType.sellItem, value, id, now)],
+    );
+  }
+
+  /// Moves one step up the home ladder. The old home is left behind.
+  CommandResult moveHome(GameState s, DateTime now) {
+    final next = nextHome(s);
+    if (next == null) {
+      return const Failure(FailReason.maxLevel);
+    }
+    if (next.pricePaisa > s.cashPaisa) {
+      return _noFunds(next.pricePaisa, s);
+    }
+    return _ok(
+      s.copyWith(
+        cashPaisa: s.cashPaisa - next.pricePaisa,
+        homeLevel: s.homeLevel + 1,
+      ),
+      [_entry(LedgerType.moveHome, -next.pricePaisa, next.id, now)],
+    );
   }
 
   // ---------- helpers ----------

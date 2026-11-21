@@ -8,6 +8,10 @@ enum LedgerType {
   buyProperty,
   sellProperty,
   income,
+  goalReward,
+  buyItem,
+  sellItem,
+  moveHome,
 }
 
 /// One money movement. The repository stores these with the new state in
@@ -38,6 +42,8 @@ enum FailReason {
   notOwned,
   maxLevel,
   maxOwned,
+  goalNotReached,
+  alreadyClaimed,
 }
 
 sealed class CommandResult {

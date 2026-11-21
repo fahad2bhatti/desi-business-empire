@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/strings.dart';
 import '../features/businesses/businesses_screen.dart';
 import '../features/empire/empire_screen.dart';
+import '../features/goals/goals_screen.dart';
 import '../features/more/more_screen.dart';
 import '../features/more/wallet_screen.dart';
 import '../features/property/property_screen.dart';
 import 'game_shell.dart';
+import 'prefs.dart';
 import 'theme.dart';
 
-/// Tabs: Empire, Businesses, Property, More.
+/// Tabs: Empire, Businesses, Assets, Goals, More.
 final _router = GoRouter(
   routes: [
     StatefulShellRoute.indexedStack(
@@ -36,7 +39,18 @@ final _router = GoRouter(
           routes: [
             GoRoute(
               path: '/property',
-              builder: (context, state) => const PropertyScreen(),
+              builder: (context, state) {
+                final tab = state.uri.queryParameters['tab'];
+                return PropertyScreen(key: ValueKey(tab), initialTab: tab);
+              },
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/goals',
+              builder: (context, state) => const GoalsScreen(),
             ),
           ],
         ),
@@ -59,14 +73,21 @@ final _router = GoRouter(
   ],
 );
 
-class DesiBusinessEmpireApp extends StatelessWidget {
+final _light = buildAppTheme(AppPalette.light);
+final _dark = buildAppTheme(AppPalette.dark);
+
+class DesiBusinessEmpireApp extends ConsumerWidget {
   const DesiBusinessEmpireApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp.router(
+  Widget build(BuildContext context, WidgetRef ref) => MaterialApp.router(
     title: S.appName,
     debugShowCheckedModeBanner: false,
-    theme: buildAppTheme(),
+    theme: _light,
+    darkTheme: _dark,
+    themeMode: ref.watch(
+      prefsProvider.select((a) => a.value?.themeMode ?? ThemeMode.dark),
+    ),
     routerConfig: _router,
   );
 }
