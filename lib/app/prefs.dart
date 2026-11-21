@@ -6,10 +6,9 @@ import 'game_controller.dart';
 /// Tutorial steps, in order. Stored as an int so it survives restarts.
 abstract final class Tutorial {
   static const welcome = 0;
-  static const buyStock = 1;
-  static const cook = 2;
-  static const sell = 3;
-  static const hireHelper = 4;
+  static const work = 1;
+  static const buyBusiness = 2;
+  static const upgrade = 3;
   static const done = 5;
 }
 

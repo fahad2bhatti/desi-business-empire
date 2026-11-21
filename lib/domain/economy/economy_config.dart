@@ -2,213 +2,59 @@ import 'dart:convert';
 
 import '../../core/money.dart';
 
-/// Staff role keys used in the config and in saves.
-abstract final class StaffRole {
-  static const helper = 'helper';
-  static const cook = 'cook';
-  static const manager = 'manager';
-  static const all = [helper, cook, manager];
-}
-
-enum UpgradeEffect {
-  batch,
-  batchSeconds,
-  price,
-  priceMult,
-  demandMult,
-  storage,
-}
-
-/// Effects that change one item line; the rest change the whole stage.
-const lineEffects = {
-  UpgradeEffect.batch,
-  UpgradeEffect.batchSeconds,
-  UpgradeEffect.price,
-};
-
 int _int(Object? v) => (v as num).toInt();
 double _double(Object? v) => (v as num).toDouble();
 
-Map<String, int> _intMap(Object? v) => {
-  for (final e in ((v ?? const <String, Object?>{}) as Map).entries)
-    e.key as String: _int(e.value),
-};
+class CategoryDef {
+  const CategoryDef({required this.id, required this.name});
 
-class LineDef {
-  const LineDef({
+  final String id;
+  final String name;
+}
+
+/// A business the player buys once and then levels up. It earns on its own.
+class BusinessDef {
+  const BusinessDef({
     required this.id,
     required this.name,
-    required this.costPaisa,
+    required this.categoryId,
     required this.pricePaisa,
-    required this.batch,
-    required this.batchSeconds,
-    required this.share,
+    required this.incomePaisaPerSec,
   });
 
   final String id;
   final String name;
-  final int costPaisa;
+  final String categoryId;
   final int pricePaisa;
-  final int batch;
-  final int batchSeconds;
-  final double share;
 
-  factory LineDef.fromJson(Map<String, Object?> j) => LineDef(
-    id: j['id'] as String,
-    name: j['name'] as String,
-    costPaisa: rupees(_int(j['cost'])),
-    pricePaisa: rupees(_int(j['price'])),
-    batch: _int(j['batch']),
-    batchSeconds: _int(j['batchSeconds']),
-    share: _double(j['share']),
-  );
+  /// Income at level 1; level n earns n times this, times milestone bonuses.
+  final int incomePaisaPerSec;
 }
 
-class StaffDef {
-  const StaffDef({
-    required this.hirePaisa,
-    required this.wagePaisaPerMin,
-    required this.max,
-    this.servePerMin = 0,
-    this.requiresSold = 0,
-  });
-
-  final int hirePaisa;
-  final int wagePaisaPerMin;
-  final int max;
-  final int servePerMin;
-  final int requiresSold;
-
-  factory StaffDef.fromJson(Map<String, Object?> j) => StaffDef(
-    hirePaisa: rupees(_int(j['hire'])),
-    wagePaisaPerMin: rupees(_int(j['wagePerMin'])),
-    max: _int(j['max'] ?? 1),
-    servePerMin: _int(j['servePerMin'] ?? 0),
-    requiresSold: _int(j['requiresSold'] ?? 0),
-  );
-}
-
-class Requirements {
-  const Requirements({
-    this.sold = const {},
-    this.upgrades = const {},
-    this.staff = const {},
-  });
-
-  /// stageId -> items sold there.
-  final Map<String, int> sold;
-
-  /// upgradeId -> minimum level.
-  final Map<String, int> upgrades;
-
-  /// stageId -> role -> minimum count.
-  final Map<String, Map<String, int>> staff;
-
-  factory Requirements.fromJson(Map<String, Object?>? j) {
-    if (j == null) return const Requirements();
-    final staff = (j['staff'] ?? const <String, Object?>{}) as Map;
-    return Requirements(
-      sold: _intMap(j['sold']),
-      upgrades: _intMap(j['upgrades']),
-      staff: {for (final e in staff.entries) e.key as String: _intMap(e.value)},
-    );
-  }
-}
-
-class StageDef {
-  const StageDef({
+/// Property: bought in units, each unit pays rent. Every unit costs more.
+class PropertyDef {
+  const PropertyDef({
     required this.id,
     required this.name,
-    required this.unlockCostPaisa,
-    required this.requirements,
-    required this.rentPaisaPerMin,
-    required this.customersPerMin,
-    required this.storage,
-    required this.lines,
-    required this.staff,
+    required this.area,
+    required this.pricePaisa,
+    required this.rentPaisaPerSec,
+    required this.maxOwned,
   });
 
   final String id;
   final String name;
-  final int unlockCostPaisa;
-  final Requirements requirements;
-  final int rentPaisaPerMin;
-  final double customersPerMin;
-  final int storage;
-  final List<LineDef> lines;
-  final Map<String, StaffDef> staff;
-
-  LineDef? line(String id) {
-    for (final l in lines) {
-      if (l.id == id) return l;
-    }
-    return null;
-  }
-
-  factory StageDef.fromJson(Map<String, Object?> j) {
-    final staff = (j['staff'] ?? const <String, Object?>{}) as Map;
-    return StageDef(
-      id: j['id'] as String,
-      name: j['name'] as String,
-      unlockCostPaisa: rupees(_int(j['unlockCost'])),
-      requirements: Requirements.fromJson(
-        j['requirements'] as Map<String, Object?>?,
-      ),
-      rentPaisaPerMin: rupees(_int(j['rentPerMin'])),
-      customersPerMin: _double(j['customersPerMin']),
-      storage: _int(j['storage']),
-      lines: [
-        for (final l in (j['lines'] as List))
-          LineDef.fromJson(l as Map<String, Object?>),
-      ],
-      staff: {
-        for (final e in staff.entries)
-          e.key as String: StaffDef.fromJson(e.value as Map<String, Object?>),
-      },
-    );
-  }
+  final String area;
+  final int pricePaisa;
+  final int rentPaisaPerSec;
+  final int maxOwned;
 }
 
-class UpgradeLevel {
-  const UpgradeLevel({required this.costPaisa, required this.value});
+class Milestone {
+  const Milestone({required this.level, required this.multiplier});
 
-  final int costPaisa;
-
-  /// Meaning depends on the effect. For [UpgradeEffect.price] it is whole PKR.
-  final double value;
-}
-
-class UpgradeDef {
-  const UpgradeDef({
-    required this.id,
-    required this.stageId,
-    required this.name,
-    required this.effect,
-    required this.lineId,
-    required this.levels,
-  });
-
-  final String id;
-  final String stageId;
-  final String name;
-  final UpgradeEffect effect;
-  final String? lineId;
-  final List<UpgradeLevel> levels;
-
-  factory UpgradeDef.fromJson(Map<String, Object?> j) => UpgradeDef(
-    id: j['id'] as String,
-    stageId: j['stage'] as String,
-    name: j['name'] as String,
-    effect: UpgradeEffect.values.byName(j['effect'] as String),
-    lineId: j['line'] as String?,
-    levels: [
-      for (final l in (j['levels'] as List).cast<Map<String, Object?>>())
-        UpgradeLevel(
-          costPaisa: rupees(_int(l['cost'])),
-          value: _double(l['value']),
-        ),
-    ],
-  );
+  final int level;
+  final int multiplier;
 }
 
 class EconomyConfig {
@@ -216,54 +62,105 @@ class EconomyConfig {
     required this.version,
     required this.startCashPaisa,
     required this.offlineCapMinutes,
-    required this.maxQueue,
-    required this.recoveryPayPaisa,
-    required this.recoveryCooldown,
-    required this.stages,
-    required this.upgrades,
+    required this.workPayPaisa,
+    required this.maxLevel,
+    required this.upgradeBase,
+    required this.upgradeGrowth,
+    required this.milestones,
+    required this.businessSellRefund,
+    required this.propertyPriceGrowth,
+    required this.propertySellRefund,
+    required this.categories,
+    required this.businesses,
+    required this.properties,
   });
 
   final int version;
   final int startCashPaisa;
   final int offlineCapMinutes;
-  final int maxQueue;
-  final int recoveryPayPaisa;
-  final Duration recoveryCooldown;
 
-  /// In progression order: index 0 is the starter business.
-  final List<StageDef> stages;
-  final List<UpgradeDef> upgrades;
+  /// Paid for one tap on "Work".
+  final int workPayPaisa;
+  final int maxLevel;
 
-  StageDef? stage(String id) {
-    for (final s in stages) {
-      if (s.id == id) return s;
+  /// Upgrade from level n to n+1 costs price x base x growth^(n-1).
+  final double upgradeBase;
+  final double upgradeGrowth;
+
+  /// Ascending by level.
+  final List<Milestone> milestones;
+
+  /// Share of everything spent on a business returned when it is sold.
+  final double businessSellRefund;
+  final double propertyPriceGrowth;
+
+  /// Share of the last unit's price returned when one unit is sold.
+  final double propertySellRefund;
+  final List<CategoryDef> categories;
+
+  /// Cheapest first within each category.
+  final List<BusinessDef> businesses;
+  final List<PropertyDef> properties;
+
+  BusinessDef? business(String id) {
+    for (final b in businesses) {
+      if (b.id == id) {
+        return b;
+      }
     }
     return null;
   }
 
-  UpgradeDef? upgrade(String id) {
-    for (final u in upgrades) {
-      if (u.id == id) return u;
+  PropertyDef? property(String id) {
+    for (final p in properties) {
+      if (p.id == id) {
+        return p;
+      }
     }
     return null;
   }
 
   factory EconomyConfig.fromJson(Map<String, Object?> j) {
-    final recovery = j['recovery'] as Map<String, Object?>;
+    final upgrade = j['upgradeCost'] as Map<String, Object?>;
     return EconomyConfig(
       version: _int(j['version']),
       startCashPaisa: rupees(_int(j['startCash'])),
       offlineCapMinutes: _int(j['offlineCapMinutes']),
-      maxQueue: _int(j['maxQueue']),
-      recoveryPayPaisa: rupees(_int(recovery['pay'])),
-      recoveryCooldown: Duration(seconds: _int(recovery['cooldownSeconds'])),
-      stages: [
-        for (final s in (j['stages'] as List))
-          StageDef.fromJson(s as Map<String, Object?>),
+      workPayPaisa: rupees(_int(j['workPay'])),
+      maxLevel: _int(j['maxLevel']),
+      upgradeBase: _double(upgrade['base']),
+      upgradeGrowth: _double(upgrade['growth']),
+      milestones: [
+        for (final m in (j['milestones'] as List).cast<Map<String, Object?>>())
+          Milestone(level: _int(m['level']), multiplier: _int(m['multiplier'])),
       ],
-      upgrades: [
-        for (final u in (j['upgrades'] as List))
-          UpgradeDef.fromJson(u as Map<String, Object?>),
+      businessSellRefund: _double(j['businessSellRefund']),
+      propertyPriceGrowth: _double(j['propertyPriceGrowth']),
+      propertySellRefund: _double(j['propertySellRefund']),
+      categories: [
+        for (final c in (j['categories'] as List).cast<Map<String, Object?>>())
+          CategoryDef(id: c['id'] as String, name: c['name'] as String),
+      ],
+      businesses: [
+        for (final b in (j['businesses'] as List).cast<Map<String, Object?>>())
+          BusinessDef(
+            id: b['id'] as String,
+            name: b['name'] as String,
+            categoryId: b['category'] as String,
+            pricePaisa: rupees(_int(b['price'])),
+            incomePaisaPerSec: rupees(_int(b['incomePerSecond'])),
+          ),
+      ],
+      properties: [
+        for (final p in (j['properties'] as List).cast<Map<String, Object?>>())
+          PropertyDef(
+            id: p['id'] as String,
+            name: p['name'] as String,
+            area: p['area'] as String,
+            pricePaisa: rupees(_int(p['price'])),
+            rentPaisaPerSec: rupees(_int(p['rentPerSecond'])),
+            maxOwned: _int(p['maxOwned']),
+          ),
       ],
     );
   }

@@ -49,6 +49,8 @@ class SaveRepository {
   Future<LoadedSave?> load(EconomyConfig config) async {
     final main = await _row(mainSlot);
     if (main == null) return null;
+    // An older game version: start fresh (founder decision, 2026-11-21).
+    if (main.schemaVersion < saveSchemaVersion) return null;
     final state = _decode(main, config);
     if (state != null) return LoadedSave(state, restoredFromBackup: false);
     for (final slot in backupSlots) {

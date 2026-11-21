@@ -5,8 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../app/game_controller.dart';
 import '../../app/prefs.dart';
 import '../../app/theme.dart';
+import '../../core/strings.dart';
 
-/// "Aur" tab: wallet, settings, tutorial replay, privacy, reset.
+/// "More" tab: accounts, settings, tutorial replay, privacy, reset.
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
@@ -15,94 +16,100 @@ class MoreScreen extends ConsumerWidget {
     final prefs = ref.watch(prefsProvider).value ?? const AppPrefs();
     final session = ref.watch(gameControllerProvider).requireValue;
     final notifier = ref.read(prefsProvider.notifier);
-    final starter = ref
-        .read(gameControllerProvider.notifier)
-        .engine
-        .config
-        .stages
-        .first
-        .id;
+    final p = context.palette;
+
+    Widget group(List<Widget> children) => Card(
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (final (i, w) in children.indexed) ...[
+            if (i > 0) const Divider(),
+            w,
+          ],
+        ],
+      ),
+    );
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.s20,
+          AppSpacing.s16,
+          AppSpacing.s20,
+          AppSpacing.s32,
+        ),
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
-            child: Text(
-              'Aur',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
+          Text(S.moreTitle, style: context.text.titleLarge),
+          const SizedBox(height: AppSpacing.s20),
+          group([
+            ListTile(
+              leading: Icon(Icons.receipt_long_outlined, color: p.inkMuted),
+              title: const Text(S.accounts),
+              subtitle: const Text(S.accountsSubtitle),
+              trailing: Icon(Icons.chevron_right, color: p.inkMuted),
+              onTap: () => context.go('/more/wallet'),
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.account_balance_wallet_outlined),
-            title: const Text('Hisaab kitaab'),
-            subtitle: const Text('Wallet aur aakhri len den'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.go('/more/wallet'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.storefront_outlined),
-            title: const Text('Karobar ka naam'),
-            subtitle: Text(prefs.businessName ?? '-'),
-            trailing: const Icon(Icons.edit_outlined),
-            onTap: () => _editName(context, ref, prefs.businessName ?? ''),
-          ),
-          const Divider(),
-          SwitchListTile(
-            secondary: const Icon(Icons.volume_up_outlined),
-            title: const Text('Aawaz'),
-            subtitle: const Text('Aawazein agle batch mein aayengi'),
-            value: prefs.sound,
-            onChanged: notifier.setSound,
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.vibration),
-            title: const Text('Vibration'),
-            subtitle: const Text('Kaam hone par halki vibration'),
-            value: prefs.haptics,
-            onChanged: notifier.setHaptics,
-          ),
-          ListTile(
-            leading: const Icon(Icons.school_outlined),
-            title: const Text('Tutorial dobara dekhein'),
-            onTap: () async {
-              await notifier.setTutorialStep(Tutorial.buyStock);
-              if (context.mounted) {
-                context.go('/business/$starter');
-              }
-            },
-          ),
-          const Divider(),
-          const ListTile(
-            leading: Icon(Icons.lock_outline),
-            title: Text('Privacy'),
-            subtitle: Text(
-              'Saara data sirf aap ke phone par hai. Koi account, ads ya tracking nahi.',
+            ListTile(
+              leading: Icon(Icons.storefront_outlined, color: p.inkMuted),
+              title: const Text(S.empireName),
+              subtitle: Text(prefs.businessName ?? S.defaultName),
+              trailing: Icon(Icons.edit_outlined, color: p.inkMuted),
+              onTap: () => _editName(context, ref, prefs.businessName ?? ''),
             ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.save_outlined),
-            title: const Text('Save'),
-            subtitle: Text(
-              session.saveFailed
-                  ? 'Save mein masla hai'
-                  : 'Theek hai · revision ${session.state.revision}',
+          ]),
+          const SizedBox(height: AppSpacing.s24),
+          group([
+            SwitchListTile(
+              secondary: Icon(Icons.volume_up_outlined, color: p.inkMuted),
+              title: const Text(S.sound),
+              subtitle: const Text(S.soundSubtitle),
+              value: prefs.sound,
+              onChanged: notifier.setSound,
             ),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(
-              Icons.delete_forever_outlined,
-              color: AppColors.terra,
+            SwitchListTile(
+              secondary: Icon(Icons.vibration, color: p.inkMuted),
+              title: const Text(S.vibration),
+              subtitle: const Text(S.vibrationSubtitle),
+              value: prefs.haptics,
+              onChanged: notifier.setHaptics,
             ),
-            title: const Text(
-              'Game reset karein',
-              style: TextStyle(color: AppColors.terra),
+            ListTile(
+              leading: Icon(Icons.school_outlined, color: p.inkMuted),
+              title: const Text(S.replayTutorial),
+              onTap: () async {
+                await notifier.setTutorialStep(Tutorial.work);
+                if (context.mounted) {
+                  context.go('/');
+                }
+              },
             ),
-            subtitle: const Text('Saari progress mit jayegi'),
-            onTap: () => _confirmReset(context, ref),
-          ),
+          ]),
+          const SizedBox(height: AppSpacing.s24),
+          group([
+            ListTile(
+              leading: Icon(Icons.lock_outline, color: p.inkMuted),
+              title: const Text(S.privacy),
+              subtitle: const Text(S.privacyBody),
+            ),
+            ListTile(
+              leading: Icon(Icons.save_outlined, color: p.inkMuted),
+              title: const Text(S.saveStatus),
+              subtitle: Text(
+                session.saveFailed
+                    ? S.saveProblem
+                    : S.saveOk(session.state.revision),
+              ),
+            ),
+          ]),
+          const SizedBox(height: AppSpacing.s24),
+          group([
+            ListTile(
+              leading: Icon(Icons.delete_outline, color: p.danger),
+              title: Text(S.resetGame, style: TextStyle(color: p.danger)),
+              subtitle: const Text(S.resetSubtitle),
+              onTap: () => _confirmReset(context, ref),
+            ),
+          ]),
         ],
       ),
     );
@@ -123,51 +130,39 @@ class MoreScreen extends ConsumerWidget {
   }
 
   Future<void> _confirmReset(BuildContext context, WidgetRef ref) async {
-    final first = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Game reset karein?'),
-        content: const Text(
-          'Paisa, karobar, staff aur upgrades sab mit jayenge. Ye wapas nahi hoga.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Nahi'),
+    final p = context.palette;
+    Future<bool> ask(String title, String body, String action) async =>
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(title),
+            content: Text(body),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text(S.cancel),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: p.danger,
+                  foregroundColor: p.background,
+                ),
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(action),
+              ),
+            ],
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.terra),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Haan, reset'),
-          ),
-        ],
-      ),
-    );
-    if (!(first ?? false) || !context.mounted) {
+        ) ??
+        false;
+
+    if (!await ask(S.resetTitle, S.resetBody, S.reset) || !context.mounted) {
       return;
     }
-    final second = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Aakhri dafa poochh rahe hain'),
-        content: const Text('Pakka saari progress mitani hai?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Nahi'),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: AppColors.terra),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Mita do'),
-          ),
-        ],
-      ),
-    );
-    if (second ?? false) {
-      await ref.read(prefsProvider.notifier).setTutorialStep(Tutorial.buyStock);
-      await ref.read(gameControllerProvider.notifier).resetGame();
+    if (!await ask(S.resetAgainTitle, S.resetAgainBody, S.eraseEverything)) {
+      return;
     }
+    await ref.read(prefsProvider.notifier).setTutorialStep(Tutorial.work);
+    await ref.read(gameControllerProvider.notifier).resetGame();
   }
 }
 
@@ -192,7 +187,7 @@ class _NameDialogState extends State<_NameDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Karobar ka naam'),
+    title: const Text(S.empireName),
     content: TextField(
       controller: _controller,
       maxLength: 30,
@@ -202,11 +197,11 @@ class _NameDialogState extends State<_NameDialog> {
     actions: [
       TextButton(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Rehne dein'),
+        child: const Text(S.cancel),
       ),
       FilledButton(
         onPressed: () => Navigator.pop(context, _controller.text.trim()),
-        child: const Text('Save'),
+        child: const Text(S.save),
       ),
     ],
   );

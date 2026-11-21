@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/prefs.dart';
 import '../../app/theme.dart';
+import '../../core/strings.dart';
+import '../common/visuals.dart';
 
-/// First launch: the fictional world, a name for the business, then the
+/// First launch: what the game is, a name for the business, then the
 /// guided first sale.
 class WelcomeScreen extends ConsumerStatefulWidget {
   const WelcomeScreen({super.key, required this.onDone});
@@ -17,7 +19,7 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 }
 
 class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
-  final _name = TextEditingController(text: 'Chaudhry Samosa Corner');
+  final _name = TextEditingController(text: S.defaultEmpireName);
   bool _saving = false;
 
   @override
@@ -29,10 +31,10 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
   String? get _error {
     final n = _name.text.trim();
     if (n.length < 2) {
-      return 'Kam az kam 2 harf likhein';
+      return S.nameTooShort;
     }
     if (n.length > 30) {
-      return 'Zyada se zyada 30 harf';
+      return S.nameTooLong;
     }
     return null;
   }
@@ -46,66 +48,74 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
     await prefs.setBusinessName(_name.text.trim());
     final step = ref.read(prefsProvider).requireValue.tutorialStep;
     if (step == Tutorial.welcome) {
-      await prefs.setTutorialStep(Tutorial.buyStock);
+      await prefs.setTutorialStep(Tutorial.work);
+    }
+    if (!mounted) {
+      return;
     }
     widget.onDone();
   }
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.s24,
+            AppSpacing.s32,
+            AppSpacing.s24,
+            AppSpacing.s24,
+          ),
           children: [
-            Container(
-              height: 140,
-              decoration: BoxDecoration(
-                color: AppColors.amberLight,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: const Center(
-                child: Icon(
-                  Icons.storefront,
-                  size: 64,
-                  color: AppColors.amberInk,
-                ),
-              ),
+            const SizedBox(height: AppSpacing.s24),
+            Row(
+              children: [
+                for (final (id, color) in [
+                  ('samosa', p.street),
+                  ('kiryana', p.shops),
+                  ('factory', p.companies),
+                  ('plaza', p.property),
+                ]) ...[
+                  SignTile(icon: iconFor(id), color: color, size: 56),
+                  const SizedBox(width: AppSpacing.s12),
+                ],
+              ],
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'Desi Business Empire',
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
+            const SizedBox(height: AppSpacing.s24),
+            Text(S.welcomeTitle, style: context.text.displaySmall),
+            const SizedBox(height: AppSpacing.s12),
+            Text(
+              S.welcomeBody,
+              style: context.text.bodyLarge?.copyWith(height: 1.45),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Ek chhote se samosa stall se shuru karein. Saman lo, samosay banao, becho, '
-              'aur staff rakh kar apna karobar barhao: takeaway, restaurant, aur ek din shaadi hall.',
-              style: TextStyle(fontSize: 15, height: 1.4),
+            const SizedBox(height: AppSpacing.s12),
+            Text(
+              S.notRealMoney,
+              style: context.text.bodyMedium?.copyWith(color: p.inkMuted),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Game ka paisa (virtual PKR) asli nahi. Na nikala ja sakta hai, na becha.',
-              style: TextStyle(fontSize: 13, color: AppColors.muted),
-            ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.s32),
             TextField(
               controller: _name,
               maxLength: 30,
               textCapitalization: TextCapitalization.words,
               decoration: InputDecoration(
-                labelText: 'Aap ke karobar ka naam',
-                helperText: 'Koi bhi naam rakhein. Baad mein Settings se badal sakte hain.',
+                labelText: S.businessNameLabel,
+                helperText: S.businessNameHelp,
                 errorText: _error,
-                border: const OutlineInputBorder(),
               ),
               onChanged: (_) => setState(() {}),
               onSubmitted: (_) => _start(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.s16),
             FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: p.gold,
+                foregroundColor: p.onGold,
+              ),
               onPressed: _error == null && !_saving ? _start : null,
-              child: const Text('Shuru karein'),
+              child: const Text(S.start),
             ),
           ],
         ),

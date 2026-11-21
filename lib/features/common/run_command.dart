@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../app/game_controller.dart';
 import '../../app/prefs.dart';
 import '../../core/failure_text.dart';
+import '../../core/strings.dart';
 import '../../domain/economy/command_result.dart';
 import '../../domain/economy/game_state.dart';
 
@@ -25,7 +26,7 @@ Future<bool> runCommand(
         .read(gameControllerProvider.notifier)
         .run(command);
     if (failure != null) {
-      say(failureText(failure, ref.read(clockProvider).nowUtc()));
+      say(failureText(failure));
       return false;
     }
     if (ref.read(prefsProvider).value?.haptics ?? false) {
@@ -36,7 +37,7 @@ Future<bool> runCommand(
     }
     return true;
   } catch (_) {
-    say('Save nahi ho saka. Banner mein "Dobara koshish" dabayein.');
+    say(S.saveFailedToast);
     return false;
   }
 }

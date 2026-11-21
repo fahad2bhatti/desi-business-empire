@@ -1,14 +1,13 @@
 import 'game_state.dart';
 
 enum LedgerType {
-  stockPurchase,
-  sale,
-  upgrade,
-  hire,
-  stageUnlock,
   work,
-  wages,
-  rent,
+  buyBusiness,
+  upgrade,
+  sellBusiness,
+  buyProperty,
+  sellProperty,
+  income,
 }
 
 /// One money movement. The repository stores these with the new state in
@@ -26,7 +25,7 @@ class LedgerEntry {
   /// Positive = money in, negative = money out.
   final int deltaPaisa;
 
-  /// Short machine-readable reason, e.g. `stall/samosa x10`.
+  /// Short machine-readable reason, e.g. `samosa L2`.
   final String reason;
   final DateTime at;
 }
@@ -34,40 +33,11 @@ class LedgerEntry {
 enum FailReason {
   unknownId,
   invalidQuantity,
-  stageLocked,
-  alreadyUnlocked,
   insufficientFunds,
-  storageFull,
-  noStock,
-  batchInProgress,
-  nothingReady,
-  noCustomer,
+  alreadyOwned,
+  notOwned,
   maxLevel,
-  maxStaff,
-  requirementsNotMet,
-  cooldown,
-}
-
-enum RequirementKind { sold, upgrade, staff }
-
-/// One unmet condition, so the UI can show "312 / 300" instead of only a
-/// disabled button.
-class UnmetRequirement {
-  const UnmetRequirement({
-    required this.kind,
-    required this.target,
-    required this.have,
-    required this.need,
-    this.role,
-  });
-
-  final RequirementKind kind;
-
-  /// Stage id (sold, staff) or upgrade id.
-  final String target;
-  final String? role;
-  final int have;
-  final int need;
+  maxOwned,
 }
 
 sealed class CommandResult {
@@ -82,23 +52,11 @@ final class Success extends CommandResult {
 }
 
 final class Failure extends CommandResult {
-  const Failure(
-    this.reason, {
-    this.neededPaisa,
-    this.availablePaisa,
-    this.retryAt,
-    this.unmet = const [],
-  });
+  const Failure(this.reason, {this.neededPaisa, this.availablePaisa});
 
   final FailReason reason;
 
   /// Set for [FailReason.insufficientFunds].
   final int? neededPaisa;
   final int? availablePaisa;
-
-  /// Set for [FailReason.cooldown].
-  final DateTime? retryAt;
-
-  /// Set for [FailReason.requirementsNotMet].
-  final List<UnmetRequirement> unmet;
 }

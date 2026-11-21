@@ -28,7 +28,7 @@ final saveRepositoryProvider = Provider<SaveRepository>(
 
 final economyConfigProvider = FutureProvider<EconomyConfig>((ref) async {
   final config = EconomyConfig.parse(
-    await rootBundle.loadString('assets/config/economy_v0.json'),
+    await rootBundle.loadString('assets/config/economy.json'),
   );
   final errors = validateConfig(config);
   if (errors.isNotEmpty) {
@@ -109,7 +109,8 @@ class GameController extends AsyncNotifier<GameSession> {
     var s = loaded?.state;
     if (s == null) {
       s = GameState.newGame(_config, now);
-      await _repo.replaceMain(s, _config.version);
+      // Also clears backups and ledger left by an older game version.
+      await _repo.resetTo(s, _config.version);
     } else if (loaded!.restoredFromBackup) {
       await _repo.replaceMain(s, _config.version);
     }
@@ -233,8 +234,7 @@ class GameController extends AsyncNotifier<GameSession> {
   }
 
   bool _worthShowing(Settlement r) =>
-      r.credited >= const Duration(minutes: 1) &&
-      r.stages.values.any((x) => x.sold > 0);
+      r.credited >= const Duration(minutes: 1) && r.earnedPaisa > 0;
 
   void _stop() {
     _ticker?.cancel();

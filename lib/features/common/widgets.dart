@@ -17,14 +17,23 @@ class NoticeBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(12),
+    padding: const EdgeInsets.symmetric(
+      horizontal: AppSpacing.s12,
+      vertical: AppSpacing.s8,
+    ),
     decoration: BoxDecoration(
-      color: AppColors.terraLight,
-      borderRadius: BorderRadius.circular(12),
+      color: context.palette.danger.withValues(alpha: 0.14),
+      borderRadius: BorderRadius.circular(AppRadius.control),
     ),
     child: Row(
       children: [
-        Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+        Icon(
+          Icons.warning_amber_rounded,
+          color: context.palette.danger,
+          size: 20,
+        ),
+        const SizedBox(width: AppSpacing.s8),
+        Expanded(child: Text(text, style: context.text.bodyMedium)),
         if (action != null)
           TextButton(onPressed: onPressed, child: Text(action!)),
       ],
@@ -32,60 +41,102 @@ class NoticeBanner extends StatelessWidget {
   );
 }
 
-/// Small grey caps label above a card's content.
-class SectionLabel extends StatelessWidget {
-  const SectionLabel(this.text, {super.key});
+/// Section heading inside a screen.
+class SectionTitle extends StatelessWidget {
+  const SectionTitle(this.text, {super.key, this.trailing});
 
   final String text;
+  final Widget? trailing;
 
   @override
-  Widget build(BuildContext context) => Text(
-    text.toUpperCase(),
-    style: const TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w600,
-      color: AppColors.muted,
-      letterSpacing: 0.5,
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: AppSpacing.s12),
+    child: Row(
+      children: [
+        Expanded(child: Text(text, style: context.text.titleMedium)),
+        ?trailing,
+      ],
     ),
   );
 }
 
-/// Rounded progress bar with a "have / need" caption.
-class ProgressLine extends StatelessWidget {
-  const ProgressLine({
+/// Rounded progress bar.
+class ProgressBar extends StatelessWidget {
+  const ProgressBar({
     super.key,
-    required this.have,
-    required this.need,
+    required this.value,
+    this.color,
     this.label,
+    this.height = 6,
   });
 
-  final int have;
-  final int need;
+  final double value;
+  final Color? color;
   final String? label;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) => ClipRRect(
+    borderRadius: BorderRadius.circular(height / 2),
+    child: LinearProgressIndicator(
+      value: value.clamp(0.0, 1.0).toDouble(),
+      minHeight: height,
+      color: color,
+      semanticsLabel: label,
+    ),
+  );
+}
+
+/// Small stat: label above a bold value.
+class StatTile extends StatelessWidget {
+  const StatTile({
+    super.key,
+    required this.label,
+    required this.value,
+    this.icon,
+    this.color,
+  });
+
+  final String label;
+  final String value;
+  final IconData? icon;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
-    final value = need <= 0 ? 1.0 : (have / need).clamp(0.0, 1.0).toDouble();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: LinearProgressIndicator(
-            value: value,
-            minHeight: 8,
-            color: AppColors.teal,
-            backgroundColor: AppColors.track,
-            semanticsLabel: label,
-            semanticsValue: '$have / $need',
+    final p = context.palette;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.s12),
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(AppRadius.tile),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 16, color: color ?? p.inkMuted),
+                const SizedBox(width: AppSpacing.s4),
+              ],
+              Expanded(
+                child: Text(
+                  label,
+                  style: context.text.bodySmall?.copyWith(color: p.inkMuted),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '${have > need ? need : have} / $need',
-          style: const TextStyle(fontSize: 12, color: AppColors.muted),
-        ),
-      ],
+          const SizedBox(height: AppSpacing.s4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(value, style: context.text.titleMedium.numbers),
+          ),
+        ],
+      ),
     );
   }
 }

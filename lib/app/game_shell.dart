@@ -2,17 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../core/strings.dart';
 import '../features/common/load_error.dart';
+import '../features/common/money_header.dart';
 import '../features/common/widgets.dart';
 import '../features/offline/offline_summary_sheet.dart';
 import '../features/onboarding/tutorial.dart';
 import '../features/onboarding/welcome_screen.dart';
 import 'game_controller.dart';
 import 'prefs.dart';
+import 'theme.dart';
 
 /// Loads the game once for every tab, shows the welcome screen on first
-/// launch, the offline summary and the save-error banner, moves the
-/// tutorial forward, and holds the bottom navigation.
+/// launch, the money header, the offline summary and the save-error
+/// banner, moves the tutorial forward, and holds the bottom navigation.
 class GameShell extends ConsumerWidget {
   const GameShell({super.key, required this.shell});
 
@@ -47,24 +50,12 @@ class GameShell extends ConsumerWidget {
       if (step == Tutorial.welcome || step == Tutorial.done) {
         return;
       }
-      final starter = ref
-          .read(gameControllerProvider.notifier)
-          .engine
-          .config
-          .stages
-          .first
-          .id;
-      final next = advanceTutorial(step, game.state, starter);
+      final next = advanceTutorial(step, game.state);
       if (next != step) {
         ref.read(prefsProvider.notifier).setTutorialStep(next);
         if (next == Tutorial.done) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Shabaash! Tutorial mukammal. Ab apna karobar barhayein.',
-              ),
-            ),
-          );
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text(S.tutorialDone)));
         }
       }
     });
@@ -83,25 +74,45 @@ class GameShell extends ConsumerWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (settings.businessName == null) {
-      return WelcomeScreen(onDone: () => shell.goBranch(1));
+      return WelcomeScreen(onDone: () => shell.goBranch(0));
     }
+    final engine = ref.read(gameControllerProvider.notifier).engine;
 
     return Scaffold(
       body: Column(
         children: [
+          SafeArea(
+            bottom: false,
+            child: MoneyHeader(
+              empireName: settings.businessName ?? S.defaultName,
+              cashPaisa: session.state.cashPaisa,
+              incomePaisaPerSec: engine.incomePerSec(session.state),
+              netWorthPaisa: engine.netWorth(session.state),
+            ),
+          ),
           if (session.saveFailed)
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: NoticeBanner(
-                  text: 'Save mein masla aaya. Jab tak theek na ho, khareed o farokht band hai.',
-                  action: 'Dobara koshish',
-                  onPressed: ref
-                      .read(gameControllerProvider.notifier)
-                      .retrySave,
-                ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.s16,
+                AppSpacing.s8,
+                AppSpacing.s16,
+                0,
               ),
+              child: NoticeBanner(
+                text: S.saveProblem,
+                action: S.tryAgain,
+                onPressed: ref.read(gameControllerProvider.notifier).retrySave,
+              ),
+            ),
+          if (session.restoredFromBackup)
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.s16,
+                AppSpacing.s8,
+                AppSpacing.s16,
+                0,
+              ),
+              child: NoticeBanner(text: S.restoredFromBackup),
             ),
           Expanded(child: shell),
         ],
@@ -112,19 +123,24 @@ class GameShell extends ConsumerWidget {
             shell.goBranch(i, initialLocation: i == shell.currentIndex),
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
+            label: S.tabEmpire,
           ),
           NavigationDestination(
             icon: Icon(Icons.storefront_outlined),
             selectedIcon: Icon(Icons.storefront),
-            label: 'Karobar',
+            label: S.tabBusinesses,
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.apartment_outlined),
+            selectedIcon: Icon(Icons.apartment),
+            label: S.tabProperty,
           ),
           NavigationDestination(
             icon: Icon(Icons.menu),
             selectedIcon: Icon(Icons.menu_open),
-            label: 'Aur',
+            label: S.tabMore,
           ),
         ],
       ),

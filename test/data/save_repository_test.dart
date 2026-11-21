@@ -12,7 +12,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final config = EconomyConfig.parse(
-  File('assets/config/economy_v0.json').readAsStringSync(),
+  File('assets/config/economy.json').readAsStringSync(),
 );
 final engine = GameEngine(config);
 final t0 = DateTime.utc(2026, 1, 1, 12);
@@ -41,20 +41,36 @@ void main() {
       );
 
   test('codec round trip keeps every field', () {
-    var s = GameState.newGame(config, t0);
-    s = (engine.buyStock(s, 'stall', 'samosa', 10, t0) as Success).state;
-    s = (engine.startBatch(s, 'stall', 'samosa', t0) as Success).state;
-    s = (engine.doWork(s, t0) as Success).state;
+    var s = GameState.newGame(config, t0).copyWith(cashPaisa: 100000000);
+    s = (engine.work(s, t0) as Success).state;
+    s = (engine.buyBusiness(s, 'samosa', t0) as Success).state;
+    s = (engine.upgradeBusiness(s, 'samosa', t0) as Success).state;
+    s = (engine.buyProperty(s, 'plot', t0) as Success).state;
     final json = jsonEncode(encodeGameState(s));
     final back = decodeGameState(
       jsonDecode(json) as Map<String, Object?>,
       config,
     );
     expect(jsonEncode(encodeGameState(back)), json);
-    expect(
-      back.stages['stall']!.lines['samosa']!.batchEndsAt,
-      t0.add(const Duration(seconds: 30)),
-    );
+    expect(back.level('samosa'), 2);
+    expect(back.owned('plot'), 1);
+    expect(back.taps, 1);
+  });
+
+  test('an older save version loads as a fresh start', () async {
+    await db
+        .into(db.saveSlots)
+        .insertOnConflictUpdate(
+          SaveSlotsCompanion.insert(
+            slot: SaveRepository.mainSlot,
+            schemaVersion: 1,
+            configVersion: 1,
+            revision: 40,
+            data: '{"old": true}',
+            savedAt: t0,
+          ),
+        );
+    expect(await repo.load(config), isNull);
   });
 
   test('codec rejects saves that break invariants', () {
@@ -72,15 +88,15 @@ void main() {
     () async {
       final fresh = GameState.newGame(config, t0);
       await repo.replaceMain(fresh, config.version);
-      final r = engine.buyStock(fresh, 'stall', 'samosa', 10, t0) as Success;
+      final r = engine.work(fresh, t0) as Success;
       await repo.commit(r.state, r.entries, config.version);
 
       final loaded = await repo.load(config);
       expect(loaded!.state.revision, 1);
-      expect(loaded.state.cashPaisa, 50000 - 12000);
+      expect(loaded.state.cashPaisa, 50000 + 2500);
       expect(loaded.restoredFromBackup, isFalse);
       final ledger = await repo.recentLedger();
-      expect(ledger.single.deltaPaisa, -12000);
+      expect(ledger.single.deltaPaisa, 2500);
 
       await expectLater(
         repo.commit(r.state, r.entries, config.version),
@@ -116,7 +132,7 @@ void main() {
     final s0 = GameState.newGame(config, t0);
     await repo.replaceMain(s0, config.version);
     await repo.backup();
-    final s1 = (engine.doWork(s0, t0) as Success).state;
+    final s1 = (engine.work(s0, t0) as Success).state;
     await repo.commit(s1, const [], config.version);
     await repo.backup();
     final rows = {
@@ -128,7 +144,7 @@ void main() {
   test('resetTo wipes slots and ledger and starts fresh', () async {
     final s = GameState.newGame(config, t0);
     await repo.replaceMain(s, config.version);
-    final r = engine.doWork(s, t0) as Success;
+    final r = engine.work(s, t0) as Success;
     await repo.commit(r.state, r.entries, config.version);
     await repo.resetTo(GameState.newGame(config, t0), config.version);
     expect((await repo.load(config))!.state.revision, 0);
@@ -138,10 +154,10 @@ void main() {
   test('ledgerSince and pruneLedger work on time', () async {
     final s = GameState.newGame(config, t0);
     await repo.replaceMain(s, config.version);
-    final a = engine.doWork(s, t0) as Success;
+    final a = engine.work(s, t0) as Success;
     await repo.commit(a.state, a.entries, config.version);
     final later = t0.add(const Duration(hours: 3));
-    final b = engine.doWork(a.state, later) as Success;
+    final b = engine.work(a.state, later) as Success;
     await repo.commit(b.state, b.entries, config.version);
 
     expect(

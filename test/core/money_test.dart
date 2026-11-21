@@ -18,4 +18,17 @@ void main() {
     expect(formatRs(1205), 'Rs 12.05');
     expect(formatRs(-12000), '− Rs 120');
   });
+
+  test('formatShort uses thousand, lakh, crore, arab and kharab', () {
+    expect(formatShort(rupees(950)), 'Rs 950');
+    expect(formatShort(rupees(9999)), 'Rs 9,999');
+    expect(formatShort(rupees(12500)), 'Rs 12.5K');
+    expect(formatShort(rupees(300000)), 'Rs 3 lakh');
+    expect(formatShort(rupees(340000)), 'Rs 3.4 lakh');
+    expect(formatShort(rupees(78000000)), 'Rs 7.8 crore');
+    expect(formatShort(rupees(1200000000)), 'Rs 1.2 arab');
+    expect(formatShort(rupees(3600000000000)), 'Rs 36 kharab');
+    expect(formatShort(1250), 'Rs 12');
+    expect(formatShort(-rupees(20000)), '− Rs 20K');
+  });
 }

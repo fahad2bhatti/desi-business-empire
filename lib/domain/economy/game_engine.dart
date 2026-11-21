@@ -1,30 +1,19 @@
 import 'dart:math' as math;
 
-import '../../core/money.dart';
 import 'command_result.dart';
 import 'economy_config.dart';
 import 'game_state.dart';
 
-/// Effective numbers for one item line after upgrades.
-class LineStats {
-  const LineStats({
-    required this.batch,
-    required this.batchSeconds,
-    required this.pricePaisa,
-  });
+/// Costs past this are treated as unaffordable, so doubles never overflow
+/// a 64-bit int.
+const maxCostPaisa = 4000000000000000000;
 
-  final int batch;
-  final int batchSeconds;
-  final int pricePaisa;
-}
+int _money(double v) => v >= maxCostPaisa ? maxCostPaisa : v.round();
 
-/// Pure rules for every economic command. No Flutter, no database, no wall
-/// clock: callers pass `now`. A command either returns [Success] with the
-/// new state (revision + 1) and its ledger entries, or [Failure] and the
-/// caller keeps the old state.
-///
-/// Time-based settlement (wages, rent, staff automation, offline) lives in
-/// `settlement.dart` as `advanceTo`.
+/// Pure idle-tycoon rules. No Flutter, no database, no wall clock: callers
+/// pass `now`. A command returns [Success] with the new state (revision + 1)
+/// and its ledger entries, or [Failure] and the caller keeps the old state.
+/// Time-based income lives in `settlement.dart`.
 class GameEngine {
   const GameEngine(this.config);
 
@@ -32,326 +21,216 @@ class GameEngine {
 
   // ---------- derived values ----------
 
-  double _stageValue(
-    GameState s,
-    String stageId,
-    UpgradeEffect effect,
-    double base,
-  ) {
-    var value = base;
-    for (final u in config.upgrades) {
-      final level = s.upgradeLevel(u.id);
-      if (u.stageId == stageId && u.effect == effect && level > 0) {
-        value = u.levels[level - 1].value;
+  /// Product of every milestone reached at [level].
+  int milestoneMultiplier(int level) {
+    var m = 1;
+    for (final ms in config.milestones) {
+      if (level >= ms.level) {
+        m *= ms.multiplier;
       }
     }
-    return value;
+    return m;
   }
 
-  int storage(GameState s, StageDef def) => _stageValue(
-    s,
-    def.id,
-    UpgradeEffect.storage,
-    def.storage.toDouble(),
-  ).round();
-
-  double customersPerMin(GameState s, StageDef def) =>
-      def.customersPerMin * _stageValue(s, def.id, UpgradeEffect.demandMult, 1);
-
-  LineStats lineStats(GameState s, StageDef def, LineDef line) {
-    var batch = line.batch;
-    var seconds = line.batchSeconds;
-    var price = line.pricePaisa;
-    for (final u in config.upgrades) {
-      final level = s.upgradeLevel(u.id);
-      if (u.stageId != def.id || u.lineId != line.id || level == 0) continue;
-      final v = u.levels[level - 1].value;
-      switch (u.effect) {
-        case UpgradeEffect.batch:
-          batch = v.round();
-        case UpgradeEffect.batchSeconds:
-          seconds = v.round();
-        case UpgradeEffect.price:
-          price = rupees(v.round());
-        case UpgradeEffect.priceMult:
-        case UpgradeEffect.demandMult:
-        case UpgradeEffect.storage:
-          break;
+  /// The next milestone above [level], or null when none is left.
+  Milestone? nextMilestone(int level) {
+    for (final ms in config.milestones) {
+      if (level < ms.level) {
+        return ms;
       }
     }
-    final mult = _stageValue(s, def.id, UpgradeEffect.priceMult, 1);
-    return LineStats(
-      batch: batch,
-      batchSeconds: seconds,
-      pricePaisa: (price * mult).round(),
-    );
+    return null;
   }
 
-  List<UnmetRequirement> missingRequirements(GameState s, String stageId) {
-    final def = config.stage(stageId);
-    if (def == null) return const [];
-    final r = def.requirements;
-    final unmet = <UnmetRequirement>[];
-    r.sold.forEach((id, need) {
-      final have = s.stages[id]?.sold ?? 0;
-      if (have < need) {
-        unmet.add(
-          UnmetRequirement(
-            kind: RequirementKind.sold,
-            target: id,
-            have: have,
-            need: need,
-          ),
-        );
-      }
-    });
-    r.upgrades.forEach((id, need) {
-      final have = s.upgradeLevel(id);
-      if (have < need) {
-        unmet.add(
-          UnmetRequirement(
-            kind: RequirementKind.upgrade,
-            target: id,
-            have: have,
-            need: need,
-          ),
-        );
-      }
-    });
-    r.staff.forEach((id, roles) {
-      roles.forEach((role, need) {
-        final have = s.stages[id]?.staffCount(role) ?? 0;
-        if (have < need) {
-          unmet.add(
-            UnmetRequirement(
-              kind: RequirementKind.staff,
-              target: id,
-              role: role,
-              have: have,
-              need: need,
-            ),
-          );
-        }
-      });
-    });
-    return unmet;
-  }
+  int businessIncome(BusinessDef b, int level) =>
+      level <= 0 ? 0 : b.incomePaisaPerSec * level * milestoneMultiplier(level);
 
-  /// The state as it looks at [now] (finished batches, arrived customers).
-  /// For display only; it is not a command and does not bump the revision.
-  GameState observe(GameState s, DateTime now) {
-    var out = s;
-    for (final id in s.stages.keys) {
-      out = out.withStage(id, _refresh(s, config.stage(id)!, now));
+  /// Cost to go from [level] to [level] + 1.
+  int upgradeCost(BusinessDef b, int level) => _money(
+    b.pricePaisa *
+        config.upgradeBase *
+        math.pow(config.upgradeGrowth, level - 1).toDouble(),
+  );
+
+  /// Price of the next unit when [owned] units are already owned.
+  int propertyPrice(PropertyDef p, int owned) => _money(
+    p.pricePaisa * math.pow(config.propertyPriceGrowth, owned).toDouble(),
+  );
+
+  /// Money back for selling one unit when [owned] units are owned.
+  int propertySellValue(PropertyDef p, int owned) => owned <= 0
+      ? 0
+      : (propertyPrice(p, owned - 1) * config.propertySellRefund).round();
+
+  int businessSellValue(GameState s, String id) =>
+      ((s.invested[id] ?? 0) * config.businessSellRefund).round();
+
+  int incomePerSec(GameState s) {
+    var total = 0;
+    for (final b in config.businesses) {
+      total += businessIncome(b, s.level(b.id));
     }
-    return out;
+    for (final p in config.properties) {
+      total += p.rentPaisaPerSec * s.owned(p.id);
+    }
+    return total;
+  }
+
+  /// Cash plus what everything owned would sell for.
+  int netWorth(GameState s) {
+    var worth = s.cashPaisa;
+    for (final id in s.businesses.keys) {
+      worth += businessSellValue(s, id);
+    }
+    for (final p in config.properties) {
+      final n = s.owned(p.id);
+      for (var i = n; i > 0; i--) {
+        worth += propertySellValue(p, i);
+      }
+    }
+    return worth;
   }
 
   // ---------- commands ----------
 
-  CommandResult buyStock(
-    GameState s,
-    String stageId,
-    String lineId,
-    int qty,
-    DateTime now,
-  ) {
-    if (qty <= 0) return const Failure(FailReason.invalidQuantity);
-    final def = config.stage(stageId);
-    final line = def?.line(lineId);
-    if (def == null || line == null) return const Failure(FailReason.unknownId);
-    if (!s.stages.containsKey(stageId)) {
-      return const Failure(FailReason.stageLocked);
-    }
-    final st = _refresh(s, def, now);
-    if (st.totalStock + qty > storage(s, def)) {
-      return const Failure(FailReason.storageFull);
-    }
-    final cost = line.costPaisa * qty;
-    if (cost > s.cashPaisa) return _noFunds(cost, s);
-    final ls = st.lines[lineId]!;
-    return _ok(
-      s
-          .copyWith(cashPaisa: s.cashPaisa - cost)
-          .withStage(
-            stageId,
-            st.withLine(lineId, ls.copyWith(stock: ls.stock + qty)),
-          ),
-      [_entry(LedgerType.stockPurchase, -cost, '$stageId/$lineId x$qty', now)],
-    );
+  /// One tap on "Work": always possible, needs nothing.
+  CommandResult work(GameState s, DateTime now) {
+    final pay = config.workPayPaisa;
+    return _ok(s.copyWith(cashPaisa: s.cashPaisa + pay, taps: s.taps + 1), [
+      _entry(LedgerType.work, pay, 'work', now),
+    ]);
   }
 
-  /// Puts up to one batch of stock in the kadhai.
-  CommandResult startBatch(
-    GameState s,
-    String stageId,
-    String lineId,
-    DateTime now,
-  ) {
-    final def = config.stage(stageId);
-    final line = def?.line(lineId);
-    if (def == null || line == null) return const Failure(FailReason.unknownId);
-    if (!s.stages.containsKey(stageId)) {
-      return const Failure(FailReason.stageLocked);
+  CommandResult buyBusiness(GameState s, String id, DateTime now) {
+    final b = config.business(id);
+    if (b == null) {
+      return const Failure(FailReason.unknownId);
     }
-    final st = _refresh(s, def, now);
-    final ls = st.lines[lineId]!;
-    if (ls.isCooking) return const Failure(FailReason.batchInProgress);
-    if (ls.stock == 0) return const Failure(FailReason.noStock);
-    final stats = lineStats(s, def, line);
-    final size = math.min(stats.batch, ls.stock);
-    final endsAt = now.add(Duration(seconds: stats.batchSeconds));
-    return _ok(
-      s.withStage(stageId, st.withLine(lineId, ls.startBatch(size, endsAt))),
-      const [],
-    );
-  }
-
-  /// Sells one ready item to the first waiting customer.
-  CommandResult serve(
-    GameState s,
-    String stageId,
-    String lineId,
-    DateTime now,
-  ) {
-    final def = config.stage(stageId);
-    final line = def?.line(lineId);
-    if (def == null || line == null) return const Failure(FailReason.unknownId);
-    if (!s.stages.containsKey(stageId)) {
-      return const Failure(FailReason.stageLocked);
+    if (s.level(id) > 0) {
+      return const Failure(FailReason.alreadyOwned);
     }
-    final st = _refresh(s, def, now);
-    if (st.queue < 1) return const Failure(FailReason.noCustomer);
-    final ls = st.lines[lineId]!;
-    if (ls.ready < 1) return const Failure(FailReason.nothingReady);
-    final price = lineStats(s, def, line).pricePaisa;
-    final next = st
-        .copyWith(queue: st.queue - 1, sold: st.sold + 1)
-        .withLine(lineId, ls.copyWith(ready: ls.ready - 1));
-    return _ok(
-      s.copyWith(cashPaisa: s.cashPaisa + price).withStage(stageId, next),
-      [_entry(LedgerType.sale, price, '$stageId/$lineId', now)],
-    );
-  }
-
-  CommandResult buyUpgrade(GameState s, String upgradeId, DateTime now) {
-    final u = config.upgrade(upgradeId);
-    if (u == null) return const Failure(FailReason.unknownId);
-    if (!s.stages.containsKey(u.stageId)) {
-      return const Failure(FailReason.stageLocked);
+    final cost = b.pricePaisa;
+    if (cost > s.cashPaisa) {
+      return _noFunds(cost, s);
     }
-    final level = s.upgradeLevel(upgradeId);
-    if (level >= u.levels.length) return const Failure(FailReason.maxLevel);
-    final cost = u.levels[level].costPaisa;
-    if (cost > s.cashPaisa) return _noFunds(cost, s);
     return _ok(
       s.copyWith(
         cashPaisa: s.cashPaisa - cost,
-        upgrades: {...s.upgrades, upgradeId: level + 1},
+        businesses: {...s.businesses, id: 1},
+        invested: {...s.invested, id: cost},
       ),
-      [_entry(LedgerType.upgrade, -cost, '$upgradeId L${level + 1}', now)],
+      [_entry(LedgerType.buyBusiness, -cost, id, now)],
     );
   }
 
-  CommandResult hire(GameState s, String stageId, String role, DateTime now) {
-    final def = config.stage(stageId);
-    final staffDef = def?.staff[role];
-    if (def == null || staffDef == null) {
+  /// Buys up to [times] levels, as many as the cash allows (at least one).
+  CommandResult upgradeBusiness(
+    GameState s,
+    String id,
+    DateTime now, {
+    int times = 1,
+  }) {
+    if (times < 1) {
+      return const Failure(FailReason.invalidQuantity);
+    }
+    final b = config.business(id);
+    if (b == null) {
       return const Failure(FailReason.unknownId);
     }
-    final st = s.stages[stageId];
-    if (st == null) return const Failure(FailReason.stageLocked);
-    final count = st.staffCount(role);
-    if (count >= staffDef.max) return const Failure(FailReason.maxStaff);
-    if (st.sold < staffDef.requiresSold) {
-      return Failure(
-        FailReason.requirementsNotMet,
-        unmet: [
-          UnmetRequirement(
-            kind: RequirementKind.sold,
-            target: stageId,
-            have: st.sold,
-            need: staffDef.requiresSold,
-          ),
-        ],
-      );
+    var level = s.level(id);
+    if (level == 0) {
+      return const Failure(FailReason.notOwned);
     }
-    final cost = staffDef.hirePaisa;
-    if (cost > s.cashPaisa) return _noFunds(cost, s);
-    return _ok(
-      s
-          .copyWith(cashPaisa: s.cashPaisa - cost)
-          .withStage(
-            stageId,
-            st.copyWith(staff: {...st.staff, role: count + 1}),
-          ),
-      [_entry(LedgerType.hire, -cost, '$stageId/$role #${count + 1}', now)],
-    );
-  }
-
-  CommandResult unlockStage(GameState s, String stageId, DateTime now) {
-    final def = config.stage(stageId);
-    if (def == null) return const Failure(FailReason.unknownId);
-    if (s.stages.containsKey(stageId)) {
-      return const Failure(FailReason.alreadyUnlocked);
+    if (level >= config.maxLevel) {
+      return const Failure(FailReason.maxLevel);
     }
-    final unmet = missingRequirements(s, stageId);
-    if (unmet.isNotEmpty) {
-      return Failure(FailReason.requirementsNotMet, unmet: unmet);
+    final first = upgradeCost(b, level);
+    if (first > s.cashPaisa) {
+      return _noFunds(first, s);
     }
-    final cost = def.unlockCostPaisa;
-    if (cost > s.cashPaisa) return _noFunds(cost, s);
-    return _ok(
-      s
-          .copyWith(cashPaisa: s.cashPaisa - cost)
-          .withStage(stageId, StageState.opened(def, now)),
-      [_entry(LedgerType.stageUnlock, -cost, stageId, now)],
-    );
-  }
-
-  /// Free recovery action: always possible, needs no stock or money.
-  CommandResult doWork(GameState s, DateTime now) {
-    final readyAt = s.workReadyAt;
-    if (readyAt != null && now.isBefore(readyAt)) {
-      return Failure(FailReason.cooldown, retryAt: readyAt);
+    var cash = s.cashPaisa;
+    var spent = 0;
+    for (var i = 0; i < times && level < config.maxLevel; i++) {
+      final cost = upgradeCost(b, level);
+      if (cost > cash) {
+        break;
+      }
+      cash -= cost;
+      spent += cost;
+      level++;
     }
-    final pay = config.recoveryPayPaisa;
     return _ok(
       s.copyWith(
-        cashPaisa: s.cashPaisa + pay,
-        workReadyAt: now.add(config.recoveryCooldown),
+        cashPaisa: cash,
+        businesses: {...s.businesses, id: level},
+        invested: {...s.invested, id: (s.invested[id] ?? 0) + spent},
       ),
-      [_entry(LedgerType.work, pay, 'work', now)],
+      [_entry(LedgerType.upgrade, -spent, '$id L$level', now)],
     );
+  }
+
+  CommandResult sellBusiness(GameState s, String id, DateTime now) {
+    if (config.business(id) == null) {
+      return const Failure(FailReason.unknownId);
+    }
+    if (s.level(id) == 0) {
+      return const Failure(FailReason.notOwned);
+    }
+    final value = businessSellValue(s, id);
+    return _ok(
+      s.copyWith(
+        cashPaisa: s.cashPaisa + value,
+        businesses: {...s.businesses}..remove(id),
+        invested: {...s.invested}..remove(id),
+      ),
+      [_entry(LedgerType.sellBusiness, value, id, now)],
+    );
+  }
+
+  CommandResult buyProperty(GameState s, String id, DateTime now) {
+    final p = config.property(id);
+    if (p == null) {
+      return const Failure(FailReason.unknownId);
+    }
+    final n = s.owned(id);
+    if (n >= p.maxOwned) {
+      return const Failure(FailReason.maxOwned);
+    }
+    final cost = propertyPrice(p, n);
+    if (cost > s.cashPaisa) {
+      return _noFunds(cost, s);
+    }
+    return _ok(
+      s.copyWith(
+        cashPaisa: s.cashPaisa - cost,
+        properties: {...s.properties, id: n + 1},
+      ),
+      [_entry(LedgerType.buyProperty, -cost, '$id #${n + 1}', now)],
+    );
+  }
+
+  CommandResult sellProperty(GameState s, String id, DateTime now) {
+    final p = config.property(id);
+    if (p == null) {
+      return const Failure(FailReason.unknownId);
+    }
+    final n = s.owned(id);
+    if (n == 0) {
+      return const Failure(FailReason.notOwned);
+    }
+    final value = propertySellValue(p, n);
+    final props = {...s.properties};
+    if (n == 1) {
+      props.remove(id);
+    } else {
+      props[id] = n - 1;
+    }
+    return _ok(s.copyWith(cashPaisa: s.cashPaisa + value, properties: props), [
+      _entry(LedgerType.sellProperty, value, '$id #$n', now),
+    ]);
   }
 
   // ---------- helpers ----------
-
-  static const carryUnit = 60000 * 1000; // ms per minute x milli-customers
-
-  /// Finishes batches whose time is up and adds customers who arrived.
-  StageState _refresh(GameState s, StageDef def, DateTime now) {
-    final st = s.stages[def.id]!;
-    final lines = {
-      for (final e in st.lines.entries)
-        e.key:
-            (e.value.batchEndsAt != null && !now.isBefore(e.value.batchEndsAt!))
-            ? e.value.finishBatch()
-            : e.value,
-    };
-    final elapsedMs = now.difference(st.customersUpdatedAt).inMilliseconds;
-    if (elapsedMs <= 0) {
-      return st.copyWith(lines: lines); // clock went back: no arrivals
-    }
-    final perMinMilli = (customersPerMin(s, def) * 1000).round();
-    final total = st.queueCarry + elapsedMs * perMinMilli;
-    return st.copyWith(
-      lines: lines,
-      queue: math.min(config.maxQueue, st.queue + total ~/ carryUnit),
-      queueCarry: total % carryUnit,
-      customersUpdatedAt: now,
-    );
-  }
 
   Success _ok(GameState s, List<LedgerEntry> entries) =>
       Success(s.copyWith(revision: s.revision + 1), entries);

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/game_controller.dart';
 import '../../app/theme.dart';
+import '../../core/strings.dart';
 import '../../data/local/save_repository.dart';
 
 /// Shown when the game cannot load. A broken save is never wiped without
@@ -18,36 +19,29 @@ class LoadErrorScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.s24),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                corrupt ? 'Save parhi nahi ja saki' : 'Game load nahi hua',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
+                corrupt ? S.corruptTitle : S.loadFailedTitle,
+                style: context.text.titleLarge,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.s8),
               Text(
-                corrupt
-                    ? 'Aap ki save aur dono backups kharab hain. Naya game shuru karne se purani progress khatam ho jayegi.'
-                    : '$error',
-                style: const TextStyle(color: AppColors.muted),
-              ),
-              const SizedBox(height: 24),
-              if (corrupt)
-                FilledButton(
-                  onPressed: () => _confirmReset(context, ref),
-                  child: const Text('Naya game shuru karein'),
-                )
-              else
-                FilledButton(
-                  onPressed: () => ref.invalidate(gameControllerProvider),
-                  child: const Text('Dobara koshish'),
+                corrupt ? S.corruptBody : '$error',
+                style: context.text.bodyMedium?.copyWith(
+                  color: context.palette.inkMuted,
                 ),
+              ),
+              const SizedBox(height: AppSpacing.s24),
+              FilledButton(
+                onPressed: corrupt
+                    ? () => _confirmReset(context, ref)
+                    : () => ref.invalidate(gameControllerProvider),
+                child: Text(corrupt ? S.startNewGame : S.tryAgain),
+              ),
             ],
           ),
         ),
@@ -59,16 +53,16 @@ class LoadErrorScreen extends ConsumerWidget {
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Pakka?'),
-        content: const Text('Saari progress mit jayegi. Ye wapas nahi hoga.'),
+        title: const Text(S.sureTitle),
+        content: const Text(S.sureBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Nahi'),
+            child: const Text(S.keepIt),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Haan, naya game'),
+            child: const Text(S.eraseAndStart),
           ),
         ],
       ),

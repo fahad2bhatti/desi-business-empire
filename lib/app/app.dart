@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/business/business_screen.dart';
-import '../features/expansion/expansion_screen.dart';
-import '../features/home/home_screen.dart';
+import '../core/strings.dart';
+import '../features/businesses/businesses_screen.dart';
+import '../features/empire/empire_screen.dart';
 import '../features/more/more_screen.dart';
 import '../features/more/wallet_screen.dart';
-import '../features/staff/staff_screen.dart';
-import '../features/upgrades/upgrades_screen.dart';
+import '../features/property/property_screen.dart';
 import 'game_shell.dart';
 import 'theme.dart';
 
-/// Tabs: Home, Karobar, Aur. Goals joins in batch 7.
+/// Tabs: Empire, Businesses, Property, More.
 final _router = GoRouter(
   routes: [
     StatefulShellRoute.indexedStack(
@@ -21,38 +20,23 @@ final _router = GoRouter(
           routes: [
             GoRoute(
               path: '/',
-              builder: (context, state) => const HomeScreen(),
-              routes: [
-                // Opened from Home, so Back returns there.
-                GoRoute(
-                  path: 'expand/:stageId',
-                  builder: (context, state) => ExpansionScreen(
-                    stageId: state.pathParameters['stageId']!,
-                  ),
-                ),
-              ],
+              builder: (context, state) => const EmpireScreen(),
             ),
           ],
         ),
         StatefulShellBranch(
-          initialLocation: '/business/stall',
           routes: [
             GoRoute(
-              path: '/business/:stageId',
-              builder: (context, state) =>
-                  BusinessScreen(stageId: state.pathParameters['stageId']!),
-              routes: [
-                GoRoute(
-                  path: 'upgrades',
-                  builder: (context, state) =>
-                      UpgradesScreen(stageId: state.pathParameters['stageId']!),
-                ),
-                GoRoute(
-                  path: 'staff',
-                  builder: (context, state) =>
-                      StaffScreen(stageId: state.pathParameters['stageId']!),
-                ),
-              ],
+              path: '/businesses',
+              builder: (context, state) => const BusinessesScreen(),
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/property',
+              builder: (context, state) => const PropertyScreen(),
             ),
           ],
         ),
@@ -80,7 +64,7 @@ class DesiBusinessEmpireApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp.router(
-    title: 'Desi Business Empire',
+    title: S.appName,
     debugShowCheckedModeBanner: false,
     theme: buildAppTheme(),
     routerConfig: _router,

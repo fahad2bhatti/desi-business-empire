@@ -5,7 +5,7 @@ import 'package:desi_business_empire/domain/economy/config_validator.dart';
 import 'package:desi_business_empire/domain/economy/economy_config.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-const _path = 'assets/config/economy_v0.json';
+const _path = 'assets/config/economy.json';
 
 Map<String, Object?> _raw() =>
     jsonDecode(File(_path).readAsStringSync()) as Map<String, Object?>;
@@ -13,8 +13,8 @@ Map<String, Object?> _raw() =>
 List<String> _validate(Map<String, Object?> raw) =>
     validateConfig(EconomyConfig.fromJson(raw));
 
-Map<String, Object?> _stage(Map<String, Object?> raw, int i) =>
-    (raw['stages'] as List)[i] as Map<String, Object?>;
+Map<String, Object?> _item(Map<String, Object?> raw, String list, int i) =>
+    (raw[list] as List)[i] as Map<String, Object?>;
 
 void main() {
   test('shipped economy config is valid', () {
@@ -24,62 +24,35 @@ void main() {
   test('parses money into paisa', () {
     final c = EconomyConfig.fromJson(_raw());
     expect(c.startCashPaisa, 50000);
-    expect(c.stage('stall')!.line('samosa')!.pricePaisa, 3000);
-    expect(c.stage('takeaway')!.unlockCostPaisa, 1000000);
-    expect(c.upgrade('masala')!.levels.first.costPaisa, 80000);
+    expect(c.workPayPaisa, 2500);
+    expect(c.business('samosa')!.pricePaisa, 100000);
+    expect(c.business('samosa')!.incomePaisaPerSec, 200);
+    expect(c.property('plot')!.rentPaisaPerSec, 4500);
+    expect(c.businesses.length, 12);
+    expect(c.properties.length, 6);
   });
 
-  test('catches line shares that do not add up to 1', () {
+  test('catches an unknown category and zero income', () {
     final raw = _raw();
-    final line =
-        (_stage(raw, 1)['lines'] as List).first as Map<String, Object?>;
-    line['share'] = 0.9;
-    expect(_validate(raw), contains(startsWith('stage takeaway: line shares')));
-  });
-
-  test('catches a price that is not above cost', () {
-    final raw = _raw();
-    final line =
-        (_stage(raw, 0)['lines'] as List).first as Map<String, Object?>;
-    line['price'] = 10;
-    expect(
-      _validate(raw),
-      contains('stage stall line samosa: price must be above cost'),
-    );
-  });
-
-  test('catches requirements on unknown upgrades and later stages', () {
-    final raw = _raw();
-    final req = _stage(raw, 1)['requirements'] as Map<String, Object?>;
-    (req['upgrades'] as Map)['missing'] = 1;
-    (req['sold'] as Map)['restaurant'] = 5;
+    _item(raw, 'businesses', 0)['category'] = 'space';
+    _item(raw, 'businesses', 1)['incomePerSecond'] = 0;
     final errors = _validate(raw);
-    expect(
-      errors,
-      contains('stage takeaway: requirement on unknown upgrade missing'),
-    );
-    expect(
-      errors,
-      contains(
-        'stage takeaway: sold requirement on unknown/later stage restaurant',
-      ),
-    );
+    expect(errors, contains('business samosa: unknown category space'));
+    expect(errors, contains('business chai: income must be > 0'));
   });
 
-  test('catches an upgrade that points at a missing line', () {
+  test('catches duplicate ids across businesses and property', () {
     final raw = _raw();
-    final up = (raw['upgrades'] as List).first as Map<String, Object?>;
-    up['line'] = 'nope';
-    expect(_validate(raw), contains('upgrade kadhai: needs a valid line'));
+    _item(raw, 'properties', 0)['id'] = 'samosa';
+    expect(_validate(raw), contains('property samosa: duplicate id'));
   });
 
-  test('catches negative and zero values', () {
+  test('catches milestones out of order and bad refunds', () {
     final raw = _raw();
-    final up = (raw['upgrades'] as List).first as Map<String, Object?>;
-    ((up['levels'] as List).first as Map)['cost'] = 0;
-    _stage(raw, 0)['rentPerMin'] = -1;
+    _item(raw, 'milestones', 1)['level'] = 10;
+    raw['businessSellRefund'] = 1.5;
     final errors = _validate(raw);
-    expect(errors, contains('upgrade kadhai: level cost must be > 0'));
-    expect(errors, contains('stage stall: negative rent'));
+    expect(errors, contains('milestone levels must ascend (at 10)'));
+    expect(errors, contains('businessSellRefund must be in (0, 1]'));
   });
 }

@@ -1,0 +1,183 @@
+{
+  "version": 2,
+  "_note": "Money is whole PKR here; code converts to integer paisa (x100). Income and rent are per second.",
+  "startCash": 500,
+  "offlineCapMinutes": 240,
+  "workPay": 25,
+  "maxLevel": 100,
+  "upgradeCost": {
+    "base": 0.5,
+    "growth": 1.15
+  },
+  "milestones": [
+    {
+      "level": 25,
+      "multiplier": 2
+    },
+    {
+      "level": 50,
+      "multiplier": 2
+    },
+    {
+      "level": 75,
+      "multiplier": 2
+    },
+    {
+      "level": 100,
+      "multiplier": 2
+    }
+  ],
+  "businessSellRefund": 0.5,
+  "propertyPriceGrowth": 1.15,
+  "propertySellRefund": 0.7,
+  "categories": [
+    {
+      "id": "street",
+      "name": "Street"
+    },
+    {
+      "id": "shops",
+      "name": "Shops"
+    },
+    {
+      "id": "companies",
+      "name": "Companies"
+    }
+  ],
+  "businesses": [
+    {
+      "id": "samosa",
+      "name": "Samosa Thela",
+      "category": "street",
+      "price": 1000,
+      "incomePerSecond": 2
+    },
+    {
+      "id": "chai",
+      "name": "Chai Dhaba",
+      "category": "street",
+      "price": 6000,
+      "incomePerSecond": 7
+    },
+    {
+      "id": "chaat",
+      "name": "Fruit Chaat Cart",
+      "category": "street",
+      "price": 36000,
+      "incomePerSecond": 26
+    },
+    {
+      "id": "rickshaw",
+      "name": "Rickshaw",
+      "category": "street",
+      "price": 220000,
+      "incomePerSecond": 95
+    },
+    {
+      "id": "kiryana",
+      "name": "Kiryana Store",
+      "category": "shops",
+      "price": 1300000,
+      "incomePerSecond": 340
+    },
+    {
+      "id": "mobile",
+      "name": "Mobile Repair Shop",
+      "category": "shops",
+      "price": 7800000,
+      "incomePerSecond": 1200
+    },
+    {
+      "id": "cloth",
+      "name": "Cloth Shop",
+      "category": "shops",
+      "price": 47000000,
+      "incomePerSecond": 4400
+    },
+    {
+      "id": "mechanic",
+      "name": "Mechanic Workshop",
+      "category": "shops",
+      "price": 280000000,
+      "incomePerSecond": 15700
+    },
+    {
+      "id": "restaurant",
+      "name": "Restaurant",
+      "category": "companies",
+      "price": 1700000000,
+      "incomePerSecond": 56000
+    },
+    {
+      "id": "transport",
+      "name": "Transport Company",
+      "category": "companies",
+      "price": 10000000000,
+      "incomePerSecond": 200000
+    },
+    {
+      "id": "hall",
+      "name": "Wedding Hall",
+      "category": "companies",
+      "price": 60000000000,
+      "incomePerSecond": 730000
+    },
+    {
+      "id": "factory",
+      "name": "Textile Factory",
+      "category": "companies",
+      "price": 360000000000,
+      "incomePerSecond": 2600000
+    }
+  ],
+  "properties": [
+    {
+      "id": "plot",
+      "name": "Small Plot",
+      "area": "Gulshan Colony",
+      "price": 150000,
+      "rentPerSecond": 45,
+      "maxOwned": 10
+    },
+    {
+      "id": "shopspace",
+      "name": "Shop Space",
+      "area": "Main Bazaar",
+      "price": 1500000,
+      "rentPerSecond": 300,
+      "maxOwned": 10
+    },
+    {
+      "id": "house",
+      "name": "Family House",
+      "area": "Green Valley",
+      "price": 12000000,
+      "rentPerSecond": 1800,
+      "maxOwned": 10
+    },
+    {
+      "id": "apartments",
+      "name": "Apartment Block",
+      "area": "City Centre",
+      "price": 120000000,
+      "rentPerSecond": 12000,
+      "maxOwned": 10
+    },
+    {
+      "id": "plaza",
+      "name": "Shopping Plaza",
+      "area": "Canal Road",
+      "price": 1200000000,
+      "rentPerSecond": 80000,
+      "maxOwned": 10
+    },
+    {
+      "id": "farmhouse",
+      "name": "Farmhouse",
+      "area": "Riverside",
+      "price": 10000000000,
+      "rentPerSecond": 500000,
+      "maxOwned": 10
+    }
+  ]
+}
