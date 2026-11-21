@@ -10,7 +10,14 @@ abstract final class StaffRole {
   static const all = [helper, cook, manager];
 }
 
-enum UpgradeEffect { batch, batchSeconds, price, priceMult, demandMult, storage }
+enum UpgradeEffect {
+  batch,
+  batchSeconds,
+  price,
+  priceMult,
+  demandMult,
+  storage,
+}
 
 /// Effects that change one item line; the rest change the whole stage.
 const lineEffects = {
@@ -23,9 +30,9 @@ int _int(Object? v) => (v as num).toInt();
 double _double(Object? v) => (v as num).toDouble();
 
 Map<String, int> _intMap(Object? v) => {
-      for (final e in ((v ?? const <String, Object?>{}) as Map).entries)
-        e.key as String: _int(e.value),
-    };
+  for (final e in ((v ?? const <String, Object?>{}) as Map).entries)
+    e.key as String: _int(e.value),
+};
 
 class LineDef {
   const LineDef({
@@ -47,14 +54,14 @@ class LineDef {
   final double share;
 
   factory LineDef.fromJson(Map<String, Object?> j) => LineDef(
-        id: j['id'] as String,
-        name: j['name'] as String,
-        costPaisa: rupees(_int(j['cost'])),
-        pricePaisa: rupees(_int(j['price'])),
-        batch: _int(j['batch']),
-        batchSeconds: _int(j['batchSeconds']),
-        share: _double(j['share']),
-      );
+    id: j['id'] as String,
+    name: j['name'] as String,
+    costPaisa: rupees(_int(j['cost'])),
+    pricePaisa: rupees(_int(j['price'])),
+    batch: _int(j['batch']),
+    batchSeconds: _int(j['batchSeconds']),
+    share: _double(j['share']),
+  );
 }
 
 class StaffDef {
@@ -73,12 +80,12 @@ class StaffDef {
   final int requiresSold;
 
   factory StaffDef.fromJson(Map<String, Object?> j) => StaffDef(
-        hirePaisa: rupees(_int(j['hire'])),
-        wagePaisaPerMin: rupees(_int(j['wagePerMin'])),
-        max: _int(j['max'] ?? 1),
-        servePerMin: _int(j['servePerMin'] ?? 0),
-        requiresSold: _int(j['requiresSold'] ?? 0),
-      );
+    hirePaisa: rupees(_int(j['hire'])),
+    wagePaisaPerMin: rupees(_int(j['wagePerMin'])),
+    max: _int(j['max'] ?? 1),
+    servePerMin: _int(j['servePerMin'] ?? 0),
+    requiresSold: _int(j['requiresSold'] ?? 0),
+  );
 }
 
 class Requirements {
@@ -144,8 +151,9 @@ class StageDef {
       id: j['id'] as String,
       name: j['name'] as String,
       unlockCostPaisa: rupees(_int(j['unlockCost'])),
-      requirements:
-          Requirements.fromJson(j['requirements'] as Map<String, Object?>?),
+      requirements: Requirements.fromJson(
+        j['requirements'] as Map<String, Object?>?,
+      ),
       rentPaisaPerMin: rupees(_int(j['rentPerMin'])),
       customersPerMin: _double(j['customersPerMin']),
       storage: _int(j['storage']),
@@ -188,19 +196,19 @@ class UpgradeDef {
   final List<UpgradeLevel> levels;
 
   factory UpgradeDef.fromJson(Map<String, Object?> j) => UpgradeDef(
-        id: j['id'] as String,
-        stageId: j['stage'] as String,
-        name: j['name'] as String,
-        effect: UpgradeEffect.values.byName(j['effect'] as String),
-        lineId: j['line'] as String?,
-        levels: [
-          for (final l in (j['levels'] as List).cast<Map<String, Object?>>())
-            UpgradeLevel(
-              costPaisa: rupees(_int(l['cost'])),
-              value: _double(l['value']),
-            ),
-        ],
-      );
+    id: j['id'] as String,
+    stageId: j['stage'] as String,
+    name: j['name'] as String,
+    effect: UpgradeEffect.values.byName(j['effect'] as String),
+    lineId: j['line'] as String?,
+    levels: [
+      for (final l in (j['levels'] as List).cast<Map<String, Object?>>())
+        UpgradeLevel(
+          costPaisa: rupees(_int(l['cost'])),
+          value: _double(l['value']),
+        ),
+    ],
+  );
 }
 
 class EconomyConfig {

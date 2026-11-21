@@ -5,38 +5,39 @@ import '../../domain/economy/game_state.dart';
 const saveSchemaVersion = 1;
 
 Map<String, Object?> encodeGameState(GameState s) => {
-      'revision': s.revision,
-      'cashPaisa': s.cashPaisa,
-      'upgrades': s.upgrades,
-      'lastSettledAt': s.lastSettledAt.toIso8601String(),
-      'workReadyAt': s.workReadyAt?.toIso8601String(),
-      'stages': {
-        for (final e in s.stages.entries)
-          e.key: {
-            'sold': e.value.sold,
-            'queue': e.value.queue,
-            'queueCarry': e.value.queueCarry,
-            'serveCarry': e.value.serveCarry,
-            'costCarry': e.value.costCarry,
-            'customersUpdatedAt': e.value.customersUpdatedAt.toIso8601String(),
-            'staff': e.value.staff,
-            'lines': {
-              for (final l in e.value.lines.entries)
-                l.key: {
-                  'stock': l.value.stock,
-                  'ready': l.value.ready,
-                  'batchSize': l.value.batchSize,
-                  'batchEndsAt': l.value.batchEndsAt?.toIso8601String(),
-                },
+  'revision': s.revision,
+  'cashPaisa': s.cashPaisa,
+  'upgrades': s.upgrades,
+  'lastSettledAt': s.lastSettledAt.toIso8601String(),
+  'workReadyAt': s.workReadyAt?.toIso8601String(),
+  'stages': {
+    for (final e in s.stages.entries)
+      e.key: {
+        'sold': e.value.sold,
+        'queue': e.value.queue,
+        'queueCarry': e.value.queueCarry,
+        'serveCarry': e.value.serveCarry,
+        'costCarry': e.value.costCarry,
+        'customersUpdatedAt': e.value.customersUpdatedAt.toIso8601String(),
+        'staff': e.value.staff,
+        'lines': {
+          for (final l in e.value.lines.entries)
+            l.key: {
+              'stock': l.value.stock,
+              'ready': l.value.ready,
+              'batchSize': l.value.batchSize,
+              'batchEndsAt': l.value.batchEndsAt?.toIso8601String(),
             },
-          },
+        },
       },
-    };
+  },
+};
 
 DateTime _time(Object? v) => DateTime.parse(v as String).toUtc();
 int _int(Object? v) => (v as num).toInt();
-Map<String, int> _intMap(Object? v) =>
-    {for (final e in (v as Map).entries) e.key as String: _int(e.value)};
+Map<String, int> _intMap(Object? v) => {
+  for (final e in (v as Map).entries) e.key as String: _int(e.value),
+};
 
 /// Throws [FormatException] when the save is broken or does not fit
 /// [config]; the repository then falls back to a backup.
@@ -49,7 +50,9 @@ GameState decodeGameState(Map<String, Object?> j, EconomyConfig config) {
     final st = e.value as Map;
     final lines = <String, LineState>{};
     for (final l in (st['lines'] as Map).entries) {
-      if (def.line(l.key as String) == null) throw FormatException('unknown line ${l.key}');
+      if (def.line(l.key as String) == null) {
+        throw FormatException('unknown line ${l.key}');
+      }
       final lv = l.value as Map;
       final ends = lv['batchEndsAt'];
       lines[l.key as String] = LineState(
@@ -89,7 +92,9 @@ void _checkInvariants(GameState s, EconomyConfig config) {
     throw const FormatException('starter business missing');
   }
   for (final st in s.stages.values) {
-    if (st.sold < 0 || st.queue < 0) throw const FormatException('negative counter');
+    if (st.sold < 0 || st.queue < 0) {
+      throw const FormatException('negative counter');
+    }
     for (final l in st.lines.values) {
       if (l.stock < 0 || l.ready < 0 || l.batchSize < 0) {
         throw const FormatException('negative items');

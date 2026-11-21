@@ -8,7 +8,9 @@ import 'package:desi_business_empire/domain/economy/game_engine.dart';
 import 'package:desi_business_empire/domain/economy/game_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-final config = EconomyConfig.parse(File('assets/config/economy_v0.json').readAsStringSync());
+final config = EconomyConfig.parse(
+  File('assets/config/economy_v0.json').readAsStringSync(),
+);
 final engine = GameEngine(config);
 final t0 = DateTime.utc(2026, 1, 1, 12);
 
@@ -17,7 +19,11 @@ DateTime at(int seconds) => t0.add(Duration(seconds: seconds));
 GameState newGame() => GameState.newGame(config, t0);
 
 GameState ok(CommandResult r) {
-  expect(r, isA<Success>(), reason: r is Failure ? 'failed: ${r.reason}' : null);
+  expect(
+    r,
+    isA<Success>(),
+    reason: r is Failure ? 'failed: ${r.reason}' : null,
+  );
   return (r as Success).state;
 }
 
@@ -44,7 +50,8 @@ void main() {
 
   group('buyStock', () {
     test('deducts cost, adds stock, writes one ledger entry', () {
-      final r = engine.buyStock(newGame(), 'stall', 'samosa', 10, t0) as Success;
+      final r =
+          engine.buyStock(newGame(), 'stall', 'samosa', 10, t0) as Success;
       expect(r.state.cashPaisa, 50000 - 12000);
       expect(samosa(r.state).stock, 10);
       expect(r.state.revision, 1);
@@ -53,29 +60,50 @@ void main() {
     });
 
     test('refuses to spend below zero and reports needed vs available', () {
-      final f = expectFail(engine.buyStock(newGame(), 'stall', 'samosa', 50, t0), FailReason.insufficientFunds);
+      final f = expectFail(
+        engine.buyStock(newGame(), 'stall', 'samosa', 50, t0),
+        FailReason.insufficientFunds,
+      );
       expect(f.neededPaisa, 60000);
       expect(f.availablePaisa, 50000);
     });
 
     test('respects storage and rejects bad quantities and ids', () {
       final rich = withCash(newGame(), 100000);
-      expectFail(engine.buyStock(rich, 'stall', 'samosa', 301, t0), FailReason.storageFull);
-      expectFail(engine.buyStock(rich, 'stall', 'samosa', 0, t0), FailReason.invalidQuantity);
-      expectFail(engine.buyStock(rich, 'stall', 'pizza', 1, t0), FailReason.unknownId);
-      expectFail(engine.buyStock(rich, 'takeaway', 'samosa', 1, t0), FailReason.stageLocked);
+      expectFail(
+        engine.buyStock(rich, 'stall', 'samosa', 301, t0),
+        FailReason.storageFull,
+      );
+      expectFail(
+        engine.buyStock(rich, 'stall', 'samosa', 0, t0),
+        FailReason.invalidQuantity,
+      );
+      expectFail(
+        engine.buyStock(rich, 'stall', 'pizza', 1, t0),
+        FailReason.unknownId,
+      );
+      expectFail(
+        engine.buyStock(rich, 'takeaway', 'samosa', 1, t0),
+        FailReason.stageLocked,
+      );
     });
   });
 
   group('cooking and selling', () {
     test('needs stock, cooks one batch at a time, finishes on time', () {
       var s = newGame();
-      expectFail(engine.startBatch(s, 'stall', 'samosa', t0), FailReason.noStock);
+      expectFail(
+        engine.startBatch(s, 'stall', 'samosa', t0),
+        FailReason.noStock,
+      );
       s = ok(engine.buyStock(s, 'stall', 'samosa', 10, t0));
       s = ok(engine.startBatch(s, 'stall', 'samosa', t0));
       expect(samosa(s).stock, 2);
       expect(samosa(s).batchSize, 8);
-      expectFail(engine.startBatch(s, 'stall', 'samosa', at(10)), FailReason.batchInProgress);
+      expectFail(
+        engine.startBatch(s, 'stall', 'samosa', at(10)),
+        FailReason.batchInProgress,
+      );
       expect(samosa(engine.observe(s, at(29))).ready, 0);
       expect(samosa(engine.observe(s, at(30))).ready, 8);
     });
@@ -91,7 +119,10 @@ void main() {
       var s = ok(engine.buyStock(newGame(), 'stall', 'samosa', 8, t0));
       s = ok(engine.startBatch(s, 'stall', 'samosa', t0));
       expectFail(engine.serve(s, 'stall', 'samosa', t0), FailReason.noCustomer);
-      expectFail(engine.serve(s, 'stall', 'samosa', at(10)), FailReason.nothingReady);
+      expectFail(
+        engine.serve(s, 'stall', 'samosa', at(10)),
+        FailReason.nothingReady,
+      );
       final cashBefore = s.cashPaisa;
       final r = engine.serve(s, 'stall', 'samosa', at(30)) as Success;
       expect(r.state.cashPaisa, cashBefore + 3000);
@@ -145,8 +176,14 @@ void main() {
     });
 
     test('cannot buy an upgrade for a locked stage or without money', () {
-      expectFail(engine.buyUpgrade(withCash(newGame(), 100000), 'tawa', t0), FailReason.stageLocked);
-      final f = expectFail(engine.buyUpgrade(newGame(), 'masala', t0), FailReason.insufficientFunds);
+      expectFail(
+        engine.buyUpgrade(withCash(newGame(), 100000), 'tawa', t0),
+        FailReason.stageLocked,
+      );
+      final f = expectFail(
+        engine.buyUpgrade(newGame(), 'masala', t0),
+        FailReason.insufficientFunds,
+      );
       expect(f.neededPaisa, 80000);
     });
   });
@@ -156,8 +193,14 @@ void main() {
       var s = withCash(newGame(), 10000);
       s = ok(engine.hire(s, 'stall', StaffRole.helper, t0));
       s = ok(engine.hire(s, 'stall', StaffRole.helper, t0));
-      expectFail(engine.hire(s, 'stall', StaffRole.helper, t0), FailReason.maxStaff);
-      final f = expectFail(engine.hire(s, 'stall', StaffRole.manager, t0), FailReason.requirementsNotMet);
+      expectFail(
+        engine.hire(s, 'stall', StaffRole.helper, t0),
+        FailReason.maxStaff,
+      );
+      final f = expectFail(
+        engine.hire(s, 'stall', StaffRole.manager, t0),
+        FailReason.requirementsNotMet,
+      );
       expect(f.unmet.single.need, 200);
       s = s.withStage('stall', stall(s).copyWith(sold: 200));
       s = ok(engine.hire(s, 'stall', StaffRole.manager, t0));
@@ -167,21 +210,41 @@ void main() {
 
   group('takeaway unlock', () {
     test('lists every unmet requirement', () {
-      final f = expectFail(engine.unlockStage(withCash(newGame(), 20000), 'takeaway', t0),
-          FailReason.requirementsNotMet);
-      expect(f.unmet.map((u) => u.kind),
-          containsAll([RequirementKind.sold, RequirementKind.upgrade, RequirementKind.staff]));
+      final f = expectFail(
+        engine.unlockStage(withCash(newGame(), 20000), 'takeaway', t0),
+        FailReason.requirementsNotMet,
+      );
+      expect(
+        f.unmet.map((u) => u.kind),
+        containsAll([
+          RequirementKind.sold,
+          RequirementKind.upgrade,
+          RequirementKind.staff,
+        ]),
+      );
     });
 
     test('opens with all lines once requirements and money are there', () {
       var s = newGame().copyWith(upgrades: {'kadhai': 2});
-      s = s.withStage('stall', stall(s).copyWith(sold: 300, staff: {StaffRole.manager: 1}));
-      expectFail(engine.unlockStage(s, 'takeaway', t0), FailReason.insufficientFunds);
+      s = s.withStage(
+        'stall',
+        stall(s).copyWith(sold: 300, staff: {StaffRole.manager: 1}),
+      );
+      expectFail(
+        engine.unlockStage(s, 'takeaway', t0),
+        FailReason.insufficientFunds,
+      );
       s = ok(engine.unlockStage(withCash(s, 10000), 'takeaway', t0));
       expect(s.cashPaisa, 0);
-      expect(s.stages['takeaway']!.lines.keys, containsAll(['samosa', 'pakora', 'roll']));
+      expect(
+        s.stages['takeaway']!.lines.keys,
+        containsAll(['samosa', 'pakora', 'roll']),
+      );
       expect(s.stages.containsKey('stall'), isTrue);
-      expectFail(engine.unlockStage(s, 'takeaway', t0), FailReason.alreadyUnlocked);
+      expectFail(
+        engine.unlockStage(s, 'takeaway', t0),
+        FailReason.alreadyUnlocked,
+      );
     });
   });
 
@@ -211,9 +274,11 @@ void main() {
       };
       if (r is Success) {
         expect(r.state.revision, s.revision + 1);
-        expect(r.state.cashPaisa - s.cashPaisa,
-            r.entries.fold<int>(0, (sum, e) => sum + e.deltaPaisa),
-            reason: 'ledger must explain every cash change');
+        expect(
+          r.state.cashPaisa - s.cashPaisa,
+          r.entries.fold<int>(0, (sum, e) => sum + e.deltaPaisa),
+          reason: 'ledger must explain every cash change',
+        );
         s = r.state;
         successes++;
       }

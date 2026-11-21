@@ -6,7 +6,9 @@ import 'package:desi_business_empire/domain/economy/game_state.dart';
 import 'package:desi_business_empire/features/upgrades/upgrade_preview.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-final config = EconomyConfig.parse(File('assets/config/economy_v0.json').readAsStringSync());
+final config = EconomyConfig.parse(
+  File('assets/config/economy_v0.json').readAsStringSync(),
+);
 final engine = GameEngine(config);
 final s0 = GameState.newGame(config, DateTime.utc(2026));
 
@@ -26,9 +28,15 @@ void main() {
 
   test('batch, time, customers and storage previews', () {
     expect([preview('kadhai').before, preview('kadhai').after], ['8', '15']);
-    expect([preview('burner').before, preview('burner').after], ['30 sec', '16 sec']);
+    expect(
+      [preview('burner').before, preview('burner').after],
+      ['30 sec', '16 sec'],
+    );
     expect([preview('board').before, preview('board').after], ['14', '17.5']);
-    expect([preview('godown').before, preview('godown').after], ['300', '1000']);
+    expect(
+      [preview('godown').before, preview('godown').after],
+      ['300', '1000'],
+    );
   });
 
   test('multiplier preview starts at x1', () {

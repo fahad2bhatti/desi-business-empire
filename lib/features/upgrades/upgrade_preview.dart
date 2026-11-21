@@ -32,36 +32,38 @@ UpgradePreview previewUpgrade(GameEngine engine, GameState s, UpgradeDef u) {
   final line = u.lineId == null ? null : def.line(u.lineId!);
   final level = s.upgradeLevel(u.id);
   final maxed = level >= u.levels.length;
-  final next = maxed ? null : s.copyWith(upgrades: {...s.upgrades, u.id: level + 1});
+  final next = maxed
+      ? null
+      : s.copyWith(upgrades: {...s.upgrades, u.id: level + 1});
 
   final (String label, String Function(GameState) show) = switch (u.effect) {
     UpgradeEffect.batch => (
-        'Ek batch (${line!.name})',
-        (GameState x) => '${engine.lineStats(x, def, line).batch}',
-      ),
+      'Ek batch (${line!.name})',
+      (GameState x) => '${engine.lineStats(x, def, line).batch}',
+    ),
     UpgradeEffect.batchSeconds => (
-        'Tayyari ka waqt (${line!.name})',
-        (GameState x) => '${engine.lineStats(x, def, line).batchSeconds} sec',
-      ),
+      'Tayyari ka waqt (${line!.name})',
+      (GameState x) => '${engine.lineStats(x, def, line).batchSeconds} sec',
+    ),
     UpgradeEffect.price => (
-        'Rate (${line!.name})',
-        (GameState x) => formatRs(engine.lineStats(x, def, line).pricePaisa),
-      ),
+      'Rate (${line!.name})',
+      (GameState x) => formatRs(engine.lineStats(x, def, line).pricePaisa),
+    ),
     UpgradeEffect.priceMult => (
-        'Sab rates',
-        (GameState x) {
-          final l = x.upgradeLevel(u.id);
-          return '×${formatNumber(l == 0 ? 1 : u.levels[l - 1].value)}';
-        },
-      ),
+      'Sab rates',
+      (GameState x) {
+        final l = x.upgradeLevel(u.id);
+        return '×${formatNumber(l == 0 ? 1 : u.levels[l - 1].value)}';
+      },
+    ),
     UpgradeEffect.demandMult => (
-        'Customers / minute',
-        (GameState x) => formatNumber(engine.customersPerMin(x, def)),
-      ),
+      'Customers / minute',
+      (GameState x) => formatNumber(engine.customersPerMin(x, def)),
+    ),
     UpgradeEffect.storage => (
-        'Saman ki jagah',
-        (GameState x) => '${engine.storage(x, def)}',
-      ),
+      'Saman ki jagah',
+      (GameState x) => '${engine.storage(x, def)}',
+    ),
   };
 
   return UpgradePreview(

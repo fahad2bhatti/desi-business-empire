@@ -27,7 +27,10 @@ class StaffScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text('Staff · ${def?.name ?? stageId}'),
         actions: [
-          Padding(padding: const EdgeInsets.only(right: 12), child: WalletChip(paisa: s.cashPaisa)),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: WalletChip(paisa: s.cashPaisa),
+          ),
         ],
       ),
       body: def == null || st == null
@@ -44,7 +47,11 @@ class StaffScreen extends ConsumerWidget {
                   child: const Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.info_outline, size: 18, color: AppColors.amberInk),
+                      Icon(
+                        Icons.info_outline,
+                        size: 18,
+                        color: AppColors.amberInk,
+                      ),
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -116,22 +123,41 @@ class _StaffCard extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(roleName(role),
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
+                  child: Text(
+                    roleName(role),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 17,
+                    ),
+                  ),
                 ),
-                Text('$count / ${def.max} rakhe hain',
-                    style: const TextStyle(fontSize: 12, color: AppColors.muted, fontWeight: FontWeight.w600)),
+                Text(
+                  '$count / ${def.max} rakhe hain',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 6),
-            Text(roleDescription(role, def, config), style: const TextStyle(fontSize: 14)),
+            Text(
+              roleDescription(role, def, config),
+              style: const TextStyle(fontSize: 14),
+            ),
             const SizedBox(height: 10),
             _row('Hire karne ki qeemat', formatRs(def.hirePaisa)),
             _row('Tankhwah', '${formatRs(def.wagePaisaPerMin * 60)} / ghanta'),
             if (def.requiresSold > 0 && count == 0) ...[
               const SizedBox(height: 10),
-              Text('Shart: ${def.requiresSold} items becho',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              Text(
+                'Shart: ${def.requiresSold} items becho',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 6),
               ProgressLine(have: sold, need: def.requiresSold, label: 'Bikri'),
             ],
@@ -139,15 +165,17 @@ class _StaffCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: blocked || full || needsSales || short ? null : onHire,
+                onPressed: blocked || full || needsSales || short
+                    ? null
+                    : onHire,
                 child: Text(
                   full
                       ? 'Poore rakh liye'
                       : needsSales
-                          ? 'Shart baqi hai'
-                          : short
-                              ? '${formatRs(def.hirePaisa - cash)} kam hain'
-                              : 'Rakho · ${formatRs(def.hirePaisa)}',
+                      ? 'Shart baqi hai'
+                      : short
+                      ? '${formatRs(def.hirePaisa - cash)} kam hain'
+                      : 'Rakho · ${formatRs(def.hirePaisa)}',
                 ),
               ),
             ),
@@ -158,12 +186,20 @@ class _StaffCard extends StatelessWidget {
   }
 
   Widget _row(String k, String v) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        child: Row(
-          children: [
-            Expanded(child: Text(k, style: const TextStyle(color: AppColors.muted, fontSize: 14))),
-            Text(v, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-          ],
+    padding: const EdgeInsets.symmetric(vertical: 2),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            k,
+            style: const TextStyle(color: AppColors.muted, fontSize: 14),
+          ),
         ),
-      );
+        Text(
+          v,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+      ],
+    ),
+  );
 }

@@ -16,15 +16,21 @@ class GameShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen(gameControllerProvider.select((a) => a.value?.offline), (prev, next) {
+    ref.listen(gameControllerProvider.select((a) => a.value?.offline), (
+      prev,
+      next,
+    ) {
       if (next == null || identical(prev, next)) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) showOfflineSummary(context, next);
       });
     });
 
-    return ref.watch(gameControllerProvider).when(
-          loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+    return ref
+        .watch(gameControllerProvider)
+        .when(
+          loading: () =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
           error: (error, _) => LoadErrorScreen(error: error),
           data: (session) => Scaffold(
             body: Column(
@@ -37,7 +43,9 @@ class GameShell extends ConsumerWidget {
                       child: NoticeBanner(
                         text: 'Save mein masla aaya. Jab tak theek na ho, khareed o farokht band hai.',
                         action: 'Dobara koshish',
-                        onPressed: ref.read(gameControllerProvider.notifier).retrySave,
+                        onPressed: ref
+                            .read(gameControllerProvider.notifier)
+                            .retrySave,
                       ),
                     ),
                   ),
@@ -46,7 +54,8 @@ class GameShell extends ConsumerWidget {
             ),
             bottomNavigationBar: NavigationBar(
               selectedIndex: shell.currentIndex,
-              onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+              onDestinationSelected: (i) =>
+                  shell.goBranch(i, initialLocation: i == shell.currentIndex),
               destinations: const [
                 NavigationDestination(
                   icon: Icon(Icons.home_outlined),

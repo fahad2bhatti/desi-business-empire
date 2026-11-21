@@ -15,13 +15,16 @@ String _duration(Duration d) {
 
 /// Shows what happened while the app was closed. The money is already in
 /// the wallet: "Theek hai" only closes the sheet.
-Future<void> showOfflineSummary(BuildContext context, Settlement s) => showModalBottomSheet<void>(
+Future<void> showOfflineSummary(BuildContext context, Settlement s) =>
+    showModalBottomSheet<void>(
       context: context,
       isDismissible: false,
       enableDrag: false,
       isScrollControlled: true,
       backgroundColor: AppColors.card,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => _OfflineSummary(settlement: s),
     );
 
@@ -41,7 +44,10 @@ class _OfflineSummary extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Wapsi mubarak!', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700)),
+            const Text(
+              'Wapsi mubarak!',
+              style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 4),
             Text(
               'Aap ${_duration(s.away)} door rahe.'
@@ -50,8 +56,13 @@ class _OfflineSummary extends ConsumerWidget {
             ),
             for (final st in s.stages.values) ...[
               const SizedBox(height: 14),
-              Text(config.stage(st.stageId)?.name ?? st.stageId,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+              Text(
+                config.stage(st.stageId)?.name ?? st.stageId,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
               if (st.ranDryAfter != null)
                 Container(
                   margin: const EdgeInsets.only(top: 8),
@@ -101,22 +112,27 @@ class _Row extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(label,
-                  style: TextStyle(fontSize: 15, fontWeight: strong ? FontWeight.w700 : FontWeight.w400)),
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: strong ? FontWeight.w700 : FontWeight.w400,
             ),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: strong ? 20 : 15,
-                fontWeight: strong ? FontWeight.w800 : FontWeight.w600,
-                color: strong ? AppColors.green : AppColors.text,
-              ),
-            ),
-          ],
+          ),
         ),
-      );
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: strong ? 20 : 15,
+            fontWeight: strong ? FontWeight.w800 : FontWeight.w600,
+            color: strong ? AppColors.green : AppColors.text,
+          ),
+        ),
+      ],
+    ),
+  );
 }

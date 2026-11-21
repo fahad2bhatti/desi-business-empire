@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/business/business_screen.dart';
+import '../features/expansion/expansion_screen.dart';
 import '../features/home/home_screen.dart';
 import '../features/staff/staff_screen.dart';
-import '../features/stall/stall_screen.dart';
 import '../features/upgrades/upgrades_screen.dart';
 import 'game_shell.dart';
 import 'theme.dart';
@@ -14,15 +15,30 @@ final _router = GoRouter(
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => GameShell(shell: shell),
       branches: [
-        StatefulShellBranch(routes: [
-          GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
-        ]),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const HomeScreen(),
+              routes: [
+                // Opened from Home, so Back returns there.
+                GoRoute(
+                  path: 'expand/:stageId',
+                  builder: (context, state) => ExpansionScreen(
+                    stageId: state.pathParameters['stageId']!,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
         StatefulShellBranch(
           initialLocation: '/business/stall',
           routes: [
             GoRoute(
               path: '/business/:stageId',
-              builder: (context, state) => const StallScreen(),
+              builder: (context, state) =>
+                  BusinessScreen(stageId: state.pathParameters['stageId']!),
               routes: [
                 GoRoute(
                   path: 'upgrades',
@@ -48,9 +64,9 @@ class DesiBusinessEmpireApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MaterialApp.router(
-        title: 'Desi Business Empire',
-        debugShowCheckedModeBanner: false,
-        theme: buildAppTheme(),
-        routerConfig: _router,
-      );
+    title: 'Desi Business Empire',
+    debugShowCheckedModeBanner: false,
+    theme: buildAppTheme(),
+    routerConfig: _router,
+  );
 }

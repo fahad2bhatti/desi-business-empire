@@ -34,7 +34,7 @@ class LedgerRows extends Table {
 class AppDatabase extends _$AppDatabase {
   /// Pass an executor in tests (e.g. `NativeDatabase.memory()`).
   AppDatabase([QueryExecutor? executor])
-      : super(executor ?? driftDatabase(name: 'desi_business_empire'));
+    : super(executor ?? driftDatabase(name: 'desi_business_empire'));
 
   @override
   int get schemaVersion => 1;

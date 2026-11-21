@@ -25,33 +25,49 @@ NextGoal nextGoal(GameEngine engine, GameState s) {
   final staffRoute = '/business/${starter.id}/staff';
 
   if (stall.staffCount(StaffRole.helper) == 0) {
-    return NextGoal('Pehla ${roleName(StaffRole.helper)} rakho',
-        detail: 'Customers khud serve honge.', route: staffRoute);
+    return NextGoal(
+      'Pehla ${roleName(StaffRole.helper)} rakho',
+      detail: 'Customers khud serve honge.',
+      route: staffRoute,
+    );
   }
   if (stall.staffCount(StaffRole.manager) == 0) {
     final need = starter.staff[StaffRole.manager]!.requiresSold;
     if (stall.sold < need) {
-      return NextGoal('$need items becho, phir Manager rakho',
-          detail: 'Manager aane ke baad dukan aap ke baghair bhi chalegi.',
-          have: stall.sold,
-          need: need,
-          route: '/business/${starter.id}');
+      return NextGoal(
+        '$need items becho, phir Manager rakho',
+        detail: 'Manager aane ke baad dukan aap ke baghair bhi chalegi.',
+        have: stall.sold,
+        need: need,
+        route: '/business/${starter.id}',
+      );
     }
-    return NextGoal('Manager rakho',
-        detail: 'Helper aur Cook ke saath dukan offline bhi chalegi.', route: staffRoute);
+    return NextGoal(
+      'Manager rakho',
+      detail: 'Helper aur Cook ke saath dukan offline bhi chalegi.',
+      route: staffRoute,
+    );
   }
   for (final def in config.stages) {
     if (s.stages.containsKey(def.id)) continue;
     final unmet = engine.missingRequirements(s, def.id);
     if (unmet.isNotEmpty) {
       final first = unmet.first;
-      return NextGoal('${def.name} ki taraf',
-          detail: describeRequirement(first, config), have: first.have, need: first.need);
+      return NextGoal(
+        '${def.name} ki taraf',
+        detail: describeRequirement(first, config),
+        have: first.have,
+        need: first.need,
+        route: '/expand/${def.id}',
+      );
     }
-    return NextGoal('${def.name} kholo: ${formatRs(def.unlockCostPaisa)}',
-        detail: 'Saari shartein poori hain.',
-        have: s.cashPaisa ~/ paisaPerRupee,
-        need: def.unlockCostPaisa ~/ paisaPerRupee);
+    return NextGoal(
+      '${def.name} kholo: ${formatRs(def.unlockCostPaisa)}',
+      detail: 'Saari shartein poori hain.',
+      have: s.cashPaisa ~/ paisaPerRupee,
+      need: def.unlockCostPaisa ~/ paisaPerRupee,
+      route: '/expand/${def.id}',
+    );
   }
   return const NextGoal('Saare karobar khul gaye!');
 }

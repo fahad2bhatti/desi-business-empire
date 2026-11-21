@@ -86,15 +86,28 @@ extension Settle on GameEngine {
     final elapsedMs = now.difference(s.lastSettledAt).inMilliseconds;
     if (elapsedMs < 0) {
       return Settlement(
-          state: s, entries: const [], away: Duration.zero, credited: Duration.zero,
-          stages: const {}, clockWentBack: true);
+        state: s,
+        entries: const [],
+        away: Duration.zero,
+        credited: Duration.zero,
+        stages: const {},
+        clockWentBack: true,
+      );
     }
     final seconds = elapsedMs ~/ 1000;
     final away = Duration(milliseconds: elapsedMs);
     if (seconds == 0) {
-      return Settlement(state: s, entries: const [], away: away, credited: Duration.zero, stages: const {});
+      return Settlement(
+        state: s,
+        entries: const [],
+        away: away,
+        credited: Duration.zero,
+        stages: const {},
+      );
     }
-    final credited = foreground ? seconds : math.min(seconds, config.offlineCapMinutes * 60);
+    final credited = foreground
+        ? seconds
+        : math.min(seconds, config.offlineCapMinutes * 60);
     final start = s.lastSettledAt;
     final end = start.add(Duration(seconds: seconds));
 
@@ -102,19 +115,22 @@ extension Settle on GameEngine {
     for (final def in config.stages) {
       final st = s.stages[def.id];
       if (st == null || def.lines.isEmpty) continue; // hall events: later phase
-      final eligible = foreground ||
+      final eligible =
+          foreground ||
           (st.staffCount(StaffRole.manager) > 0 &&
               st.staffCount(StaffRole.helper) > 0 &&
               st.staffCount(StaffRole.cook) > 0);
       if (!eligible) continue;
       final stats = {for (final l in def.lines) l.id: lineStats(s, def, l)};
-      runs.add(_Run(
-        def,
-        st,
-        {for (final e in stats.entries) e.key: e.value.pricePaisa},
-        {for (final e in stats.entries) e.key: e.value.batch},
-        {for (final e in stats.entries) e.key: e.value.batchSeconds},
-      ));
+      runs.add(
+        _Run(
+          def,
+          st,
+          {for (final e in stats.entries) e.key: e.value.pricePaisa},
+          {for (final e in stats.entries) e.key: e.value.batch},
+          {for (final e in stats.entries) e.key: e.value.batchSeconds},
+        ),
+      );
       if (_isDry(st)) {
         runs.last
           ..dry = true
@@ -150,13 +166,34 @@ extension Settle on GameEngine {
     for (final r in runs) {
       final id = r.def.id;
       if (r.revenue > 0) {
-        entries.add(LedgerEntry(type: LedgerType.sale, deltaPaisa: r.revenue, reason: '$id/auto', at: end));
+        entries.add(
+          LedgerEntry(
+            type: LedgerType.sale,
+            deltaPaisa: r.revenue,
+            reason: '$id/auto',
+            at: end,
+          ),
+        );
       }
       if (r.wages > 0) {
-        entries.add(LedgerEntry(type: LedgerType.wages, deltaPaisa: -r.wages, reason: id, at: end));
+        entries.add(
+          LedgerEntry(
+            type: LedgerType.wages,
+            deltaPaisa: -r.wages,
+            reason: id,
+            at: end,
+          ),
+        );
       }
       if (r.rent > 0) {
-        entries.add(LedgerEntry(type: LedgerType.rent, deltaPaisa: -r.rent, reason: id, at: end));
+        entries.add(
+          LedgerEntry(
+            type: LedgerType.rent,
+            deltaPaisa: -r.rent,
+            reason: id,
+            at: end,
+          ),
+        );
       }
       summaries[id] = StageSettlement(
         stageId: id,
@@ -165,7 +202,9 @@ extension Settle on GameEngine {
         wagesPaisa: r.wages,
         rentPaisa: r.rent,
         stockUsed: r.stockUsed,
-        ranDryAfter: r.dryAtSecond == null ? null : Duration(seconds: r.dryAtSecond!),
+        ranDryAfter: r.dryAtSecond == null
+            ? null
+            : Duration(seconds: r.dryAtSecond!),
       );
     }
 
@@ -193,7 +232,10 @@ extension Settle on GameEngine {
       if (l.isCooking && !t.isBefore(l.batchEndsAt!)) l = l.finishBatch();
       if (cooks > 0 && !l.isCooking && l.stock > 0) {
         final size = math.min(r.batches[e.key]!, l.stock);
-        l = l.startBatch(size, t.add(Duration(seconds: r.batchSeconds[e.key]!)));
+        l = l.startBatch(
+          size,
+          t.add(Duration(seconds: r.batchSeconds[e.key]!)),
+        );
         r.stockUsed += size;
       }
       lines[e.key] = l;
@@ -205,7 +247,8 @@ extension Settle on GameEngine {
     var updatedAt = st.customersUpdatedAt;
     final ms = t.difference(updatedAt).inMilliseconds;
     if (ms > 0) {
-      final total = queueCarry + ms * (customersPerMin(s, r.def) * 1000).round();
+      final total =
+          queueCarry + ms * (customersPerMin(s, r.def) * 1000).round();
       queue = math.min(config.maxQueue, queue + total ~/ GameEngine.carryUnit);
       queueCarry = total % GameEngine.carryUnit;
       updatedAt = t;
@@ -213,7 +256,8 @@ extension Settle on GameEngine {
 
     // Helpers serve, taking lines in turn so every item sells.
     final helperDef = r.def.staff[StaffRole.helper]!;
-    var serveCarry = st.serveCarry +
+    var serveCarry =
+        st.serveCarry +
         st.staffCount(StaffRole.helper) * helperDef.servePerMin * 1000 * 1000;
     var serves = serveCarry ~/ GameEngine.carryUnit;
     serveCarry %= GameEngine.carryUnit;
@@ -240,8 +284,10 @@ extension Settle on GameEngine {
     }
 
     // Rent and wages for this second, never below zero cash.
-    final wagePerMin = r.def.staff.entries
-        .fold<int>(0, (sum, e) => sum + e.value.wagePaisaPerMin * st.staffCount(e.key));
+    final wagePerMin = r.def.staff.entries.fold<int>(
+      0,
+      (sum, e) => sum + e.value.wagePaisaPerMin * st.staffCount(e.key),
+    );
     final perMin = r.def.rentPaisaPerMin + wagePerMin;
     var costCarry = st.costCarry + perMin * 1000;
     var charge = costCarry ~/ 60000;
@@ -267,13 +313,16 @@ extension Settle on GameEngine {
     return cash;
   }
 
-  bool _isDry(StageState st) =>
-      st.lines.values.every((l) => l.stock == 0 && l.ready == 0 && !l.isCooking);
+  bool _isDry(StageState st) => st.lines.values.every(
+    (l) => l.stock == 0 && l.ready == 0 && !l.isCooking,
+  );
 
-  StageState _finishBatches(StageState st, DateTime end) => st.copyWith(lines: {
-        for (final e in st.lines.entries)
-          e.key: (e.value.isCooking && !end.isBefore(e.value.batchEndsAt!))
-              ? e.value.finishBatch()
-              : e.value,
-      });
+  StageState _finishBatches(StageState st, DateTime end) => st.copyWith(
+    lines: {
+      for (final e in st.lines.entries)
+        e.key: (e.value.isCooking && !end.isBefore(e.value.batchEndsAt!))
+            ? e.value.finishBatch()
+            : e.value,
+    },
+  );
 }

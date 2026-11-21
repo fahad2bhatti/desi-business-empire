@@ -22,21 +22,20 @@ class LineState {
   bool get isCooking => batchEndsAt != null;
 
   LineState copyWith({int? stock, int? ready}) => LineState(
-        stock: stock ?? this.stock,
-        ready: ready ?? this.ready,
-        batchSize: batchSize,
-        batchEndsAt: batchEndsAt,
-      );
+    stock: stock ?? this.stock,
+    ready: ready ?? this.ready,
+    batchSize: batchSize,
+    batchEndsAt: batchEndsAt,
+  );
 
   LineState startBatch(int size, DateTime endsAt) => LineState(
-        stock: stock - size,
-        ready: ready,
-        batchSize: size,
-        batchEndsAt: endsAt,
-      );
+    stock: stock - size,
+    ready: ready,
+    batchSize: size,
+    batchEndsAt: endsAt,
+  );
 
-  LineState finishBatch() =>
-      LineState(stock: stock, ready: ready + batchSize);
+  LineState finishBatch() => LineState(stock: stock, ready: ready + batchSize);
 }
 
 /// One unlocked business (stall, takeaway, ...).
@@ -53,9 +52,9 @@ class StageState {
   });
 
   factory StageState.opened(StageDef def, DateTime now) => StageState(
-        customersUpdatedAt: now,
-        lines: {for (final l in def.lines) l.id: const LineState()},
-      );
+    customersUpdatedAt: now,
+    lines: {for (final l in def.lines) l.id: const LineState()},
+  );
 
   /// Items sold here, all lines together.
   final int sold;
@@ -92,17 +91,16 @@ class StageState {
     int? costCarry,
     Map<String, int>? staff,
     Map<String, LineState>? lines,
-  }) =>
-      StageState(
-        sold: sold ?? this.sold,
-        queue: queue ?? this.queue,
-        queueCarry: queueCarry ?? this.queueCarry,
-        customersUpdatedAt: customersUpdatedAt ?? this.customersUpdatedAt,
-        serveCarry: serveCarry ?? this.serveCarry,
-        costCarry: costCarry ?? this.costCarry,
-        staff: staff ?? this.staff,
-        lines: lines ?? this.lines,
-      );
+  }) => StageState(
+    sold: sold ?? this.sold,
+    queue: queue ?? this.queue,
+    queueCarry: queueCarry ?? this.queueCarry,
+    customersUpdatedAt: customersUpdatedAt ?? this.customersUpdatedAt,
+    serveCarry: serveCarry ?? this.serveCarry,
+    costCarry: costCarry ?? this.costCarry,
+    staff: staff ?? this.staff,
+    lines: lines ?? this.lines,
+  );
 
   StageState withLine(String id, LineState line) =>
       copyWith(lines: {...lines, id: line});
@@ -155,15 +153,14 @@ class GameState {
     Map<String, StageState>? stages,
     DateTime? lastSettledAt,
     DateTime? workReadyAt,
-  }) =>
-      GameState(
-        revision: revision ?? this.revision,
-        cashPaisa: cashPaisa ?? this.cashPaisa,
-        upgrades: upgrades ?? this.upgrades,
-        stages: stages ?? this.stages,
-        lastSettledAt: lastSettledAt ?? this.lastSettledAt,
-        workReadyAt: workReadyAt ?? this.workReadyAt,
-      );
+  }) => GameState(
+    revision: revision ?? this.revision,
+    cashPaisa: cashPaisa ?? this.cashPaisa,
+    upgrades: upgrades ?? this.upgrades,
+    stages: stages ?? this.stages,
+    lastSettledAt: lastSettledAt ?? this.lastSettledAt,
+    workReadyAt: workReadyAt ?? this.workReadyAt,
+  );
 
   GameState withStage(String id, StageState stage) =>
       copyWith(stages: {...stages, id: stage});

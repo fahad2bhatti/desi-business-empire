@@ -25,7 +25,11 @@ class WalletChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.payments_outlined, size: 18, color: AppColors.amberInk),
+            const Icon(
+              Icons.payments_outlined,
+              size: 18,
+              color: AppColors.amberInk,
+            ),
             const SizedBox(width: 8),
             Column(
               mainAxisSize: MainAxisSize.min,
@@ -42,7 +46,11 @@ class WalletChip extends StatelessWidget {
                 ),
                 const Text(
                   'VIRTUAL PKR',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.amberInk),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.amberInk,
+                  ),
                 ),
               ],
             ),

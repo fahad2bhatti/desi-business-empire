@@ -22,14 +22,18 @@ final databaseProvider = Provider<AppDatabase>((ref) {
   return db;
 });
 
-final saveRepositoryProvider =
-    Provider<SaveRepository>((ref) => SaveRepository(ref.watch(databaseProvider)));
+final saveRepositoryProvider = Provider<SaveRepository>(
+  (ref) => SaveRepository(ref.watch(databaseProvider)),
+);
 
 final economyConfigProvider = FutureProvider<EconomyConfig>((ref) async {
-  final config =
-      EconomyConfig.parse(await rootBundle.loadString('assets/config/economy_v0.json'));
+  final config = EconomyConfig.parse(
+    await rootBundle.loadString('assets/config/economy_v0.json'),
+  );
   final errors = validateConfig(config);
-  if (errors.isNotEmpty) throw StateError('Economy config invalid: ${errors.join('; ')}');
+  if (errors.isNotEmpty) {
+    throw StateError('Economy config invalid: ${errors.join('; ')}');
+  }
   return config;
 });
 
@@ -55,18 +59,22 @@ class GameSession {
   final bool saveFailed;
   final bool restoredFromBackup;
 
-  GameSession copyWith({GameState? state, Settlement? offline, bool? saveFailed}) => GameSession(
-        state: state ?? this.state,
-        offline: offline ?? this.offline,
-        saveFailed: saveFailed ?? this.saveFailed,
-        restoredFromBackup: restoredFromBackup,
-      );
+  GameSession copyWith({
+    GameState? state,
+    Settlement? offline,
+    bool? saveFailed,
+  }) => GameSession(
+    state: state ?? this.state,
+    offline: offline ?? this.offline,
+    saveFailed: saveFailed ?? this.saveFailed,
+    restoredFromBackup: restoredFromBackup,
+  );
 
   GameSession withoutOffline() => GameSession(
-        state: state,
-        saveFailed: saveFailed,
-        restoredFromBackup: restoredFromBackup,
-      );
+    state: state,
+    saveFailed: saveFailed,
+    restoredFromBackup: restoredFromBackup,
+  );
 }
 
 class SaveBlockedException implements Exception {
@@ -108,7 +116,9 @@ class GameController extends AsyncNotifier<GameSession> {
 
     // Time since the app was last open is settled once, here.
     final r = engine.advanceTo(s, now, foreground: false);
-    if (!identical(r.state, s)) await _repo.commit(r.state, r.entries, _config.version);
+    if (!identical(r.state, s)) {
+      await _repo.commit(r.state, r.entries, _config.version);
+    }
 
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
     _lifecycle = AppLifecycleListener(onPause: _onPause, onResume: _onResume);
@@ -122,31 +132,32 @@ class GameController extends AsyncNotifier<GameSession> {
   /// Runs one engine command at the current time. Returns the [Failure]
   /// (nothing changed) or `null` on success. Throws if saving failed; the
   /// UI then shows the retry banner.
-  Future<Failure?> run(CommandResult Function(GameState s, DateTime now) command) =>
-      _serial(() async {
-        final cur = state.requireValue;
-        if (cur.saveFailed) throw const SaveBlockedException();
-        final now = _clock.nowUtc();
-        try {
-          final settled = engine.advanceTo(cur.state, now, foreground: true);
-          if (!identical(settled.state, cur.state)) {
-            await _repo.commit(settled.state, settled.entries, _config.version);
-          }
-          final result = command(settled.state, now);
-          switch (result) {
-            case final Failure failure:
-              state = AsyncData(cur.copyWith(state: settled.state));
-              return failure;
-            case final Success ok:
-              await _repo.commit(ok.state, ok.entries, _config.version);
-              state = AsyncData(cur.copyWith(state: ok.state));
-              return null;
-          }
-        } catch (_) {
-          state = AsyncData(cur.copyWith(saveFailed: true));
-          rethrow;
-        }
-      });
+  Future<Failure?> run(
+    CommandResult Function(GameState s, DateTime now) command,
+  ) => _serial(() async {
+    final cur = state.requireValue;
+    if (cur.saveFailed) throw const SaveBlockedException();
+    final now = _clock.nowUtc();
+    try {
+      final settled = engine.advanceTo(cur.state, now, foreground: true);
+      if (!identical(settled.state, cur.state)) {
+        await _repo.commit(settled.state, settled.entries, _config.version);
+      }
+      final result = command(settled.state, now);
+      switch (result) {
+        case final Failure failure:
+          state = AsyncData(cur.copyWith(state: settled.state));
+          return failure;
+        case final Success ok:
+          await _repo.commit(ok.state, ok.entries, _config.version);
+          state = AsyncData(cur.copyWith(state: ok.state));
+          return null;
+      }
+    } catch (_) {
+      state = AsyncData(cur.copyWith(saveFailed: true));
+      rethrow;
+    }
+  });
 
   void acknowledgeOffline() {
     final cur = state.value;
@@ -155,11 +166,11 @@ class GameController extends AsyncNotifier<GameSession> {
 
   /// Reloads the stored save after a failed write, so memory and disk agree.
   Future<void> retrySave() => _serial(() async {
-        final loaded = await _repo.load(_config);
-        final cur = state.value;
-        if (loaded == null || cur == null) return;
-        state = AsyncData(GameSession(state: loaded.state, offline: cur.offline));
-      });
+    final loaded = await _repo.load(_config);
+    final cur = state.value;
+    if (loaded == null || cur == null) return;
+    state = AsyncData(GameSession(state: loaded.state, offline: cur.offline));
+  });
 
   /// Destroys the save. Call only after the player confirmed.
   Future<void> resetGame() async {
@@ -167,7 +178,10 @@ class GameController extends AsyncNotifier<GameSession> {
       final config = await ref.read(economyConfigProvider.future);
       await ref
           .read(saveRepositoryProvider)
-          .resetTo(GameState.newGame(config, ref.read(clockProvider).nowUtc()), config.version);
+          .resetTo(
+            GameState.newGame(config, ref.read(clockProvider).nowUtc()),
+            config.version,
+          );
     });
     ref.invalidateSelf();
   }
@@ -175,24 +189,24 @@ class GameController extends AsyncNotifier<GameSession> {
   // ---------- time ----------
 
   Future<void> _tick() => _serial(() async {
-        final cur = state.value;
-        if (cur == null || cur.saveFailed) return;
-        final now = _clock.nowUtc();
-        final r = engine.advanceTo(cur.state, now, foreground: true);
-        if (identical(r.state, cur.state)) return;
-        try {
-          await _repo.commit(r.state, r.entries, _config.version);
-          state = AsyncData(cur.copyWith(state: r.state));
-          final last = _lastBackup;
-          if (last == null || now.difference(last) >= _backupEvery) {
-            await _repo.backup();
-            await _repo.pruneLedger(now.subtract(_keepLedger));
-            _lastBackup = now;
-          }
-        } catch (_) {
-          state = AsyncData(cur.copyWith(saveFailed: true));
-        }
-      });
+    final cur = state.value;
+    if (cur == null || cur.saveFailed) return;
+    final now = _clock.nowUtc();
+    final r = engine.advanceTo(cur.state, now, foreground: true);
+    if (identical(r.state, cur.state)) return;
+    try {
+      await _repo.commit(r.state, r.entries, _config.version);
+      state = AsyncData(cur.copyWith(state: r.state));
+      final last = _lastBackup;
+      if (last == null || now.difference(last) >= _backupEvery) {
+        await _repo.backup();
+        await _repo.pruneLedger(now.subtract(_keepLedger));
+        _lastBackup = now;
+      }
+    } catch (_) {
+      state = AsyncData(cur.copyWith(saveFailed: true));
+    }
+  });
 
   void _onPause() {
     _ticker?.cancel();
@@ -208,7 +222,9 @@ class GameController extends AsyncNotifier<GameSession> {
       if (identical(r.state, cur.state)) return;
       try {
         await _repo.commit(r.state, r.entries, _config.version);
-        state = AsyncData(cur.copyWith(state: r.state, offline: _worthShowing(r) ? r : null));
+        state = AsyncData(
+          cur.copyWith(state: r.state, offline: _worthShowing(r) ? r : null),
+        );
       } catch (_) {
         state = AsyncData(cur.copyWith(saveFailed: true));
       }
@@ -217,7 +233,8 @@ class GameController extends AsyncNotifier<GameSession> {
   }
 
   bool _worthShowing(Settlement r) =>
-      r.credited >= const Duration(minutes: 1) && r.stages.values.any((x) => x.sold > 0);
+      r.credited >= const Duration(minutes: 1) &&
+      r.stages.values.any((x) => x.sold > 0);
 
   void _stop() {
     _ticker?.cancel();

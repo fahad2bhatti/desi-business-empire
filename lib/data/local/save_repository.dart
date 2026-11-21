@@ -22,7 +22,8 @@ class StaleSaveException implements Exception {
   final int attempted;
 
   @override
-  String toString() => 'StaleSaveException(stored: $stored, attempted: $attempted)';
+  String toString() =>
+      'StaleSaveException(stored: $stored, attempted: $attempted)';
 }
 
 class LoadedSave {
@@ -40,8 +41,9 @@ class SaveRepository {
   static const mainSlot = 'main';
   static const backupSlots = ['backup_1', 'backup_2'];
 
-  Future<SaveSlot?> _row(String slot) =>
-      (_db.select(_db.saveSlots)..where((t) => t.slot.equals(slot))).getSingleOrNull();
+  Future<SaveSlot?> _row(String slot) => (_db.select(
+    _db.saveSlots,
+  )..where((t) => t.slot.equals(slot))).getSingleOrNull();
 
   /// `null` means there is no save yet (new player).
   Future<LoadedSave?> load(EconomyConfig config) async {
@@ -58,9 +60,14 @@ class SaveRepository {
   }
 
   GameState? _decode(SaveSlot row, EconomyConfig config) {
-    if (row.schemaVersion != saveSchemaVersion) return null; // no migrations yet
+    if (row.schemaVersion != saveSchemaVersion) {
+      return null; // no migrations yet
+    }
     try {
-      return decodeGameState(jsonDecode(row.data) as Map<String, Object?>, config);
+      return decodeGameState(
+        jsonDecode(row.data) as Map<String, Object?>,
+        config,
+      );
     } on Object {
       return null;
     }
@@ -68,63 +75,90 @@ class SaveRepository {
 
   /// Writes the new state and its ledger entries in one transaction.
   /// Throws [StaleSaveException] if the stored revision is not older.
-  Future<void> commit(GameState s, List<LedgerEntry> entries, int configVersion) =>
-      _db.transaction(() async {
-        final stored = await _row(mainSlot);
-        if (stored != null && stored.revision >= s.revision) {
-          throw StaleSaveException(stored.revision, s.revision);
-        }
-        await _db.into(_db.saveSlots).insertOnConflictUpdate(_slot(mainSlot, s, configVersion));
-        for (var i = 0; i < entries.length; i++) {
-          final e = entries[i];
-          await _db.into(_db.ledgerRows).insert(LedgerRowsCompanion.insert(
-                revision: s.revision,
-                idx: i,
-                type: e.type.name,
-                deltaPaisa: e.deltaPaisa,
-                reason: e.reason,
-                at: e.at,
-              ));
-        }
-      });
+  Future<void> commit(
+    GameState s,
+    List<LedgerEntry> entries,
+    int configVersion,
+  ) => _db.transaction(() async {
+    final stored = await _row(mainSlot);
+    if (stored != null && stored.revision >= s.revision) {
+      throw StaleSaveException(stored.revision, s.revision);
+    }
+    await _db
+        .into(_db.saveSlots)
+        .insertOnConflictUpdate(_slot(mainSlot, s, configVersion));
+    for (var i = 0; i < entries.length; i++) {
+      final e = entries[i];
+      await _db
+          .into(_db.ledgerRows)
+          .insert(
+            LedgerRowsCompanion.insert(
+              revision: s.revision,
+              idx: i,
+              type: e.type.name,
+              deltaPaisa: e.deltaPaisa,
+              reason: e.reason,
+              at: e.at,
+            ),
+          );
+    }
+  });
 
   /// Overwrites the main slot without the revision check. Only for a fresh
   /// game or a state restored from a backup.
-  Future<void> replaceMain(GameState s, int configVersion, {bool clearLedger = false}) =>
-      _db.transaction(() async {
-        if (clearLedger) await _db.delete(_db.ledgerRows).go();
-        await _db.into(_db.saveSlots).insertOnConflictUpdate(_slot(mainSlot, s, configVersion));
-      });
+  Future<void> replaceMain(
+    GameState s,
+    int configVersion, {
+    bool clearLedger = false,
+  }) => _db.transaction(() async {
+    if (clearLedger) await _db.delete(_db.ledgerRows).go();
+    await _db
+        .into(_db.saveSlots)
+        .insertOnConflictUpdate(_slot(mainSlot, s, configVersion));
+  });
 
   /// Copies main -> backup_1 -> backup_2 (oldest dropped).
   Future<void> backup() => _db.transaction(() async {
-        final main = await _row(mainSlot);
-        if (main == null) return;
-        final first = await _row(backupSlots[0]);
-        if (first != null) {
-          await _db.into(_db.saveSlots).insertOnConflictUpdate(first.copyWith(slot: backupSlots[1]));
-        }
-        await _db.into(_db.saveSlots).insertOnConflictUpdate(main.copyWith(slot: backupSlots[0]));
-      });
+    final main = await _row(mainSlot);
+    if (main == null) return;
+    final first = await _row(backupSlots[0]);
+    if (first != null) {
+      await _db
+          .into(_db.saveSlots)
+          .insertOnConflictUpdate(first.copyWith(slot: backupSlots[1]));
+    }
+    await _db
+        .into(_db.saveSlots)
+        .insertOnConflictUpdate(main.copyWith(slot: backupSlots[0]));
+  });
 
   /// Wipes everything and starts over. Only after the player confirms.
-  Future<void> resetTo(GameState fresh, int configVersion) => _db.transaction(() async {
+  Future<void> resetTo(GameState fresh, int configVersion) =>
+      _db.transaction(() async {
         await _db.delete(_db.saveSlots).go();
         await _db.delete(_db.ledgerRows).go();
-        await _db.into(_db.saveSlots).insertOnConflictUpdate(_slot(mainSlot, fresh, configVersion));
+        await _db
+            .into(_db.saveSlots)
+            .insertOnConflictUpdate(_slot(mainSlot, fresh, configVersion));
       });
 
-  Future<List<LedgerRow>> recentLedger({int limit = 50}) => (_db.select(_db.ledgerRows)
-        ..orderBy([(t) => OrderingTerm.desc(t.revision), (t) => OrderingTerm.desc(t.idx)])
-        ..limit(limit))
-      .get();
+  Future<List<LedgerRow>> recentLedger({int limit = 50}) =>
+      (_db.select(_db.ledgerRows)
+            ..orderBy([
+              (t) => OrderingTerm.desc(t.revision),
+              (t) => OrderingTerm.desc(t.idx),
+            ])
+            ..limit(limit))
+          .get();
 
-  Future<List<LedgerRow>> ledgerSince(DateTime since) =>
-      (_db.select(_db.ledgerRows)..where((t) => t.at.isBiggerOrEqualValue(since))).get();
+  Future<List<LedgerRow>> ledgerSince(DateTime since) => (_db.select(
+    _db.ledgerRows,
+  )..where((t) => t.at.isBiggerOrEqualValue(since))).get();
 
   /// Keeps the ledger small: the foreground tick writes a few rows a second.
-  Future<int> pruneLedger(DateTime before) =>
-      (_db.delete(_db.ledgerRows)..where((t) => t.at.isSmallerThanValue(before))).go();
+  Future<int> pruneLedger(DateTime before) => (_db.delete(
+    _db.ledgerRows,
+  )..where((t) => t.at.isSmallerThanValue(before))).go();
 
   SaveSlotsCompanion _slot(String slot, GameState s, int configVersion) =>
       SaveSlotsCompanion.insert(

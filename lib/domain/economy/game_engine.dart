@@ -32,7 +32,12 @@ class GameEngine {
 
   // ---------- derived values ----------
 
-  double _stageValue(GameState s, String stageId, UpgradeEffect effect, double base) {
+  double _stageValue(
+    GameState s,
+    String stageId,
+    UpgradeEffect effect,
+    double base,
+  ) {
     var value = base;
     for (final u in config.upgrades) {
       final level = s.upgradeLevel(u.id);
@@ -43,8 +48,12 @@ class GameEngine {
     return value;
   }
 
-  int storage(GameState s, StageDef def) =>
-      _stageValue(s, def.id, UpgradeEffect.storage, def.storage.toDouble()).round();
+  int storage(GameState s, StageDef def) => _stageValue(
+    s,
+    def.id,
+    UpgradeEffect.storage,
+    def.storage.toDouble(),
+  ).round();
 
   double customersPerMin(GameState s, StageDef def) =>
       def.customersPerMin * _stageValue(s, def.id, UpgradeEffect.demandMult, 1);
@@ -71,7 +80,11 @@ class GameEngine {
       }
     }
     final mult = _stageValue(s, def.id, UpgradeEffect.priceMult, 1);
-    return LineStats(batch: batch, batchSeconds: seconds, pricePaisa: (price * mult).round());
+    return LineStats(
+      batch: batch,
+      batchSeconds: seconds,
+      pricePaisa: (price * mult).round(),
+    );
   }
 
   List<UnmetRequirement> missingRequirements(GameState s, String stageId) {
@@ -82,21 +95,42 @@ class GameEngine {
     r.sold.forEach((id, need) {
       final have = s.stages[id]?.sold ?? 0;
       if (have < need) {
-        unmet.add(UnmetRequirement(kind: RequirementKind.sold, target: id, have: have, need: need));
+        unmet.add(
+          UnmetRequirement(
+            kind: RequirementKind.sold,
+            target: id,
+            have: have,
+            need: need,
+          ),
+        );
       }
     });
     r.upgrades.forEach((id, need) {
       final have = s.upgradeLevel(id);
       if (have < need) {
-        unmet.add(UnmetRequirement(kind: RequirementKind.upgrade, target: id, have: have, need: need));
+        unmet.add(
+          UnmetRequirement(
+            kind: RequirementKind.upgrade,
+            target: id,
+            have: have,
+            need: need,
+          ),
+        );
       }
     });
     r.staff.forEach((id, roles) {
       roles.forEach((role, need) {
         final have = s.stages[id]?.staffCount(role) ?? 0;
         if (have < need) {
-          unmet.add(UnmetRequirement(
-              kind: RequirementKind.staff, target: id, role: role, have: have, need: need));
+          unmet.add(
+            UnmetRequirement(
+              kind: RequirementKind.staff,
+              target: id,
+              role: role,
+              have: have,
+              need: need,
+            ),
+          );
         }
       });
     });
@@ -115,30 +149,51 @@ class GameEngine {
 
   // ---------- commands ----------
 
-  CommandResult buyStock(GameState s, String stageId, String lineId, int qty, DateTime now) {
+  CommandResult buyStock(
+    GameState s,
+    String stageId,
+    String lineId,
+    int qty,
+    DateTime now,
+  ) {
     if (qty <= 0) return const Failure(FailReason.invalidQuantity);
     final def = config.stage(stageId);
     final line = def?.line(lineId);
     if (def == null || line == null) return const Failure(FailReason.unknownId);
-    if (!s.stages.containsKey(stageId)) return const Failure(FailReason.stageLocked);
+    if (!s.stages.containsKey(stageId)) {
+      return const Failure(FailReason.stageLocked);
+    }
     final st = _refresh(s, def, now);
-    if (st.totalStock + qty > storage(s, def)) return const Failure(FailReason.storageFull);
+    if (st.totalStock + qty > storage(s, def)) {
+      return const Failure(FailReason.storageFull);
+    }
     final cost = line.costPaisa * qty;
     if (cost > s.cashPaisa) return _noFunds(cost, s);
     final ls = st.lines[lineId]!;
     return _ok(
-      s.copyWith(cashPaisa: s.cashPaisa - cost)
-          .withStage(stageId, st.withLine(lineId, ls.copyWith(stock: ls.stock + qty))),
+      s
+          .copyWith(cashPaisa: s.cashPaisa - cost)
+          .withStage(
+            stageId,
+            st.withLine(lineId, ls.copyWith(stock: ls.stock + qty)),
+          ),
       [_entry(LedgerType.stockPurchase, -cost, '$stageId/$lineId x$qty', now)],
     );
   }
 
   /// Puts up to one batch of stock in the kadhai.
-  CommandResult startBatch(GameState s, String stageId, String lineId, DateTime now) {
+  CommandResult startBatch(
+    GameState s,
+    String stageId,
+    String lineId,
+    DateTime now,
+  ) {
     final def = config.stage(stageId);
     final line = def?.line(lineId);
     if (def == null || line == null) return const Failure(FailReason.unknownId);
-    if (!s.stages.containsKey(stageId)) return const Failure(FailReason.stageLocked);
+    if (!s.stages.containsKey(stageId)) {
+      return const Failure(FailReason.stageLocked);
+    }
     final st = _refresh(s, def, now);
     final ls = st.lines[lineId]!;
     if (ls.isCooking) return const Failure(FailReason.batchInProgress);
@@ -146,15 +201,25 @@ class GameEngine {
     final stats = lineStats(s, def, line);
     final size = math.min(stats.batch, ls.stock);
     final endsAt = now.add(Duration(seconds: stats.batchSeconds));
-    return _ok(s.withStage(stageId, st.withLine(lineId, ls.startBatch(size, endsAt))), const []);
+    return _ok(
+      s.withStage(stageId, st.withLine(lineId, ls.startBatch(size, endsAt))),
+      const [],
+    );
   }
 
   /// Sells one ready item to the first waiting customer.
-  CommandResult serve(GameState s, String stageId, String lineId, DateTime now) {
+  CommandResult serve(
+    GameState s,
+    String stageId,
+    String lineId,
+    DateTime now,
+  ) {
     final def = config.stage(stageId);
     final line = def?.line(lineId);
     if (def == null || line == null) return const Failure(FailReason.unknownId);
-    if (!s.stages.containsKey(stageId)) return const Failure(FailReason.stageLocked);
+    if (!s.stages.containsKey(stageId)) {
+      return const Failure(FailReason.stageLocked);
+    }
     final st = _refresh(s, def, now);
     if (st.queue < 1) return const Failure(FailReason.noCustomer);
     final ls = st.lines[lineId]!;
@@ -172,13 +237,18 @@ class GameEngine {
   CommandResult buyUpgrade(GameState s, String upgradeId, DateTime now) {
     final u = config.upgrade(upgradeId);
     if (u == null) return const Failure(FailReason.unknownId);
-    if (!s.stages.containsKey(u.stageId)) return const Failure(FailReason.stageLocked);
+    if (!s.stages.containsKey(u.stageId)) {
+      return const Failure(FailReason.stageLocked);
+    }
     final level = s.upgradeLevel(upgradeId);
     if (level >= u.levels.length) return const Failure(FailReason.maxLevel);
     final cost = u.levels[level].costPaisa;
     if (cost > s.cashPaisa) return _noFunds(cost, s);
     return _ok(
-      s.copyWith(cashPaisa: s.cashPaisa - cost, upgrades: {...s.upgrades, upgradeId: level + 1}),
+      s.copyWith(
+        cashPaisa: s.cashPaisa - cost,
+        upgrades: {...s.upgrades, upgradeId: level + 1},
+      ),
       [_entry(LedgerType.upgrade, -cost, '$upgradeId L${level + 1}', now)],
     );
   }
@@ -186,22 +256,35 @@ class GameEngine {
   CommandResult hire(GameState s, String stageId, String role, DateTime now) {
     final def = config.stage(stageId);
     final staffDef = def?.staff[role];
-    if (def == null || staffDef == null) return const Failure(FailReason.unknownId);
+    if (def == null || staffDef == null) {
+      return const Failure(FailReason.unknownId);
+    }
     final st = s.stages[stageId];
     if (st == null) return const Failure(FailReason.stageLocked);
     final count = st.staffCount(role);
     if (count >= staffDef.max) return const Failure(FailReason.maxStaff);
     if (st.sold < staffDef.requiresSold) {
-      return Failure(FailReason.requirementsNotMet, unmet: [
-        UnmetRequirement(
-            kind: RequirementKind.sold, target: stageId, have: st.sold, need: staffDef.requiresSold),
-      ]);
+      return Failure(
+        FailReason.requirementsNotMet,
+        unmet: [
+          UnmetRequirement(
+            kind: RequirementKind.sold,
+            target: stageId,
+            have: st.sold,
+            need: staffDef.requiresSold,
+          ),
+        ],
+      );
     }
     final cost = staffDef.hirePaisa;
     if (cost > s.cashPaisa) return _noFunds(cost, s);
     return _ok(
-      s.copyWith(cashPaisa: s.cashPaisa - cost)
-          .withStage(stageId, st.copyWith(staff: {...st.staff, role: count + 1})),
+      s
+          .copyWith(cashPaisa: s.cashPaisa - cost)
+          .withStage(
+            stageId,
+            st.copyWith(staff: {...st.staff, role: count + 1}),
+          ),
       [_entry(LedgerType.hire, -cost, '$stageId/$role #${count + 1}', now)],
     );
   }
@@ -209,13 +292,19 @@ class GameEngine {
   CommandResult unlockStage(GameState s, String stageId, DateTime now) {
     final def = config.stage(stageId);
     if (def == null) return const Failure(FailReason.unknownId);
-    if (s.stages.containsKey(stageId)) return const Failure(FailReason.alreadyUnlocked);
+    if (s.stages.containsKey(stageId)) {
+      return const Failure(FailReason.alreadyUnlocked);
+    }
     final unmet = missingRequirements(s, stageId);
-    if (unmet.isNotEmpty) return Failure(FailReason.requirementsNotMet, unmet: unmet);
+    if (unmet.isNotEmpty) {
+      return Failure(FailReason.requirementsNotMet, unmet: unmet);
+    }
     final cost = def.unlockCostPaisa;
     if (cost > s.cashPaisa) return _noFunds(cost, s);
     return _ok(
-      s.copyWith(cashPaisa: s.cashPaisa - cost).withStage(stageId, StageState.opened(def, now)),
+      s
+          .copyWith(cashPaisa: s.cashPaisa - cost)
+          .withStage(stageId, StageState.opened(def, now)),
       [_entry(LedgerType.stageUnlock, -cost, stageId, now)],
     );
   }
@@ -228,7 +317,10 @@ class GameEngine {
     }
     final pay = config.recoveryPayPaisa;
     return _ok(
-      s.copyWith(cashPaisa: s.cashPaisa + pay, workReadyAt: now.add(config.recoveryCooldown)),
+      s.copyWith(
+        cashPaisa: s.cashPaisa + pay,
+        workReadyAt: now.add(config.recoveryCooldown),
+      ),
       [_entry(LedgerType.work, pay, 'work', now)],
     );
   }
@@ -242,12 +334,15 @@ class GameEngine {
     final st = s.stages[def.id]!;
     final lines = {
       for (final e in st.lines.entries)
-        e.key: (e.value.batchEndsAt != null && !now.isBefore(e.value.batchEndsAt!))
+        e.key:
+            (e.value.batchEndsAt != null && !now.isBefore(e.value.batchEndsAt!))
             ? e.value.finishBatch()
             : e.value,
     };
     final elapsedMs = now.difference(st.customersUpdatedAt).inMilliseconds;
-    if (elapsedMs <= 0) return st.copyWith(lines: lines); // clock went back: no arrivals
+    if (elapsedMs <= 0) {
+      return st.copyWith(lines: lines); // clock went back: no arrivals
+    }
     final perMinMilli = (customersPerMin(s, def) * 1000).round();
     final total = st.queueCarry + elapsedMs * perMinMilli;
     return st.copyWith(
@@ -261,8 +356,11 @@ class GameEngine {
   Success _ok(GameState s, List<LedgerEntry> entries) =>
       Success(s.copyWith(revision: s.revision + 1), entries);
 
-  Failure _noFunds(int cost, GameState s) =>
-      Failure(FailReason.insufficientFunds, neededPaisa: cost, availablePaisa: s.cashPaisa);
+  Failure _noFunds(int cost, GameState s) => Failure(
+    FailReason.insufficientFunds,
+    neededPaisa: cost,
+    availablePaisa: s.cashPaisa,
+  );
 
   LedgerEntry _entry(LedgerType type, int delta, String reason, DateTime at) =>
       LedgerEntry(type: type, deltaPaisa: delta, reason: reason, at: at);

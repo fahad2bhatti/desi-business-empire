@@ -25,7 +25,10 @@ class LoadErrorScreen extends ConsumerWidget {
             children: [
               Text(
                 corrupt ? 'Save parhi nahi ja saki' : 'Game load nahi hua',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
@@ -59,7 +62,10 @@ class LoadErrorScreen extends ConsumerWidget {
         title: const Text('Pakka?'),
         content: const Text('Saari progress mit jayegi. Ye wapas nahi hoga.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Nahi')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Nahi'),
+          ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Haan, naya game'),
@@ -67,6 +73,8 @@ class LoadErrorScreen extends ConsumerWidget {
         ],
       ),
     );
-    if (ok ?? false) await ref.read(gameControllerProvider.notifier).resetGame();
+    if (ok ?? false) {
+      await ref.read(gameControllerProvider.notifier).resetGame();
+    }
   }
 }

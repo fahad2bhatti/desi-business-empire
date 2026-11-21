@@ -31,16 +31,21 @@ void main() {
 
   test('catches line shares that do not add up to 1', () {
     final raw = _raw();
-    final line = (_stage(raw, 1)['lines'] as List).first as Map<String, Object?>;
+    final line =
+        (_stage(raw, 1)['lines'] as List).first as Map<String, Object?>;
     line['share'] = 0.9;
     expect(_validate(raw), contains(startsWith('stage takeaway: line shares')));
   });
 
   test('catches a price that is not above cost', () {
     final raw = _raw();
-    final line = (_stage(raw, 0)['lines'] as List).first as Map<String, Object?>;
+    final line =
+        (_stage(raw, 0)['lines'] as List).first as Map<String, Object?>;
     line['price'] = 10;
-    expect(_validate(raw), contains('stage stall line samosa: price must be above cost'));
+    expect(
+      _validate(raw),
+      contains('stage stall line samosa: price must be above cost'),
+    );
   });
 
   test('catches requirements on unknown upgrades and later stages', () {
@@ -49,8 +54,16 @@ void main() {
     (req['upgrades'] as Map)['missing'] = 1;
     (req['sold'] as Map)['restaurant'] = 5;
     final errors = _validate(raw);
-    expect(errors, contains('stage takeaway: requirement on unknown upgrade missing'));
-    expect(errors, contains('stage takeaway: sold requirement on unknown/later stage restaurant'));
+    expect(
+      errors,
+      contains('stage takeaway: requirement on unknown upgrade missing'),
+    );
+    expect(
+      errors,
+      contains(
+        'stage takeaway: sold requirement on unknown/later stage restaurant',
+      ),
+    );
   });
 
   test('catches an upgrade that points at a missing line', () {

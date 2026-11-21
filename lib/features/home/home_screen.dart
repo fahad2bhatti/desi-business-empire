@@ -32,10 +32,17 @@ class ProfitSummary {
   int get net => revenue - stock - wages - rent;
 }
 
-final recentProfitProvider = FutureProvider.autoDispose<ProfitSummary>((ref) async {
+final recentProfitProvider = FutureProvider.autoDispose<ProfitSummary>((
+  ref,
+) async {
   // Refresh roughly every 15 saves instead of every second.
-  ref.watch(gameControllerProvider.select((a) => (a.value?.state.revision ?? 0) ~/ 15));
-  final since = ref.read(clockProvider).nowUtc().subtract(const Duration(hours: 1));
+  ref.watch(
+    gameControllerProvider.select((a) => (a.value?.state.revision ?? 0) ~/ 15),
+  );
+  final since = ref
+      .read(clockProvider)
+      .nowUtc()
+      .subtract(const Duration(hours: 1));
   final rows = await ref.read(saveRepositoryProvider).ledgerSince(since);
   var revenue = 0, stock = 0, wages = 0, rent = 0;
   for (final r in rows) {
@@ -53,7 +60,12 @@ final recentProfitProvider = FutureProvider.autoDispose<ProfitSummary>((ref) asy
         break;
     }
   }
-  return ProfitSummary(revenue: revenue, stock: stock, wages: wages, rent: rent);
+  return ProfitSummary(
+    revenue: revenue,
+    stock: stock,
+    wages: wages,
+    rent: rent,
+  );
 });
 
 class HomeScreen extends ConsumerWidget {
@@ -63,9 +75,13 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final session = ref.watch(gameControllerProvider).requireValue;
     final engine = ref.read(gameControllerProvider.notifier).engine;
-    final view = engine.observe(session.state, ref.read(clockProvider).nowUtc());
+    final view = engine.observe(
+      session.state,
+      ref.read(clockProvider).nowUtc(),
+    );
     final goal = nextGoal(engine, view);
-    final profit = ref.watch(recentProfitProvider).value ?? const ProfitSummary();
+    final profit =
+        ref.watch(recentProfitProvider).value ?? const ProfitSummary();
 
     return SafeArea(
       child: ListView(
@@ -77,8 +93,17 @@ class HomeScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Salam, Seth sahab', style: TextStyle(fontSize: 12, color: AppColors.muted)),
-                    Text('Mera Karobar', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+                    Text(
+                      'Salam, Seth sahab',
+                      style: TextStyle(fontSize: 12, color: AppColors.muted),
+                    ),
+                    Text(
+                      'Mera Karobar',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -93,9 +118,15 @@ class HomeScreen extends ConsumerWidget {
           const Row(
             children: [
               Expanded(
-                child: Text('Aap ke karobar', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700)),
+                child: Text(
+                  'Aap ke karobar',
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700),
+                ),
               ),
-              Text('Game ka paisa, asli nahi', style: TextStyle(fontSize: 12, color: AppColors.muted)),
+              Text(
+                'Game ka paisa, asli nahi',
+                style: TextStyle(fontSize: 12, color: AppColors.muted),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -117,14 +148,19 @@ class _ProfitCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget line(String label, int paisa) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Row(
-            children: [
-              Expanded(child: Text(label, style: const TextStyle(color: AppColors.muted, fontSize: 13))),
-              Text(formatRs(paisa), style: const TextStyle(fontSize: 13)),
-            ],
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(color: AppColors.muted, fontSize: 13),
+            ),
           ),
-        );
+          Text(formatRs(paisa), style: const TextStyle(fontSize: 13)),
+        ],
+      ),
+    );
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -141,8 +177,10 @@ class _ProfitCard extends StatelessWidget {
                 color: profit.net >= 0 ? AppColors.green : AppColors.terra,
               ),
             ),
-            const Text('khalis munafa (investment ke ilawa)',
-                style: TextStyle(fontSize: 12, color: AppColors.muted)),
+            const Text(
+              'khalis munafa (investment ke ilawa)',
+              style: TextStyle(fontSize: 12, color: AppColors.muted),
+            ),
             const SizedBox(height: 10),
             line('Bikri aur mazdoori', profit.revenue),
             line('Saman khareeda', -profit.stock),
@@ -174,29 +212,55 @@ class _GoalCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('AGLA GOAL',
-                  style: TextStyle(color: AppColors.onTealMuted, fontSize: 12, fontWeight: FontWeight.w600)),
+              const Text(
+                'AGLA GOAL',
+                style: TextStyle(
+                  color: AppColors.onTealMuted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const SizedBox(height: 6),
-              Text(goal.title,
-                  style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w700)),
+              Text(
+                goal.title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               if (goal.have != null && goal.need != null) ...[
                 const SizedBox(height: 10),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(
-                    value: goal.need == 0 ? 1.0 : (goal.have! / goal.need!).clamp(0.0, 1.0).toDouble(),
+                    value: goal.need == 0
+                        ? 1.0
+                        : (goal.have! / goal.need!).clamp(0.0, 1.0).toDouble(),
                     minHeight: 8,
                     color: AppColors.amber,
                     backgroundColor: Colors.white.withValues(alpha: 0.22),
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text('${goal.have! > goal.need! ? goal.need : goal.have} / ${goal.need}',
-                    style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700)),
+                Text(
+                  '${goal.have! > goal.need! ? goal.need : goal.have} / ${goal.need}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
               if (goal.detail != null) ...[
                 const SizedBox(height: 6),
-                Text(goal.detail!, style: const TextStyle(color: AppColors.onTealMuted, fontSize: 13)),
+                Text(
+                  goal.detail!,
+                  style: const TextStyle(
+                    color: AppColors.onTealMuted,
+                    fontSize: 13,
+                  ),
+                ),
               ],
             ],
           ),
@@ -207,7 +271,11 @@ class _GoalCard extends StatelessWidget {
 }
 
 class _BusinessCard extends StatelessWidget {
-  const _BusinessCard({required this.def, required this.state, required this.engine});
+  const _BusinessCard({
+    required this.def,
+    required this.state,
+    required this.engine,
+  });
 
   final StageDef def;
   final GameState state;
@@ -216,13 +284,15 @@ class _BusinessCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final st = state.stages[def.id];
-    if (st == null) return _locked();
-    final staff = def.staff.keys.where((r) => st.staffCount(r) > 0).map((r) => '${roleName(r)} ${st.staffCount(r)}');
+    if (st == null) return _locked(context);
+    final staff = def.staff.keys
+        .where((r) => st.staffCount(r) > 0)
+        .map((r) => '${roleName(r)} ${st.staffCount(r)}');
     final ready = st.lines.values.fold(0, (sum, l) => sum + l.ready);
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: def.id == engine.config.stages.first.id ? () => context.go('/business/${def.id}') : null,
+        onTap: () => context.go('/business/${def.id}'),
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(
@@ -234,19 +304,39 @@ class _BusinessCard extends StatelessWidget {
                   color: AppColors.amberLight,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.storefront, color: AppColors.amberInk, size: 28),
+                child: const Icon(
+                  Icons.storefront,
+                  color: AppColors.amberInk,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(def.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                    Text(
+                      def.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 16,
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text('Saman ${st.totalStock} · Tayyar $ready · Bika ${st.sold}',
-                        style: const TextStyle(fontSize: 13, color: AppColors.muted)),
-                    Text(staff.isEmpty ? 'Koi staff nahi' : staff.join(' · '),
-                        style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                    Text(
+                      'Saman ${st.totalStock} · Tayyar $ready · Bika ${st.sold}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.muted,
+                      ),
+                    ),
+                    Text(
+                      staff.isEmpty ? 'Koi staff nahi' : staff.join(' · '),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.muted,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -257,47 +347,71 @@ class _BusinessCard extends StatelessWidget {
     );
   }
 
-  Widget _locked() {
+  Widget _locked(BuildContext context) {
     final unmet = engine.missingRequirements(state, def.id);
-    final isNext = engine.config.stages.where((s) => !state.stages.containsKey(s.id)).first.id == def.id;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.line, width: 1.5),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 2),
-            child: Icon(Icons.lock_outline, color: AppColors.muted),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(def.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-                Text('Kholne ki qeemat: ${formatRs(def.unlockCostPaisa)}',
-                    style: const TextStyle(fontSize: 13, color: AppColors.muted)),
-                if (isNext)
-                  for (final u in unmet)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text('• ${describeRequirement(u, engine.config)} (${u.have}/${u.need})',
-                          style: const TextStyle(fontSize: 13)),
-                    ),
-                if (isNext && unmet.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 4),
-                    child: Text('Saari shartein poori! Kholne ki screen agle batch mein.',
-                        style: TextStyle(fontSize: 13, color: AppColors.green)),
-                  ),
-              ],
+    final isNext =
+        engine.config.stages
+            .where((s) => !state.stages.containsKey(s.id))
+            .first
+            .id ==
+        def.id;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: isNext ? () => context.go('/expand/${def.id}') : null,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.line, width: 1.5),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Icon(Icons.lock_outline, color: AppColors.muted),
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    def.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    'Kholne ki qeemat: ${formatRs(def.unlockCostPaisa)}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.muted,
+                    ),
+                  ),
+                  if (isNext)
+                    for (final u in unmet)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          '• ${describeRequirement(u, engine.config)} (${u.have}/${u.need})',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                  if (isNext && unmet.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Text(
+                        'Saari shartein poori! Tap kar ke kholein.',
+                        style: TextStyle(fontSize: 13, color: AppColors.green),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

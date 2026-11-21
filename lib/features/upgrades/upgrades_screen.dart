@@ -19,13 +19,18 @@ class UpgradesScreen extends ConsumerWidget {
     final engine = ref.read(gameControllerProvider.notifier).engine;
     final s = session.state;
     final def = engine.config.stage(stageId);
-    final upgrades = engine.config.upgrades.where((u) => u.stageId == stageId).toList();
+    final upgrades = engine.config.upgrades
+        .where((u) => u.stageId == stageId)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Upgrades · ${def?.name ?? stageId}'),
         actions: [
-          Padding(padding: const EdgeInsets.only(right: 12), child: WalletChip(paisa: s.cashPaisa)),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: WalletChip(paisa: s.cashPaisa),
+          ),
         ],
       ),
       body: ListView(
@@ -86,18 +91,39 @@ class _UpgradeCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text.rich(TextSpan(children: [
-                    TextSpan(text: name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+                  Text.rich(
                     TextSpan(
-                      text: '  L${p.level}/${p.maxLevel}',
-                      style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                      children: [
+                        TextSpan(
+                          text: name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
+                        TextSpan(
+                          text: '  L${p.level}/${p.maxLevel}',
+                          style: const TextStyle(
+                            color: AppColors.muted,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
-                  ])),
+                  ),
                   const SizedBox(height: 4),
-                  Text(p.label, style: const TextStyle(fontSize: 13, color: AppColors.muted)),
+                  Text(
+                    p.label,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppColors.muted,
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   Semantics(
-                    label: p.isMaxed ? '${p.label}: ${p.before}' : '${p.label}: ${p.before} se ${p.after}',
+                    label: p.isMaxed
+                        ? '${p.label}: ${p.before}'
+                        : '${p.label}: ${p.before} se ${p.after}',
                     excludeSemantics: true,
                     child: Row(
                       children: [
@@ -105,19 +131,33 @@ class _UpgradeCard extends StatelessWidget {
                         if (!p.isMaxed) ...[
                           const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 6),
-                            child: Icon(Icons.arrow_forward, size: 16, color: AppColors.muted),
+                            child: Icon(
+                              Icons.arrow_forward,
+                              size: 16,
+                              color: AppColors.muted,
+                            ),
                           ),
-                          Text(p.after!,
-                              style: const TextStyle(
-                                  fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.green)),
+                          Text(
+                            p.after!,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.green,
+                            ),
+                          ),
                         ],
                       ],
                     ),
                   ),
                   if (short) ...[
                     const SizedBox(height: 4),
-                    Text('${formatRs(cost - cash)} kam hain',
-                        style: const TextStyle(fontSize: 13, color: AppColors.terra)),
+                    Text(
+                      '${formatRs(cost - cash)} kam hain',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.terra,
+                      ),
+                    ),
                   ],
                 ],
               ),

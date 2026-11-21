@@ -19,7 +19,9 @@ Future<bool> runCommand(
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(text)));
   try {
-    final failure = await ref.read(gameControllerProvider.notifier).run(command);
+    final failure = await ref
+        .read(gameControllerProvider.notifier)
+        .run(command);
     if (failure != null) {
       say(failureText(failure, ref.read(clockProvider).nowUtc()));
       return false;
