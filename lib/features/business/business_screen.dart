@@ -11,6 +11,7 @@ import '../../domain/economy/game_state.dart';
 import '../../widgets/wallet_chip.dart';
 import '../common/run_command.dart';
 import '../common/widgets.dart';
+import '../onboarding/tutorial.dart';
 
 const _buyQty = 10;
 
@@ -85,6 +86,8 @@ class BusinessScreen extends ConsumerWidget {
               ),
             ),
           ],
+          const SizedBox(height: 12),
+          TutorialCoach(starterId: engine.config.stages.first.id),
           if (session.restoredFromBackup) ...[
             const SizedBox(height: 12),
             const NoticeBanner(

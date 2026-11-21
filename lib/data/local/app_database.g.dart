@@ -829,16 +829,234 @@ class LedgerRowsCompanion extends UpdateCompanion<LedgerRow> {
   }
 }
 
+class $PrefsTable extends Prefs with TableInfo<$PrefsTable, Pref> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PrefsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _prefKeyMeta = const VerificationMeta(
+    'prefKey',
+  );
+  @override
+  late final GeneratedColumn<String> prefKey = GeneratedColumn<String>(
+    'pref_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _prefValueMeta = const VerificationMeta(
+    'prefValue',
+  );
+  @override
+  late final GeneratedColumn<String> prefValue = GeneratedColumn<String>(
+    'pref_value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [prefKey, prefValue];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'prefs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Pref> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('pref_key')) {
+      context.handle(
+        _prefKeyMeta,
+        prefKey.isAcceptableOrUnknown(data['pref_key']!, _prefKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_prefKeyMeta);
+    }
+    if (data.containsKey('pref_value')) {
+      context.handle(
+        _prefValueMeta,
+        prefValue.isAcceptableOrUnknown(data['pref_value']!, _prefValueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_prefValueMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {prefKey};
+  @override
+  Pref map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Pref(
+      prefKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pref_key'],
+      )!,
+      prefValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}pref_value'],
+      )!,
+    );
+  }
+
+  @override
+  $PrefsTable createAlias(String alias) {
+    return $PrefsTable(attachedDatabase, alias);
+  }
+}
+
+class Pref extends DataClass implements Insertable<Pref> {
+  final String prefKey;
+  final String prefValue;
+  const Pref({required this.prefKey, required this.prefValue});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['pref_key'] = Variable<String>(prefKey);
+    map['pref_value'] = Variable<String>(prefValue);
+    return map;
+  }
+
+  PrefsCompanion toCompanion(bool nullToAbsent) {
+    return PrefsCompanion(prefKey: Value(prefKey), prefValue: Value(prefValue));
+  }
+
+  factory Pref.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Pref(
+      prefKey: serializer.fromJson<String>(json['prefKey']),
+      prefValue: serializer.fromJson<String>(json['prefValue']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'prefKey': serializer.toJson<String>(prefKey),
+      'prefValue': serializer.toJson<String>(prefValue),
+    };
+  }
+
+  Pref copyWith({String? prefKey, String? prefValue}) => Pref(
+    prefKey: prefKey ?? this.prefKey,
+    prefValue: prefValue ?? this.prefValue,
+  );
+  Pref copyWithCompanion(PrefsCompanion data) {
+    return Pref(
+      prefKey: data.prefKey.present ? data.prefKey.value : this.prefKey,
+      prefValue: data.prefValue.present ? data.prefValue.value : this.prefValue,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Pref(')
+          ..write('prefKey: $prefKey, ')
+          ..write('prefValue: $prefValue')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(prefKey, prefValue);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Pref &&
+          other.prefKey == this.prefKey &&
+          other.prefValue == this.prefValue);
+}
+
+class PrefsCompanion extends UpdateCompanion<Pref> {
+  final Value<String> prefKey;
+  final Value<String> prefValue;
+  final Value<int> rowid;
+  const PrefsCompanion({
+    this.prefKey = const Value.absent(),
+    this.prefValue = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PrefsCompanion.insert({
+    required String prefKey,
+    required String prefValue,
+    this.rowid = const Value.absent(),
+  }) : prefKey = Value(prefKey),
+       prefValue = Value(prefValue);
+  static Insertable<Pref> custom({
+    Expression<String>? prefKey,
+    Expression<String>? prefValue,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (prefKey != null) 'pref_key': prefKey,
+      if (prefValue != null) 'pref_value': prefValue,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PrefsCompanion copyWith({
+    Value<String>? prefKey,
+    Value<String>? prefValue,
+    Value<int>? rowid,
+  }) {
+    return PrefsCompanion(
+      prefKey: prefKey ?? this.prefKey,
+      prefValue: prefValue ?? this.prefValue,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (prefKey.present) {
+      map['pref_key'] = Variable<String>(prefKey.value);
+    }
+    if (prefValue.present) {
+      map['pref_value'] = Variable<String>(prefValue.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PrefsCompanion(')
+          ..write('prefKey: $prefKey, ')
+          ..write('prefValue: $prefValue, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $SaveSlotsTable saveSlots = $SaveSlotsTable(this);
   late final $LedgerRowsTable ledgerRows = $LedgerRowsTable(this);
+  late final $PrefsTable prefs = $PrefsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
-  List<DatabaseSchemaEntity> get allSchemaEntities => [saveSlots, ledgerRows];
+  List<DatabaseSchemaEntity> get allSchemaEntities => [
+    saveSlots,
+    ledgerRows,
+    prefs,
+  ];
 }
 
 typedef $$SaveSlotsTableCreateCompanionBuilder = SaveSlotsCompanion Function({
@@ -1290,6 +1508,149 @@ typedef $$LedgerRowsTableProcessedTableManager =
       LedgerRow,
       PrefetchHooks Function()
     >;
+typedef $$PrefsTableCreateCompanionBuilder = PrefsCompanion Function({
+  required String prefKey,
+  required String prefValue,
+  Value<int> rowid,
+});
+typedef $$PrefsTableUpdateCompanionBuilder = PrefsCompanion Function({
+  Value<String> prefKey,
+  Value<String> prefValue,
+  Value<int> rowid,
+});
+
+class $$PrefsTableFilterComposer extends Composer<_$AppDatabase, $PrefsTable> {
+  $$PrefsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get prefKey => $composableBuilder(
+    column: $table.prefKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get prefValue => $composableBuilder(
+    column: $table.prefValue,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PrefsTableOrderingComposer
+    extends Composer<_$AppDatabase, $PrefsTable> {
+  $$PrefsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get prefKey => $composableBuilder(
+    column: $table.prefKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get prefValue => $composableBuilder(
+    column: $table.prefValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PrefsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PrefsTable> {
+  $$PrefsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get prefKey =>
+      $composableBuilder(column: $table.prefKey, builder: (column) => column);
+
+  GeneratedColumn<String> get prefValue =>
+      $composableBuilder(column: $table.prefValue, builder: (column) => column);
+}
+
+class $$PrefsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PrefsTable,
+          Pref,
+          $$PrefsTableFilterComposer,
+          $$PrefsTableOrderingComposer,
+          $$PrefsTableAnnotationComposer,
+          $$PrefsTableCreateCompanionBuilder,
+          $$PrefsTableUpdateCompanionBuilder,
+          (Pref, BaseReferences<_$AppDatabase, $PrefsTable, Pref>),
+          Pref,
+          PrefetchHooks Function()
+        > {
+  $$PrefsTableTableManager(_$AppDatabase db, $PrefsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PrefsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PrefsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PrefsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> prefKey = const Value.absent(),
+                Value<String> prefValue = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PrefsCompanion(
+                prefKey: prefKey,
+                prefValue: prefValue,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String prefKey,
+                required String prefValue,
+                Value<int> rowid = const Value.absent(),
+              }) => PrefsCompanion.insert(
+                prefKey: prefKey,
+                prefValue: prefValue,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$PrefsTable, Pref>(table),
+                  BaseReferences<_$AppDatabase, $PrefsTable, Pref>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PrefsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PrefsTable,
+      Pref,
+      $$PrefsTableFilterComposer,
+      $$PrefsTableOrderingComposer,
+      $$PrefsTableAnnotationComposer,
+      $$PrefsTableCreateCompanionBuilder,
+      $$PrefsTableUpdateCompanionBuilder,
+      (Pref, BaseReferences<_$AppDatabase, $PrefsTable, Pref>),
+      Pref,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1298,4 +1659,6 @@ class $AppDatabaseManager {
       $$SaveSlotsTableTableManager(_db, _db.saveSlots);
   $$LedgerRowsTableTableManager get ledgerRows =>
       $$LedgerRowsTableTableManager(_db, _db.ledgerRows);
+  $$PrefsTableTableManager get prefs =>
+      $$PrefsTableTableManager(_db, _db.prefs);
 }

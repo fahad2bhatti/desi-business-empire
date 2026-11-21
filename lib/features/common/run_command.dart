@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/game_controller.dart';
+import '../../app/prefs.dart';
 import '../../core/failure_text.dart';
 import '../../domain/economy/command_result.dart';
 import '../../domain/economy/game_state.dart';
@@ -26,7 +28,12 @@ Future<bool> runCommand(
       say(failureText(failure, ref.read(clockProvider).nowUtc()));
       return false;
     }
-    if (successText != null) say(successText);
+    if (ref.read(prefsProvider).value?.haptics ?? false) {
+      HapticFeedback.selectionClick();
+    }
+    if (successText != null) {
+      say(successText);
+    }
     return true;
   } catch (_) {
     say('Save nahi ho saka. Banner mein "Dobara koshish" dabayein.');

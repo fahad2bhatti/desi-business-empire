@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/game_controller.dart';
+import '../../app/prefs.dart';
 import '../../app/theme.dart';
 import '../../core/labels.dart';
 import '../../core/money.dart';
@@ -12,6 +13,7 @@ import '../../domain/economy/game_engine.dart';
 import '../../domain/economy/game_state.dart';
 import '../../widgets/wallet_chip.dart';
 import '../common/widgets.dart';
+import '../onboarding/tutorial.dart';
 import 'next_goal.dart';
 
 /// Money in and out over the last hour, from the ledger.
@@ -89,17 +91,18 @@ class HomeScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Salam, Seth sahab',
                       style: TextStyle(fontSize: 12, color: AppColors.muted),
                     ),
                     Text(
-                      'Mera Karobar',
-                      style: TextStyle(
+                      ref.watch(prefsProvider).value?.businessName ??
+                          'Mera Karobar',
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
                       ),
@@ -111,6 +114,7 @@ class HomeScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
+          TutorialCoach(starterId: engine.config.stages.first.id),
           _ProfitCard(profit: profit),
           const SizedBox(height: 14),
           _GoalCard(goal: goal),
@@ -167,7 +171,17 @@ class _ProfitCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SectionLabel('Pichle 60 minute ka hisaab'),
+            Row(
+              children: [
+                const Expanded(
+                  child: SectionLabel('Pichle 60 minute ka hisaab'),
+                ),
+                TextButton(
+                  onPressed: () => context.go('/more/wallet'),
+                  child: const Text('Tafseel'),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
             Text(
               '${profit.net >= 0 ? '+ ' : ''}${formatRs(profit.net)}',

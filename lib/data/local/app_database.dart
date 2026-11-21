@@ -30,12 +30,31 @@ class LedgerRows extends Table {
   Set<Column> get primaryKey => {revision, idx};
 }
 
-@DriftDatabase(tables: [SaveSlots, LedgerRows])
+/// Device preferences and tutorial progress (not part of the economy).
+class Prefs extends Table {
+  TextColumn get prefKey => text()();
+  TextColumn get prefValue => text()();
+
+  @override
+  Set<Column> get primaryKey => {prefKey};
+}
+
+@DriftDatabase(tables: [SaveSlots, LedgerRows, Prefs])
 class AppDatabase extends _$AppDatabase {
   /// Pass an executor in tests (e.g. `NativeDatabase.memory()`).
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'desi_business_empire'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(prefs);
+      }
+    },
+  );
 }

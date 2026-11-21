@@ -5,10 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../features/common/load_error.dart';
 import '../features/common/widgets.dart';
 import '../features/offline/offline_summary_sheet.dart';
+import '../features/onboarding/tutorial.dart';
+import '../features/onboarding/welcome_screen.dart';
 import 'game_controller.dart';
+import 'prefs.dart';
 
-/// Loads the game once for every tab, shows the offline summary and the
-/// save-error banner, and holds the bottom navigation.
+/// Loads the game once for every tab, shows the welcome screen on first
+/// launch, the offline summary and the save-error banner, moves the
+/// tutorial forward, and holds the bottom navigation.
 class GameShell extends ConsumerWidget {
   const GameShell({super.key, required this.shell});
 
@@ -20,56 +24,110 @@ class GameShell extends ConsumerWidget {
       prev,
       next,
     ) {
-      if (next == null || identical(prev, next)) return;
+      if (next == null || identical(prev, next)) {
+        return;
+      }
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) showOfflineSummary(context, next);
+        if (context.mounted) {
+          showOfflineSummary(context, next);
+        }
       });
     });
 
-    return ref
-        .watch(gameControllerProvider)
-        .when(
-          loading: () =>
-              const Scaffold(body: Center(child: CircularProgressIndicator())),
-          error: (error, _) => LoadErrorScreen(error: error),
-          data: (session) => Scaffold(
-            body: Column(
-              children: [
-                if (session.saveFailed)
-                  SafeArea(
-                    bottom: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: NoticeBanner(
-                        text: 'Save mein masla aaya. Jab tak theek na ho, khareed o farokht band hai.',
-                        action: 'Dobara koshish',
-                        onPressed: ref
-                            .read(gameControllerProvider.notifier)
-                            .retrySave,
-                      ),
-                    ),
-                  ),
-                Expanded(child: shell),
-              ],
+    ref.listen(gameControllerProvider.select((a) => a.value?.state.revision), (
+      before,
+      after,
+    ) {
+      final prefs = ref.read(prefsProvider).value;
+      final game = ref.read(gameControllerProvider).value;
+      if (prefs == null || game == null) {
+        return;
+      }
+      final step = prefs.tutorialStep;
+      if (step == Tutorial.welcome || step == Tutorial.done) {
+        return;
+      }
+      final starter = ref
+          .read(gameControllerProvider.notifier)
+          .engine
+          .config
+          .stages
+          .first
+          .id;
+      final next = advanceTutorial(step, game.state, starter);
+      if (next != step) {
+        ref.read(prefsProvider.notifier).setTutorialStep(next);
+        if (next == Tutorial.done) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Shabaash! Tutorial mukammal. Ab apna karobar barhayein.',
+              ),
             ),
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: shell.currentIndex,
-              onDestinationSelected: (i) =>
-                  shell.goBranch(i, initialLocation: i == shell.currentIndex),
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home),
-                  label: 'Home',
+          );
+        }
+      }
+    });
+
+    final prefs = ref.watch(prefsProvider);
+    final game = ref.watch(gameControllerProvider);
+    if (game.hasError) {
+      return LoadErrorScreen(error: game.error!);
+    }
+    if (prefs.hasError) {
+      return LoadErrorScreen(error: prefs.error!);
+    }
+    final session = game.value;
+    final settings = prefs.value;
+    if (session == null || settings == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    if (settings.businessName == null) {
+      return WelcomeScreen(onDone: () => shell.goBranch(1));
+    }
+
+    return Scaffold(
+      body: Column(
+        children: [
+          if (session.saveFailed)
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: NoticeBanner(
+                  text: 'Save mein masla aaya. Jab tak theek na ho, khareed o farokht band hai.',
+                  action: 'Dobara koshish',
+                  onPressed: ref
+                      .read(gameControllerProvider.notifier)
+                      .retrySave,
                 ),
-                NavigationDestination(
-                  icon: Icon(Icons.storefront_outlined),
-                  selectedIcon: Icon(Icons.storefront),
-                  label: 'Karobar',
-                ),
-              ],
+              ),
             ),
+          Expanded(child: shell),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: shell.currentIndex,
+        onDestinationSelected: (i) =>
+            shell.goBranch(i, initialLocation: i == shell.currentIndex),
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
           ),
-        );
+          NavigationDestination(
+            icon: Icon(Icons.storefront_outlined),
+            selectedIcon: Icon(Icons.storefront),
+            label: 'Karobar',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.menu),
+            selectedIcon: Icon(Icons.menu_open),
+            label: 'Aur',
+          ),
+        ],
+      ),
+    );
   }
 }
