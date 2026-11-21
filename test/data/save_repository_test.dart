@@ -112,4 +112,18 @@ void main() {
     expect((await repo.load(config))!.state.revision, 0);
     expect(await repo.recentLedger(), isEmpty);
   });
+
+  test('ledgerSince and pruneLedger work on time', () async {
+    final s = GameState.newGame(config, t0);
+    await repo.replaceMain(s, config.version);
+    final a = engine.doWork(s, t0) as Success;
+    await repo.commit(a.state, a.entries, config.version);
+    final later = t0.add(const Duration(hours: 3));
+    final b = engine.doWork(a.state, later) as Success;
+    await repo.commit(b.state, b.entries, config.version);
+
+    expect((await repo.ledgerSince(t0.add(const Duration(hours: 1)))).length, 1);
+    expect(await repo.pruneLedger(t0.add(const Duration(hours: 1))), 1);
+    expect((await repo.recentLedger()).single.revision, 2);
+  });
 }

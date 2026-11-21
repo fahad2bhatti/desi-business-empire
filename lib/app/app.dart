@@ -1,12 +1,45 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/home/home_screen.dart';
+import '../features/staff/staff_screen.dart';
 import '../features/stall/stall_screen.dart';
+import '../features/upgrades/upgrades_screen.dart';
+import 'game_shell.dart';
 import 'theme.dart';
 
+/// Tabs: Home, Karobar. Goals and More join in later batches.
 final _router = GoRouter(
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const StallScreen()),
+    StatefulShellRoute.indexedStack(
+      builder: (context, state, shell) => GameShell(shell: shell),
+      branches: [
+        StatefulShellBranch(routes: [
+          GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+        ]),
+        StatefulShellBranch(
+          initialLocation: '/business/stall',
+          routes: [
+            GoRoute(
+              path: '/business/:stageId',
+              builder: (context, state) => const StallScreen(),
+              routes: [
+                GoRoute(
+                  path: 'upgrades',
+                  builder: (context, state) =>
+                      UpgradesScreen(stageId: state.pathParameters['stageId']!),
+                ),
+                GoRoute(
+                  path: 'staff',
+                  builder: (context, state) =>
+                      StaffScreen(stageId: state.pathParameters['stageId']!),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    ),
   ],
 );
 

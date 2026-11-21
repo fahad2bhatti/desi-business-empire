@@ -77,6 +77,7 @@ class SaveBlockedException implements Exception {
 /// one at a time, and the UI only sees a change after it is stored.
 class GameController extends AsyncNotifier<GameSession> {
   static const _backupEvery = Duration(minutes: 5);
+  static const _keepLedger = Duration(days: 2);
 
   late EconomyConfig _config;
   late GameEngine engine;
@@ -185,6 +186,7 @@ class GameController extends AsyncNotifier<GameSession> {
           final last = _lastBackup;
           if (last == null || now.difference(last) >= _backupEvery) {
             await _repo.backup();
+            await _repo.pruneLedger(now.subtract(_keepLedger));
             _lastBackup = now;
           }
         } catch (_) {

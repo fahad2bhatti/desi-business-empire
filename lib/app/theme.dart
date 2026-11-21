@@ -8,6 +8,9 @@ abstract final class AppColors {
   static const teal = Color(0xFF155E63);
   static const tealDark = Color(0xFF0F474B);
   static const tealLight = Color(0xFFE3F0EF);
+
+  /// Secondary text on a teal background.
+  static const onTealMuted = Color(0xFFCFE6E4);
   static const amber = Color(0xFFE6A23C);
   static const amberLight = Color(0xFFFBEBD0);
   static const amberInk = Color(0xFF6E4C14);

@@ -119,6 +119,13 @@ class SaveRepository {
         ..limit(limit))
       .get();
 
+  Future<List<LedgerRow>> ledgerSince(DateTime since) =>
+      (_db.select(_db.ledgerRows)..where((t) => t.at.isBiggerOrEqualValue(since))).get();
+
+  /// Keeps the ledger small: the foreground tick writes a few rows a second.
+  Future<int> pruneLedger(DateTime before) =>
+      (_db.delete(_db.ledgerRows)..where((t) => t.at.isSmallerThanValue(before))).go();
+
   SaveSlotsCompanion _slot(String slot, GameState s, int configVersion) =>
       SaveSlotsCompanion.insert(
         slot: slot,
