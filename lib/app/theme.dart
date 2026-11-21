@@ -286,6 +286,7 @@ ThemeData buildAppTheme([AppPalette p = AppPalette.dark]) {
       ),
       iconTheme: WidgetStateProperty.resolveWith(
         (states) => IconThemeData(
+          size: 26,
           color: states.contains(WidgetState.selected) ? p.ink : p.inkMuted,
         ),
       ),
@@ -296,10 +297,15 @@ ThemeData buildAppTheme([AppPalette p = AppPalette.dark]) {
       indicatorColor: p.accentInk,
       indicatorSize: TabBarIndicatorSize.label,
       dividerColor: p.hairline,
-      labelStyle: text.titleSmall,
-      unselectedLabelStyle: text.titleSmall?.copyWith(
+      labelStyle: text.titleMedium?.copyWith(
+        fontSize: 18,
+        fontWeight: FontWeight.w700,
+      ),
+      unselectedLabelStyle: text.titleMedium?.copyWith(
+        fontSize: 18,
         fontWeight: FontWeight.w500,
       ),
+      labelPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.s16),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,

@@ -54,7 +54,7 @@ class SignTile extends StatelessWidget {
     super.key,
     required this.icon,
     this.dot,
-    this.size = 44,
+    this.size = 52,
     this.dimmed = false,
   });
 
@@ -82,7 +82,7 @@ class SignTile extends StatelessWidget {
             child: Icon(
               icon,
               color: dimmed ? p.inkMuted : p.ink,
-              size: size * 0.5,
+              size: size * 0.55,
             ),
           ),
           if (dot != null)

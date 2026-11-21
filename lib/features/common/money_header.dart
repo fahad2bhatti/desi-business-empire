@@ -32,9 +32,9 @@ class MoneyHeader extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(
           AppSpacing.s20,
-          AppSpacing.s12,
+          AppSpacing.s24,
           AppSpacing.s20,
-          AppSpacing.s16,
+          AppSpacing.s20,
         ),
         decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: p.hairline)),
@@ -42,47 +42,41 @@ class MoneyHeader extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    empireName,
-                    style: context.text.titleSmall?.copyWith(color: p.inkMuted),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Text(
-                  '${S.netWorth} ${formatShort(netWorthPaisa)}',
-                  style: context.text.bodySmall
-                      ?.copyWith(color: p.inkMuted)
+            Text(
+              empireName,
+              style: context.text.titleSmall?.copyWith(color: p.inkMuted),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: AppSpacing.s8),
+            TweenAnimationBuilder<double>(
+              tween: Tween(end: cashPaisa.toDouble()),
+              duration: reduceMotion ? Duration.zero : AppMotion.counter,
+              curve: AppMotion.curve,
+              builder: (context, value, _) => FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  formatShort(value.round()),
+                  style: context.text.displaySmall
+                      ?.copyWith(fontSize: 48, height: 1.1)
                       .numbers,
                 ),
-              ],
+              ),
             ),
-            const SizedBox(height: AppSpacing.s4),
+            const SizedBox(height: AppSpacing.s8),
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Expanded(
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween(end: cashPaisa.toDouble()),
-                    duration: reduceMotion ? Duration.zero : AppMotion.counter,
-                    curve: AppMotion.curve,
-                    builder: (context, value, _) => FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        formatShort(value.round()),
-                        style: context.text.displaySmall.numbers,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.s8),
                 Text(
                   S.perSecond(income),
                   style: context.text.titleMedium
                       ?.copyWith(color: p.income)
+                      .numbers,
+                ),
+                const Spacer(),
+                Text(
+                  '${S.netWorth} ${formatShort(netWorthPaisa)}',
+                  style: context.text.bodySmall
+                      ?.copyWith(color: p.inkMuted)
                       .numbers,
                 ),
               ],

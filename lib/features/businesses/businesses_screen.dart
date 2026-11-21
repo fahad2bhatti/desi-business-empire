@@ -40,7 +40,7 @@ class BusinessesScreen extends ConsumerWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.circle, size: 8, color: p.category(c.id)),
+                      Icon(Icons.circle, size: 10, color: p.category(c.id)),
                       const SizedBox(width: AppSpacing.s8),
                       Text(c.name),
                     ],

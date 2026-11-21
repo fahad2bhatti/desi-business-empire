@@ -32,6 +32,8 @@ class PropertyScreen extends StatelessWidget {
       child: const Column(
         children: [
           TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
             tabs: [
               Tab(text: S.tabHome),
               Tab(text: S.property),
