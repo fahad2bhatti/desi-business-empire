@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../app/theme.dart';
 import '../../core/strings.dart';
+import 'photos.dart';
 
 /// Warning strip with an optional action (save errors, restored backup).
 class NoticeBanner extends StatelessWidget {
@@ -68,6 +69,7 @@ class FocusCard extends StatelessWidget {
     super.key,
     required this.icon,
     required this.title,
+    this.photoId,
     this.detail,
     this.progress,
     this.progressText,
@@ -78,6 +80,9 @@ class FocusCard extends StatelessWidget {
 
   final IconData icon;
   final String title;
+
+  /// Photo shown instead of [icon] when this id has one.
+  final String? photoId;
   final String? detail;
 
   /// 0..1 when the move cannot be afforded yet.
@@ -104,14 +109,17 @@ class FocusCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: on.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(AppRadius.tile),
+                  PhotoThumb(
+                    id: photoId ?? '',
+                    fallback: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: on.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(AppRadius.tile),
+                      ),
+                      child: Icon(icon, color: on, size: 24),
                     ),
-                    child: Icon(icon, color: on, size: 24),
                   ),
                   const SizedBox(width: AppSpacing.s12),
                   Expanded(

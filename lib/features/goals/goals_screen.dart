@@ -30,6 +30,20 @@ String goalTitle(GoalDef g, EconomyConfig c) => switch (g.type) {
   ),
 };
 
+/// Photo shown beside a goal; falls back to [goalIcon].
+String goalPhoto(GoalDef g, EconomyConfig c) => switch (g.type) {
+  GoalType.taps => 'goal_taps',
+  GoalType.businessesOwned => 'kiryana',
+  GoalType.businessLevel => g.businessId ?? '',
+  GoalType.totalLevels => 'goal_levels',
+  GoalType.propertyUnits => 'plaza',
+  GoalType.incomePerSecond => 'goal_income',
+  GoalType.netWorth => 'goal_worth',
+  GoalType.lifestyleOwned => 'sportscar',
+  GoalType.homeLevel =>
+    g.target < c.homes.length ? c.homes[g.target].id : 'familyhome',
+};
+
 IconData goalIcon(GoalDef g) => switch (g.type) {
   GoalType.taps => Icons.touch_app,
   GoalType.businessesOwned => Icons.storefront,
@@ -134,6 +148,7 @@ class GoalsScreen extends ConsumerWidget {
         if (ready.isNotEmpty) ...[
           FocusCard(
             icon: Icons.emoji_events,
+            photoId: 'goal_trophy',
             title: S.goalsReady(ready.length),
             detail: S.focusWaiting(formatShort(engine.claimableRewardPaisa(s))),
             actionLabel: S.collectAll(
@@ -200,7 +215,11 @@ class GoalCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                SignTile(icon: goalIcon(goal), dimmed: claimed),
+                SignTile(
+                  icon: goalIcon(goal),
+                  artId: goalPhoto(goal, engine.config),
+                  dimmed: claimed,
+                ),
                 const SizedBox(width: AppSpacing.s12),
                 Expanded(
                   child: Column(

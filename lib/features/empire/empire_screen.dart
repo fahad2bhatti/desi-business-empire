@@ -88,7 +88,11 @@ class NextMoveCard extends ConsumerWidget {
     final s = state;
     final move = engine.nextMove(s);
     if (move == null) {
-      return const FocusCard(icon: Icons.emoji_events, title: S.allDone);
+      return const FocusCard(
+        icon: Icons.emoji_events,
+        photoId: 'goal_trophy',
+        title: S.allDone,
+      );
     }
     final c = engine.config;
     final cost = formatShort(move.costPaisa);
@@ -218,7 +222,7 @@ class _Overview extends StatelessWidget {
       ),
       (
         Icons.receipt_long,
-        '',
+        'goal_income',
         S.tax,
         '${S.taxDue}: ${formatShort(s.taxDuePaisa)}',
         '/more/wallet',
