@@ -10,6 +10,7 @@ import '../../domain/economy/advisor.dart';
 import '../../domain/economy/game_engine.dart';
 import '../../domain/economy/game_state.dart';
 import '../../domain/economy/goals.dart';
+import '../common/photos.dart';
 import '../common/run_command.dart';
 import '../common/visuals.dart';
 import '../common/widgets.dart';
@@ -196,18 +197,21 @@ class _Overview extends StatelessWidget {
     final rows = [
       (
         Icons.storefront,
+        'kiryana',
         S.tabBusinesses,
         S.rowBusinesses(s.businesses.length, c.businesses.length),
         '/businesses',
       ),
       (
         Icons.apartment,
+        'plaza',
         S.property,
         S.rowProperty(units, formatShort(rent)),
         '/property?tab=property',
       ),
       (
         Icons.directions_car,
+        'sportscar',
         S.tabVehicles,
         S.rowVehicles(ownedVehicles.length, vehicles.length),
         '/property?tab=vehicles',
@@ -215,6 +219,7 @@ class _Overview extends StatelessWidget {
       if (home != null)
         (
           iconFor(home.id),
+          home.id,
           S.tabHome,
           S.rowHome(home.name, home.incomeBonusPercent),
           '/property?tab=home',
@@ -225,14 +230,18 @@ class _Overview extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          for (final (i, (icon, title, subtitle, path)) in rows.indexed) ...[
+          for (final (i, (icon, photo, title, subtitle, path)) in rows.indexed) ...[
             if (i > 0) const Divider(indent: AppSpacing.s16),
             ListTile(
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.s16,
                 vertical: AppSpacing.s4,
               ),
-              leading: SignTile(icon: icon, size: 40),
+              leading: PhotoThumb(
+                id: photo,
+                size: 44,
+                fallback: SignTile(icon: icon, size: 40),
+              ),
               title: Text(title, style: context.text.titleSmall),
               subtitle: Text(
                 subtitle,
@@ -311,14 +320,17 @@ class _WorkButtonState extends State<_WorkButton> {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: p.surfaceRaised,
-                        shape: BoxShape.circle,
+                    PhotoThumb(
+                      id: 'samosa',
+                      fallback: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: p.surfaceRaised,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.touch_app, color: p.ink),
                       ),
-                      child: Icon(Icons.touch_app, color: p.ink),
                     ),
                     const SizedBox(width: AppSpacing.s12),
                     Expanded(

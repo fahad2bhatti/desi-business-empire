@@ -45,7 +45,7 @@ Everything else uses `FilledButton.tonal` (neutral grey).
 
 ## Typography
 System font through the theme `TextTheme`. Money and headings are heavy (700-800); body 400.
-`displaySmall` 34 for the cash counter; `headlineSmall` 24; `titleLarge` 20; `titleMedium` 16; `bodyMedium` 14; `labelSmall` 11 for navigation. Every number uses tabular figures (`style.numbers`). Money uses `formatShort` (K, lakh, crore, arab, kharab); exact values use `formatRs`.
+`displaySmall` 34 for the cash counter; `headlineSmall` 24; `titleLarge` 20; `titleMedium` 16; `bodyMedium` 14; `labelSmall` 11 for navigation. Every number uses tabular figures (`style.numbers`). Money uses `formatShort` (K, M, B, T — international units); exact values use `formatRs`.
 
 ## Layout
 4-point spacing via `AppSpacing`. The money header is pinned above every tab. Lists of cards with 12–16 px between items.

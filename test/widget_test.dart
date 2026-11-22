@@ -21,7 +21,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Rs 3.4 lakh'), findsOneWidget);
+    expect(find.text('Rs 340K'), findsOneWidget);
     expect(find.text('+Rs 47/s'), findsOneWidget);
     expect(find.text('Chaudhry Group'), findsOneWidget);
     expect(
@@ -104,6 +104,6 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Rs 3.4 lakh'), findsOneWidget);
+    expect(find.text('Rs 340K'), findsOneWidget);
   });
 }

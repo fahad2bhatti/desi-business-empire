@@ -75,3 +75,8 @@ After an approved decision, record date, decision, rationale and affected files.
 - Assets tabs are now Cars, Bikes, Helicopters, Planes, Luxury (`bikes` tab key added to `PropertyScreen._tabs`).
 - Totals: 64 items / +140%, 33 vehicles.
 - Not verified on device yet.
+
+## 2026-11-22 — Photos on Empire, property photos, international money units
+- Motorbike, Small Plot, Shop Space, Apartment Block and Shopping Plaza now have photos.
+- Empire screen: Work button and the Businesses / Property / Vehicles / Home rows show small photo thumbnails (`PhotoThumb` in photos.dart: samosa, kiryana, plaza, sportscar, current home) instead of glyph tiles; glyph stays as fallback.
+- `formatShort` now uses K / M / B / T instead of lakh / crore / arab / kharab. Goal ids still say lakh/crore internally (ids only, never shown).

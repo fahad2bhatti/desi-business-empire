@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../app/theme.dart';
+
 /// Ids that have a real photo in assets/images/ID.jpg. Anything not listed
 /// keeps its drawn art.
 const _photoIds = {
@@ -94,6 +96,11 @@ const _photoIds = {
   'r1',
   'gsxr1000',
   'ninjah2',
+  'motorbike',
+  'plot',
+  'shopspace',
+  'apartments',
+  'plaza',
 };
 
 bool hasPhoto(String id) => _photoIds.contains(id);
@@ -119,6 +126,39 @@ class PhotoBanner extends StatelessWidget {
           ),
           if (dimmed) const ColoredBox(color: Color(0x66000000)),
         ],
+      ),
+    );
+  }
+}
+
+/// Small square photo with rounded corners, for list rows. Shows [fallback]
+/// when [id] has no photo or the file is missing.
+class PhotoThumb extends StatelessWidget {
+  const PhotoThumb({
+    super.key,
+    required this.id,
+    required this.fallback,
+    this.size = 48,
+  });
+
+  final String id;
+  final Widget fallback;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!hasPhoto(id)) {
+      return fallback;
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.tile),
+      child: SizedBox.square(
+        dimension: size,
+        child: Image.asset(
+          'assets/images/$id.jpg',
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => fallback,
+        ),
       ),
     );
   }
