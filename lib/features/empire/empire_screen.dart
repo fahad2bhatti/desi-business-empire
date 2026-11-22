@@ -452,9 +452,12 @@ class _BankCard extends StatelessWidget {
         : S.cardLimit(formatShort(card.limitPaisa));
     return Semantics(
       container: true,
+      button: true,
       label:
           '${S.cardShort(card.name)}. ${S.netWorth} ${formatShort(worth)}. $limit',
-      child: AspectRatio(
+      child: GestureDetector(
+        onTap: () => _showCards(context, engine, state),
+        child: AspectRatio(
         aspectRatio: 1.7,
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.s20),
@@ -533,6 +536,137 @@ class _BankCard extends StatelessWidget {
                       ),
                 style: small?.numbers,
               ),
+            ],
+          ),
+        ),
+      ),
+      ),
+    );
+  }
+}
+
+/// Every card from first to last: the player's own, the ones already
+/// passed, and the ones still locked with what they need.
+void _showCards(BuildContext context, GameEngine engine, GameState s) {
+  final p = context.palette;
+  final current = engine.card(s);
+  final cards = engine.config.cards;
+  final at = cards.indexOf(current);
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (sheet) => SafeArea(
+      child: ListView(
+        shrinkWrap: true,
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.s20,
+          0,
+          AppSpacing.s20,
+          AppSpacing.s20,
+        ),
+        children: [
+          Text(S.cardsTitle, style: sheet.text.titleLarge),
+          const SizedBox(height: AppSpacing.s4),
+          Text(
+            S.cardsIntro,
+            style: sheet.text.bodyMedium?.copyWith(color: p.inkMuted),
+          ),
+          const SizedBox(height: AppSpacing.s16),
+          for (final (i, c) in cards.indexed)
+            _CardRow(card: c, index: i, current: at),
+        ],
+      ),
+    ),
+  );
+}
+
+class _CardRow extends StatelessWidget {
+  const _CardRow({
+    required this.card,
+    required this.index,
+    required this.current,
+  });
+
+  final CardDef card;
+  final int index;
+  final int current;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final locked = index > current;
+    final isCurrent = index == current;
+    final color = _cardColor(card.id);
+    final on = ThemeData.estimateBrightnessForColor(color) == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF14181D);
+    final limit = card.limitPaisa == noCardLimit
+        ? S.cardNoLimit
+        : S.cardLimit(formatShort(card.limitPaisa));
+    final status = locked
+        ? S.cardNeedsWorth(formatShort(card.netWorthPaisa))
+        : isCurrent
+        ? S.cardYours
+        : index == 0
+        ? S.cardStart
+        : S.cardUnlocked;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.s12),
+      child: Opacity(
+        opacity: locked ? 0.55 : 1,
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.s12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.card),
+            border: Border.all(
+              color: isCurrent ? p.accent : p.inkMuted.withValues(alpha: 0.25),
+              width: isCurrent ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 64,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  locked ? Icons.lock_outline : Icons.credit_card,
+                  color: on,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.s12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      S.cardShort(card.name),
+                      style: context.text.titleSmall,
+                    ),
+                    Text(
+                      limit,
+                      style: context.text.bodySmall?.copyWith(
+                        color: p.inkMuted,
+                      ),
+                    ),
+                    Text(
+                      status,
+                      style: context.text.bodySmall
+                          ?.copyWith(
+                            color: isCurrent ? p.accentInk : p.inkMuted,
+                          )
+                          .numbers,
+                    ),
+                  ],
+                ),
+              ),
+              if (!locked && !isCurrent)
+                Icon(Icons.check, color: p.income, size: 20),
             ],
           ),
         ),

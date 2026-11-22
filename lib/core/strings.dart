@@ -276,6 +276,13 @@ abstract final class S {
   static String cardNext(String card, String need, String have) =>
       '$card card at $need (now $have)';
   static const cardTop = 'Top card reached';
+  static const cardsTitle = 'Bank cards';
+  static const cardsIntro =
+      'Your card follows your net worth. A better card lets you buy bigger things.';
+  static const cardYours = 'Your card';
+  static String cardNeedsWorth(String worth) => 'Needs a net worth of $worth';
+  static const cardUnlocked = 'Unlocked';
+  static const cardStart = 'Where everyone starts';
   static String cardUpgraded(String card) => 'Card upgraded: $card';
   static String cardLimit(String limit) => 'Buy anything up to $limit';
   static const cardNoLimit = 'No limit on what you can buy';
