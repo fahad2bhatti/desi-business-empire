@@ -168,7 +168,10 @@ class _PropertyCard extends ConsumerWidget {
     final n = state.owned(prop.id);
     final full = n >= prop.maxOwned;
     final price = engine.propertyPrice(prop, n);
-    final canBuy = !full && state.cashPaisa >= price;
+    final lock = engine.cardAllows(state, price)
+        ? null
+        : engine.cardFor(price).name;
+    final canBuy = !full && lock == null && state.cashPaisa >= price;
     final muted = context.text.bodySmall?.copyWith(color: p.inkMuted);
     final onBuy = blocked || !canBuy
         ? null
@@ -182,7 +185,7 @@ class _PropertyCard extends ConsumerWidget {
       children: [
         const Text(S.buyShort),
         Text(
-          formatShort(price),
+          lock != null && !full ? S.cardShort(lock) : formatShort(price),
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,

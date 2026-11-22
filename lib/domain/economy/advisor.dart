@@ -88,9 +88,14 @@ extension Advisor on GameEngine {
     if (reward > 0) {
       return Move(MoveKind.claimGoals, costPaisa: 0, gainPaisa: reward);
     }
-    final moves = candidateMoves(s).where((m) => m.gainPaisa > 0).toList();
+    var moves = candidateMoves(s).where((m) => m.gainPaisa > 0).toList();
     if (moves.isEmpty) {
       return null;
+    }
+    // Moves above the bank card's limit cannot be bought yet.
+    final allowed = moves.where((m) => cardAllows(s, m.costPaisa)).toList();
+    if (allowed.isNotEmpty) {
+      moves = allowed;
     }
     final affordable = moves.where((m) => m.costPaisa <= s.cashPaisa).toList();
     if (affordable.isNotEmpty) {
@@ -111,7 +116,8 @@ extension Advisor on GameEngine {
         continue;
       }
       if (config.business(m.id!)!.categoryId != categoryId ||
-          m.costPaisa > s.cashPaisa) {
+          m.costPaisa > s.cashPaisa ||
+          !cardAllows(s, m.costPaisa)) {
         continue;
       }
       if (best == null || m.payback < best.payback) {

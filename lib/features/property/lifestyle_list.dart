@@ -117,7 +117,10 @@ class _ItemCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final p = context.palette;
     final owned = state.lifestyle.contains(item.id);
-    final canBuy = !owned && state.cashPaisa >= item.pricePaisa;
+    final lock = engine.cardAllows(state, item.pricePaisa)
+        ? null
+        : engine.cardFor(item.pricePaisa).name;
+    final canBuy = !owned && lock == null && state.cashPaisa >= item.pricePaisa;
     final onBuy = blocked || !canBuy
         ? null
         : () => runCommand(
@@ -130,7 +133,9 @@ class _ItemCard extends ConsumerWidget {
       children: [
         const Text(S.buyShort),
         Text(
-          formatShort(item.pricePaisa),
+          lock != null && !owned
+              ? S.cardShort(lock)
+              : formatShort(item.pricePaisa),
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,

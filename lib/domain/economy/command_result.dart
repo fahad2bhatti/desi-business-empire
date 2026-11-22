@@ -45,6 +45,9 @@ enum FailReason {
   maxOwned,
   goalNotReached,
   alreadyClaimed,
+
+  /// The price is above what the player's bank card allows.
+  cardTooLow,
 }
 
 sealed class CommandResult {
@@ -59,11 +62,19 @@ final class Success extends CommandResult {
 }
 
 final class Failure extends CommandResult {
-  const Failure(this.reason, {this.neededPaisa, this.availablePaisa});
+  const Failure(
+    this.reason, {
+    this.neededPaisa,
+    this.availablePaisa,
+    this.cardName,
+  });
 
   final FailReason reason;
 
   /// Set for [FailReason.insufficientFunds].
   final int? neededPaisa;
   final int? availablePaisa;
+
+  /// Set for [FailReason.cardTooLow]: the card that would allow it.
+  final String? cardName;
 }

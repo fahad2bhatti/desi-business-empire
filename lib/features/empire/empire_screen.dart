@@ -7,6 +7,7 @@ import '../../app/theme.dart';
 import '../../core/money.dart';
 import '../../core/strings.dart';
 import '../../domain/economy/advisor.dart';
+import '../../domain/economy/economy_config.dart';
 import '../../domain/economy/game_engine.dart';
 import '../../domain/economy/game_state.dart';
 import '../../domain/economy/goals.dart';
@@ -28,6 +29,27 @@ class EmpireScreen extends ConsumerWidget {
     final s = session.state;
     final goal = nextGoal(engine, s);
 
+    // Say so when net worth earns a better card.
+    ref.listen<int>(
+      gameControllerProvider.select((a) {
+        final st = a.value?.state;
+        return st == null
+            ? 0
+            : engine.config.cards.indexOf(engine.card(st));
+      }),
+      (before, now) {
+        if (before != null && now > before) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(S.cardUpgraded(engine.config.cards[now].name)),
+              ),
+            );
+        }
+      },
+    );
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.s20,
@@ -45,6 +67,8 @@ class EmpireScreen extends ConsumerWidget {
           onTap: () =>
               runCommand(context, ref, (state, now) => engine.work(state, now)),
         ),
+        const SizedBox(height: AppSpacing.s16),
+        _BankCard(engine: engine, state: s),
         const SizedBox(height: AppSpacing.s24),
         const SectionTitle(S.yourEmpire),
         _Overview(engine: engine, state: s),
@@ -388,6 +412,91 @@ class _WorkButtonState extends State<_WorkButton> {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Metal colour for each card.
+Color _cardColor(String id) => switch (id) {
+  'bronze' => const Color(0xFF9A6A3C),
+  'silver' => const Color(0xFFA9B1BA),
+  'gold' => const Color(0xFFC9A227),
+  'platinum' => const Color(0xFF7D8A99),
+  'diamond' => const Color(0xFF4A9BD0),
+  _ => const Color(0xFF1F3A5F),
+};
+
+/// The player's bank card: its name, what it lets them buy, and how far
+/// net worth is from the next one.
+class _BankCard extends StatelessWidget {
+  const _BankCard({required this.engine, required this.state});
+
+  final GameEngine engine;
+  final GameState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final card = engine.card(state);
+    final next = engine.nextCard(state);
+    final worth = engine.netWorth(state);
+    final color = _cardColor(card.id);
+    final on = ThemeData.estimateBrightnessForColor(color) == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF14181D);
+    final span = next == null ? 1 : next.netWorthPaisa - card.netWorthPaisa;
+    final progress = next == null
+        ? 1.0
+        : ((worth - card.netWorthPaisa) / span).clamp(0.0, 1.0);
+    final small = context.text.bodySmall?.copyWith(color: on);
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.s16),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.credit_card, color: on),
+              const SizedBox(width: AppSpacing.s8),
+              Text(
+                S.cardShort(card.name),
+                style: context.text.titleMedium?.copyWith(color: on),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.s4),
+          Text(
+            card.limitPaisa == noCardLimit
+                ? S.cardNoLimit
+                : S.cardLimit(formatShort(card.limitPaisa)),
+            style: small,
+          ),
+          const SizedBox(height: AppSpacing.s12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              color: on,
+              backgroundColor: on.withValues(alpha: 0.25),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s4),
+          Text(
+            next == null
+                ? S.cardTop
+                : S.cardNext(
+                    next.name,
+                    formatShort(next.netWorthPaisa),
+                    formatShort(worth),
+                  ),
+            style: small?.numbers,
+          ),
+        ],
+      ),
     );
   }
 }

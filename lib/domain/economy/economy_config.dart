@@ -142,6 +142,30 @@ class TaxSlab {
   final int percent;
 }
 
+/// Limit of the top card: nothing is out of reach.
+const noCardLimit = 1 << 62;
+
+/// A bank card. The card follows net worth and its limit is the highest
+/// price the player may pay for one thing (a business, property, home or
+/// item). Things already owned are never taken away.
+class CardDef {
+  const CardDef({
+    required this.id,
+    required this.name,
+    required this.netWorthPaisa,
+    required this.limitPaisa,
+  });
+
+  final String id;
+  final String name;
+
+  /// Net worth needed to hold this card.
+  final int netWorthPaisa;
+
+  /// Highest price that can be bought with it.
+  final int limitPaisa;
+}
+
 /// Income tax and purchase tax. Tax builds up as "due" and is paid by
 /// filing a return; a return is due every [periodHours]. Each deadline
 /// missed adds [latePenaltyPercent] of what is due.
@@ -218,6 +242,9 @@ class EconomyConfig {
     required this.lifestyleSellRefund,
     this.homes = const [],
     this.tax = TaxConfig.none,
+    this.cards = const [
+      CardDef(id: 'basic', name: 'Basic', netWorthPaisa: 0, limitPaisa: noCardLimit),
+    ],
   });
 
   final int version;
@@ -260,6 +287,9 @@ class EconomyConfig {
   final List<HomeDef> homes;
 
   final TaxConfig tax;
+
+  /// Lowest first; index 0 is held from the start.
+  final List<CardDef> cards;
 
   BusinessDef? business(String id) {
     for (final b in businesses) {
@@ -367,6 +397,19 @@ class EconomyConfig {
       tax: j['tax'] == null
           ? TaxConfig.none
           : TaxConfig.fromJson(j['tax']! as Map<String, Object?>),
+      cards: j['cards'] == null
+          ? const [
+              CardDef(id: 'basic', name: 'Basic', netWorthPaisa: 0, limitPaisa: noCardLimit),
+            ]
+          : [
+              for (final c in (j['cards']! as List).cast<Map<String, Object?>>())
+                CardDef(
+                  id: c['id'] as String,
+                  name: c['name'] as String,
+                  netWorthPaisa: rupees(_int(c['netWorth'])),
+                  limitPaisa: c['limit'] == null ? noCardLimit : rupees(_int(c['limit'])),
+                ),
+            ],
     );
   }
 

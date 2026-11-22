@@ -269,6 +269,17 @@ abstract final class S {
   }
 
   // ---------- tax ----------
+  // ---------- bank card ----------
+  static const bankCard = 'Bank card';
+  static String cardShort(String card) => '$card card';
+  static String needsCard(String card) => 'Needs the $card card';
+  static String cardNext(String card, String need, String have) =>
+      '$card card at $need (now $have)';
+  static const cardTop = 'Top card reached';
+  static String cardUpgraded(String card) => 'Card upgraded: $card';
+  static String cardLimit(String limit) => 'Buy anything up to $limit';
+  static const cardNoLimit = 'No limit on what you can buy';
+
   static const tax = 'Tax';
   static const taxDue = 'Tax due';
   static const taxPaid = 'Tax paid so far';

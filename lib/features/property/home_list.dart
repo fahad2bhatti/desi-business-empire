@@ -32,7 +32,15 @@ class HomeList extends ConsumerWidget {
     } else {
       final cost = formatShort(next.pricePaisa);
       final detail = S.bonusBecomes(next.incomeBonusPercent);
-      if (next.pricePaisa <= s.cashPaisa) {
+      if (next.pricePaisa <= s.cashPaisa &&
+          !engine.cardAllows(s, next.pricePaisa)) {
+        focus = FocusCard(
+          icon: iconFor(next.id),
+          photoId: next.id,
+          title: S.focusMove(next.name),
+          detail: '$cost · ${S.needsCard(engine.cardFor(next.pricePaisa).name)}',
+        );
+      } else if (next.pricePaisa <= s.cashPaisa) {
         focus = FocusCard(
           icon: iconFor(next.id),
           title: S.focusMove(next.name),

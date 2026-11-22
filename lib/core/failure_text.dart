@@ -13,5 +13,6 @@ String failureText(Failure f) => switch (f.reason) {
   FailReason.maxOwned => S.maxOwnedReached,
   FailReason.goalNotReached => S.goalNotReached,
   FailReason.alreadyClaimed => S.alreadyClaimed,
+  FailReason.cardTooLow => S.needsCard(f.cardName ?? ''),
   FailReason.unknownId || FailReason.invalidQuantity => S.somethingWrong,
 };

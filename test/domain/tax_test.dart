@@ -23,12 +23,12 @@ void main() {
 
   test('buying something big adds purchase tax to what is due', () {
     final price = config.item('jet')!.pricePaisa;
-    final s = GameState.newGame(config, t0).copyWith(cashPaisa: price * 2);
+    final s = GameState.newGame(config, t0).copyWith(cashPaisa: price * 3);
     final r = engine.buyItem(s, 'jet', t0) as Success;
     final pct = engine.purchaseTaxPercent(price);
     expect(pct, greaterThan(0));
     expect(r.state.taxDuePaisa, price * pct ~/ 100);
-    expect(r.state.cashPaisa, price);
+    expect(r.state.cashPaisa, price * 2);
   });
 
   test('cheap purchases owe no tax', () {

@@ -91,6 +91,18 @@ List<String> validateConfig(EconomyConfig c) {
       }
     }
   }
+  check(c.cards.isNotEmpty, 'no cards');
+  final cardIds = <String>{};
+  for (final (i, k) in c.cards.indexed) {
+    check(cardIds.add(k.id), 'card ${k.id}: duplicate id');
+    if (i == 0) {
+      check(k.netWorthPaisa == 0, 'card ${k.id}: the first card needs no net worth');
+    } else {
+      check(k.netWorthPaisa > c.cards[i - 1].netWorthPaisa, 'card ${k.id}: net worth must ascend');
+      check(k.limitPaisa > c.cards[i - 1].limitPaisa, 'card ${k.id}: limit must ascend');
+    }
+  }
+  check(c.cards.last.limitPaisa == noCardLimit, 'the top card must have no limit');
   check(c.homes.isNotEmpty, 'no homes');
   for (final (i, h) in c.homes.indexed) {
     final where = 'home ${h.id}';

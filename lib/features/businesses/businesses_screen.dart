@@ -154,13 +154,18 @@ class _BusinessCard extends ConsumerWidget {
     Widget? action;
     double? saving;
     if (!owned) {
-      final canBuy = cash >= b.pricePaisa;
-      if (!canBuy) {
+      final lock = engine.cardAllows(state, b.pricePaisa)
+          ? null
+          : engine.cardFor(b.pricePaisa).name;
+      final canBuy = cash >= b.pricePaisa && lock == null;
+      if (cash < b.pricePaisa) {
         saving = cash / b.pricePaisa;
       }
       action = _ActionButton(
         label: S.buyShort,
-        price: formatShort(b.pricePaisa),
+        price: lock != null && cash >= b.pricePaisa
+            ? S.cardShort(lock)
+            : formatShort(b.pricePaisa),
         focus: focus,
         onPressed: blocked || !canBuy
             ? null
@@ -172,11 +177,16 @@ class _BusinessCard extends ConsumerWidget {
       );
     } else if (level < max) {
       final cost = engine.upgradeCost(b, level);
+      final lock = engine.cardAllows(state, cost)
+          ? null
+          : engine.cardFor(cost).name;
       action = _ActionButton(
         label: S.upgradeShort,
-        price: formatShort(cost),
+        price: lock != null && cash >= cost
+            ? S.cardShort(lock)
+            : formatShort(cost),
         focus: focus,
-        onPressed: blocked || cash < cost
+        onPressed: blocked || cash < cost || lock != null
             ? null
             : () => runCommand(
                 context,

@@ -87,3 +87,8 @@ After an approved decision, record date, decision, rationale and affected files.
 - A missed deadline adds `latePenaltyPercent` to what is due and increments `taxMissed`.
 - Accounts (More → Accounts) shows the tax card and buys/sells/tax (`transactions()`, which skips per-second income and work rows). Income is kept as a 24h total, not as ledger rows.
 - Money display in Accounts uses formatShort (K/M/B/T).
+
+## 2026-11-23 — Bank cards (levels)
+- Six cards in economy.json `cards`: Bronze, Silver, Gold, Platinum, Diamond, Americano Express. The card follows net worth (cash + resale value - tax due), so tax and spending can move it either way.
+- A card's `limit` is the highest price the player may pay for one thing (business, upgrade, property unit, home, lifestyle item). Funds are checked first, then the card (`FailReason.cardTooLow`). Owned things are never taken away. The top card has no limit.
+- Empire shows the card with a progress bar to the next one; locked buy buttons show "<Card> card"; the advisor skips locked moves.

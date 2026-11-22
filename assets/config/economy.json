@@ -530,6 +530,14 @@
     {"id": "kanada", "name": "Air Kanada 777", "kind": "vehicle", "group": "plane", "price": 350000000000, "incomeBonusPercent": 1},
     {"id": "jet", "name": "Jumbo Jet", "kind": "vehicle", "group": "plane", "price": 500000000000, "incomeBonusPercent": 10}
   ],
+  "cards": [
+    { "id": "bronze", "name": "Bronze", "netWorth": 0, "limit": 200000 },
+    { "id": "silver", "name": "Silver", "netWorth": 500000, "limit": 5000000 },
+    { "id": "gold", "name": "Gold", "netWorth": 25000000, "limit": 100000000 },
+    { "id": "platinum", "name": "Platinum", "netWorth": 1000000000, "limit": 10000000000 },
+    { "id": "diamond", "name": "Diamond", "netWorth": 50000000000, "limit": 100000000000 },
+    { "id": "americano", "name": "Americano Express", "netWorth": 1000000000000, "limit": null }
+  ],
   "tax": {
     "_note": "Income tax by income per second (Rs) and purchase tax by price (Rs). A return is due every periodHours; each missed deadline adds latePenaltyPercent of what is due.",
     "periodHours": 60,

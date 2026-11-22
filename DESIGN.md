@@ -91,3 +91,6 @@ Business cards use the same photo banner: samosa, chai, chaat, rickshaw, taxi, l
 - Tax is a card on the Accounts screen: amount due, time left to the return, income tax rate now, and a File return button. Overdue states use the danger colour and show the missed count and penalty.
 - The Empire screen has a Tax row that opens Accounts.
 - Money uses short units everywhere: K, M, B, T (never lakh, crore, arab or kharab).
+
+## Bank card
+- A metal-coloured card on Empire: name, what it lets the player buy, progress to the next card. Locked buy buttons say which card is needed (e.g. "Gold card").

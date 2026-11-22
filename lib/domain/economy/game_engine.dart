@@ -146,6 +146,40 @@ class GameEngine {
     );
   }
 
+  // ---------- bank card ----------
+
+  /// The best card the player's net worth reaches.
+  CardDef card(GameState s) {
+    final worth = netWorth(s);
+    var best = config.cards.first;
+    for (final c in config.cards) {
+      if (worth >= c.netWorthPaisa) {
+        best = c;
+      }
+    }
+    return best;
+  }
+
+  /// The card after [card], or null on the top card.
+  CardDef? nextCard(GameState s) {
+    final i = config.cards.indexOf(card(s));
+    return i + 1 < config.cards.length ? config.cards[i + 1] : null;
+  }
+
+  /// The cheapest card whose limit covers [pricePaisa].
+  CardDef cardFor(int pricePaisa) => config.cards.firstWhere(
+    (c) => c.limitPaisa >= pricePaisa,
+    orElse: () => config.cards.last,
+  );
+
+  bool cardAllows(GameState s, int pricePaisa) =>
+      card(s).limitPaisa >= pricePaisa;
+
+  /// Null when the card allows [pricePaisa], else the refusal.
+  Failure? _cardCheck(GameState s, int pricePaisa) => cardAllows(s, pricePaisa)
+      ? null
+      : Failure(FailReason.cardTooLow, cardName: cardFor(pricePaisa).name);
+
   /// Cash plus what everything owned would sell for, minus tax due.
   int netWorth(GameState s) {
     var worth = s.cashPaisa - s.taxDuePaisa;
@@ -190,6 +224,10 @@ class GameEngine {
     if (cost > s.cashPaisa) {
       return _noFunds(cost, s);
     }
+    final locked = _cardCheck(s, cost);
+    if (locked != null) {
+      return locked;
+    }
     return _ok(
       s.copyWith(
         cashPaisa: s.cashPaisa - cost,
@@ -226,11 +264,16 @@ class GameEngine {
     if (first > s.cashPaisa) {
       return _noFunds(first, s);
     }
+    final locked = _cardCheck(s, first);
+    if (locked != null) {
+      return locked;
+    }
+    final limit = card(s).limitPaisa;
     var cash = s.cashPaisa;
     var spent = 0;
     for (var i = 0; i < times && level < config.maxLevel; i++) {
       final cost = upgradeCost(b, level);
-      if (cost > cash) {
+      if (cost > cash || cost > limit) {
         break;
       }
       cash -= cost;
@@ -279,6 +322,10 @@ class GameEngine {
     if (cost > s.cashPaisa) {
       return _noFunds(cost, s);
     }
+    final locked = _cardCheck(s, cost);
+    if (locked != null) {
+      return locked;
+    }
     return _ok(
       s.copyWith(
         cashPaisa: s.cashPaisa - cost,
@@ -321,6 +368,10 @@ class GameEngine {
     if (item.pricePaisa > s.cashPaisa) {
       return _noFunds(item.pricePaisa, s);
     }
+    final locked = _cardCheck(s, item.pricePaisa);
+    if (locked != null) {
+      return locked;
+    }
     return _ok(
       s.copyWith(
         cashPaisa: s.cashPaisa - item.pricePaisa,
@@ -357,6 +408,10 @@ class GameEngine {
     }
     if (next.pricePaisa > s.cashPaisa) {
       return _noFunds(next.pricePaisa, s);
+    }
+    final locked = _cardCheck(s, next.pricePaisa);
+    if (locked != null) {
+      return locked;
     }
     return _ok(
       s.copyWith(
