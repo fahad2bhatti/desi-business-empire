@@ -7,6 +7,7 @@ import 'package:desi_business_empire/domain/economy/command_result.dart';
 import 'package:desi_business_empire/domain/economy/economy_config.dart';
 import 'package:desi_business_empire/domain/economy/game_engine.dart';
 import 'package:desi_business_empire/domain/economy/game_state.dart';
+import 'package:desi_business_empire/domain/economy/settlement.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 final config = EconomyConfig.parse(File('assets/config/economy.json').readAsStringSync());
