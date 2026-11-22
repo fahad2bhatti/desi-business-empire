@@ -41,6 +41,8 @@ abstract final class S {
   static const tabHelis = 'Helicopters';
   static const tabPlanes = 'Planes';
   static const tabLuxury = 'Luxury';
+  static const jewellery = 'Jewellery';
+  static const artCollection = 'Art Collection';
   static const tabMore = 'More';
   static const tabGoals = 'Goals';
 
@@ -143,6 +145,8 @@ abstract final class S {
       'You get $value back and lose its +$percent% income bonus.';
   static const kindVehicle = 'Vehicle';
   static const kindLuxury = 'Luxury';
+  static String categoryInfo(int owned, int total, int percent) =>
+      '$owned of $total owned · +$percent% income';
   static String sectionBonus(String what, int percent) => 'Your $what add +$percent% to all income';
   static String ownedOf(int n, int total) => '$n of $total';
 

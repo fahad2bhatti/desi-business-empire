@@ -79,7 +79,7 @@ List<String> validateConfig(EconomyConfig c) {
     check(i.pricePaisa > 0, '$where: price must be > 0');
     check(i.incomeBonusPercent > 0, '$where: bonus must be > 0');
     check(i.kind == 'vehicle' || i.kind == 'luxury', '$where: kind must be vehicle or luxury');
-    check(const {'road', 'heli', 'plane', 'luxury'}.contains(i.group), '$where: unknown group ${i.group}');
+    check(const {'road', 'heli', 'plane', 'luxury', 'jewellery', 'art'}.contains(i.group), '$where: unknown group ${i.group}');
   }
   check(c.homes.isNotEmpty, 'no homes');
   for (final (i, h) in c.homes.indexed) {

@@ -55,3 +55,11 @@ After an approved decision, record date, decision, rationale and affected files.
 2026-11-22: Photos for cars, helicopters, planes and houses added (assets/images, 16:9). Lifestyle items got a `group`; Assets screen split into Home, Property, Cars & Bikes, Helicopters, Planes, Luxury tabs. 10 homes, 27 lifestyle items (+81%). Not yet verified.
 
 2026-11-22: Business photos added: samosa, chai, chaat, rickshaw, taxi, loader (Clion-style pickup), bus, transport (cargo). Business cards now show the photo banner like the Assets tabs. No config or test change. Not yet verified.
+2026-11-22: Remaining business photos added: kiryana, mobile, cloth, mechanic, restaurant, hall, factory. All 15 businesses now have photos. Mechanic photo is small source (299x168), upscaled. Not yet verified.
+## 2026-11-22 — Luxury split: Jewellery & Art sub-sections
+- Added 18 new lifestyle items: 9 jewellery (`pendant`, `goldset`, `longset`, `kundan`, `bridal`, `temple`, `jewellery`, `diamondset`, `emerald`) and 9 art (`popart`, `canvas`, `floral`, `modernart`, `abstract`, `gallery`, `painting`, `oldmasters`, `museum`). Kept the existing ids `jewellery` and `painting` (renamed display name only) so old saves still decode.
+- New `group` values `jewellery` and `art` added to `LifestyleDef`/config_validator alongside `road`/`heli`/`plane`/`luxury`; both still validate as `kind: luxury`.
+- `LifestyleList` gained an optional `header` list of widgets shown above its items; the Luxury tab passes two `LifestyleCategoryCard`s (Jewellery, Art Collection) as that header. Each card shows owned/total + bonus % and pushes a new page with `LifestyleList(group: ...)` scoped to just that category.
+- All 18 new items have photos (uploaded art-gallery / jewellery-set photography), priced by look from Rs 85,000 (pendant) up to Rs 10B (museum wing) / Rs 90M (emerald necklace), bonuses 1-4%.
+- Lifestyle totals now 43 items / +106%. Vehicle count unchanged at 23.
+- Not yet verified on device (no flutter binary in this sandbox) — Fahad should run `flutter analyze && flutter test` after unzip.

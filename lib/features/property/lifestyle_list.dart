@@ -16,12 +16,19 @@ import '../common/widgets.dart';
 /// One section of vehicles or luxury items ([group]): each owned once, each
 /// adds a permanent percentage to all income. [what] names them in the bonus
 /// line. Focus: the cheapest one not owned yet, when it is affordable.
+/// [header] sits above the items (the Luxury tab puts its sub-sections there).
 class LifestyleList extends ConsumerWidget {
-  const LifestyleList({super.key, required this.group, required this.what});
+  const LifestyleList({
+    super.key,
+    required this.group,
+    required this.what,
+    this.header = const [],
+  });
 
-  /// `road`, `heli`, `plane` or `luxury`.
+  /// `road`, `heli`, `plane`, `luxury`, `jewellery` or `art`.
   final String group;
   final String what;
+  final List<Widget> header;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -69,6 +76,7 @@ class LifestyleList extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.s12),
+        for (final h in header) ...[h, const SizedBox(height: AppSpacing.s8)],
         for (final item in items) ...[
           _ItemCard(
             item: item,
@@ -237,5 +245,78 @@ class _ItemCard extends ConsumerWidget {
         successText: S.sold(item.name, value),
       );
     }
+  }
+}
+
+/// A luxury sub-section (jewellery, art) shown as one card; tapping it opens
+/// that section's items on their own page.
+class LifestyleCategoryCard extends ConsumerWidget {
+  const LifestyleCategoryCard({
+    super.key,
+    required this.group,
+    required this.title,
+    required this.photoId,
+  });
+
+  final String group;
+  final String title;
+
+  /// Photo used as the card banner.
+  final String photoId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(gameControllerProvider).requireValue.state;
+    final engine = ref.read(gameControllerProvider.notifier).engine;
+    final p = context.palette;
+    final items = engine.config.lifestyle.where((i) => i.group == group).toList();
+    final owned = items.where((i) => s.lifestyle.contains(i.id)).toList();
+    final bonus = owned.fold(0, (a, i) => a + i.incomeBonusPercent);
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => Scaffold(
+              appBar: AppBar(title: Text(title)),
+              body: LifestyleList(group: group, what: title.toLowerCase()),
+            ),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (hasPhoto(photoId)) PhotoBanner(id: photoId),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.s16,
+                AppSpacing.s12,
+                AppSpacing.s8,
+                AppSpacing.s12,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title, style: context.text.titleMedium),
+                        Text(
+                          S.categoryInfo(owned.length, items.length, bonus),
+                          style: context.text.bodySmall
+                              ?.copyWith(color: bonus > 0 ? p.income : p.inkMuted)
+                              .numbers,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right, color: p.inkMuted),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

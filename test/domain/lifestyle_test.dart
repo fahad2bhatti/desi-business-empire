@@ -24,14 +24,14 @@ GameState owner({int cashPkr = 0}) => GameState.newGame(config, t0).copyWith(
 );
 
 void main() {
-  test('config has 27 lifestyle items worth +81% together', () {
-    expect(config.lifestyle.length, 27);
-    expect(config.lifestyle.fold(0, (a, i) => a + i.incomeBonusPercent), 81);
+  test('config has 38 lifestyle items worth +100% together', () {
+    expect(config.lifestyle.length, 38);
+    expect(config.lifestyle.fold(0, (a, i) => a + i.incomeBonusPercent), 100);
     expect(config.lifestyle.where((i) => i.kind == 'vehicle').length, 23);
   });
 
   test('every item sits in a section and each section is sorted by price', () {
-    for (final g in ['road', 'heli', 'plane', 'luxury']) {
+    for (final g in ['road', 'heli', 'plane', 'luxury', 'watches', 'yachts']) {
       final items = config.lifestyle.where((i) => i.group == g).toList();
       expect(items, isNotEmpty, reason: g);
       for (var i = 1; i < items.length; i++) {
@@ -39,9 +39,13 @@ void main() {
       }
     }
     expect(
-      config.lifestyle.where((i) => i.group == 'luxury').every((i) => i.kind == 'luxury'),
+      config.lifestyle
+          .where((i) => const {'luxury', 'watches', 'yachts'}.contains(i.group))
+          .every((i) => i.kind == 'luxury'),
       isTrue,
     );
+    expect(config.lifestyle.where((i) => i.group == 'watches').length, 6);
+    expect(config.lifestyle.where((i) => i.group == 'yachts').length, 7);
   });
 
   test('buying an item costs its price and raises all income by its bonus', () {

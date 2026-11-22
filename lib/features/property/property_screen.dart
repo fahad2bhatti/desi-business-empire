@@ -53,7 +53,22 @@ class PropertyScreen extends StatelessWidget {
                 LifestyleList(group: 'road', what: 'cars and bikes'),
                 LifestyleList(group: 'heli', what: 'helicopters'),
                 LifestyleList(group: 'plane', what: 'planes'),
-                LifestyleList(group: 'luxury', what: 'luxuries'),
+                LifestyleList(
+                  group: 'luxury',
+                  what: 'luxuries',
+                  header: [
+                    LifestyleCategoryCard(
+                      group: 'jewellery',
+                      title: S.jewellery,
+                      photoId: 'bridal',
+                    ),
+                    LifestyleCategoryCard(
+                      group: 'art',
+                      title: S.artCollection,
+                      photoId: 'gallery',
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
