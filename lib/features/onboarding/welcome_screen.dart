@@ -69,6 +69,18 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
             AppSpacing.s24,
           ),
           children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 96,
+                  height: 96,
+                  errorBuilder: (_, _, _) => const SizedBox(height: 96),
+                ),
+              ),
+            ),
             const SizedBox(height: AppSpacing.s24),
             Row(
               children: [

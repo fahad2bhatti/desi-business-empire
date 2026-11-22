@@ -94,3 +94,7 @@ Business cards use the same photo banner: samosa, chai, chaat, rickshaw, taxi, l
 
 ## Bank card
 - A metal-coloured card on Empire: name, what it lets the player buy, progress to the next card. Locked buy buttons say which card is needed (e.g. "Gold card").
+
+## Empire top & logo
+- Empire starts with the big bank card (credit-card shape, metal colour, logo, net worth, limit, progress to next card), then Work, then the Next move card.
+- The logo (assets/images/logo.png, from logo_icon_v3) is the Android launcher icon (adaptive: foreground + #0E1217 background), sits on the bank card and on the welcome screen.
