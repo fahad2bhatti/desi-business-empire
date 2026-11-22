@@ -69,7 +69,9 @@ Controls 12 px; sign tiles 14 px; cards 18 px.
 6 tiers: Rented Room (free) → Small Flat → Family Home → Bungalow → Villa → Mansion. Income bonus is not cumulative; only the current home's bonus applies. Encoded in `homeLevel` (int 0–5).
 
 ## Lifestyle & Vehicles
-11 lifestyle items (7 vehicles + 4 luxury), total +53% income bonus (cumulative across all owned items). Vehicles tab and Luxury tab inside the Property screen.
+27 lifestyle items, total +81% income bonus (cumulative across all owned items). Each item has a `group` in config (`road`, `heli`, `plane`, `luxury`); the Assets screen shows one tab per group (Cars & Bikes, Helicopters, Planes, Luxury) next to Home (10 homes) and Property. Items with a photo in `assets/images/<id>.jpg` (listed in `photos.dart`) show it as a banner card; others keep drawn art, then an icon.
+
+Business cards use the same photo banner: samosa, chai, chaat, rickshaw, taxi, loader, bus, transport (Cargo Logistics) and rentacar have photos in `assets/images/<id>.jpg`; the other businesses keep the sign tile. Tall sources are blur-filled and white-background product shots are centred on white so nothing is cut by the 16:7 banner.
 
 ## Do's and Don'ts
 - Do keep every string in `lib/core/strings.dart` (English).

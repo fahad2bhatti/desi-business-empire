@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../app/theme.dart';
+import 'photos.dart';
+import 'vehicle_art.dart';
 
 /// Icon for each business, property, home and item id. Kept in the UI layer
 /// so the economy config stays pure data.
@@ -39,11 +41,31 @@ IconData iconFor(String id) => switch (id) {
   'sedan' => Icons.directions_car_filled,
   'jewellery' => Icons.diamond,
   'suv' => Icons.airport_shuttle,
+  'cruiser' => Icons.airport_shuttle,
+  'luxsuv' => Icons.airport_shuttle,
+  'cayenne' => Icons.airport_shuttle,
+  'gt3' => Icons.speed,
+  'gt2' => Icons.speed,
   'sportscar' => Icons.speed,
   'painting' => Icons.palette,
   'helicopter' => Icons.flight_takeoff,
   'yacht' => Icons.sailing,
   'jet' => Icons.flight,
+  'cottage' => Icons.cottage,
+  'townhouse' => Icons.home_work,
+  'chalet' => Icons.cabin,
+  'poolvilla' => Icons.villa,
+  'r8' => Icons.speed,
+  'gtr' => Icons.speed,
+  'airbus' => Icons.flight_takeoff,
+  'rescue' => Icons.flight_takeoff,
+  'navyheli' => Icons.flight_takeoff,
+  'huey' => Icons.flight_takeoff,
+  'apache' => Icons.flight_takeoff,
+  'chinook' => Icons.flight_takeoff,
+  'unitid' => Icons.flight,
+  'etihaad' => Icons.flight,
+  'kanada' => Icons.flight,
   _ => Icons.business,
 };
 
@@ -53,12 +75,16 @@ class SignTile extends StatelessWidget {
   const SignTile({
     super.key,
     required this.icon,
+    this.artId,
     this.dot,
     this.size = 52,
     this.dimmed = false,
   });
 
   final IconData icon;
+
+  /// When this id has a drawn vehicle, it replaces the glyph.
+  final String? artId;
   final Color? dot;
   final double size;
   final bool dimmed;
@@ -79,11 +105,27 @@ class SignTile extends StatelessWidget {
               color: p.surfaceRaised,
               borderRadius: BorderRadius.circular(AppRadius.tile),
             ),
-            child: Icon(
-              icon,
-              color: dimmed ? p.inkMuted : p.ink,
-              size: size * 0.55,
-            ),
+            clipBehavior: Clip.antiAlias,
+            child: artId != null && hasPhoto(artId!)
+                ? Image.asset(
+                    'assets/images/$artId.jpg',
+                    fit: BoxFit.cover,
+                    color: dimmed ? const Color(0x66000000) : null,
+                    colorBlendMode: BlendMode.darken,
+                    errorBuilder: (_, _, _) => Icon(icon, color: p.ink),
+                  )
+                : artId != null && hasVehicleArt(artId!)
+                ? Center(
+                    child: Opacity(
+                      opacity: dimmed ? 0.45 : 1,
+                      child: VehicleArt(id: artId!, width: size * 0.84),
+                    ),
+                  )
+                : Icon(
+                    icon,
+                    color: dimmed ? p.inkMuted : p.ink,
+                    size: size * 0.55,
+                  ),
           ),
           if (dot != null)
             Positioned(

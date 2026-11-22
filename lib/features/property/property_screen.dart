@@ -8,20 +8,22 @@ import '../../core/strings.dart';
 import '../../domain/economy/economy_config.dart';
 import '../../domain/economy/game_engine.dart';
 import '../../domain/economy/game_state.dart';
+import '../common/photos.dart';
 import '../common/run_command.dart';
 import '../common/visuals.dart';
 import '../common/widgets.dart';
 import 'home_list.dart';
 import 'lifestyle_list.dart';
 
-/// Assets tab: Home, Property, Vehicles, Luxury. [initialTab] is one of
-/// `home`, `property`, `vehicles`, `luxury`.
+/// Assets tab: one section per kind of asset. [initialTab] is one of
+/// `home`, `property`, `vehicles` (cars and bikes), `helicopters`, `planes`,
+/// `luxury`.
 class PropertyScreen extends StatelessWidget {
   const PropertyScreen({super.key, this.initialTab});
 
   final String? initialTab;
 
-  static const _tabs = ['home', 'property', 'vehicles', 'luxury'];
+  static const _tabs = ['home', 'property', 'vehicles', 'helicopters', 'planes', 'luxury'];
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +39,9 @@ class PropertyScreen extends StatelessWidget {
             tabs: [
               Tab(text: S.tabHome),
               Tab(text: S.property),
-              Tab(text: S.tabVehicles),
+              Tab(text: S.tabCars),
+              Tab(text: S.tabHelis),
+              Tab(text: S.tabPlanes),
               Tab(text: S.tabLuxury),
             ],
           ),
@@ -46,8 +50,10 @@ class PropertyScreen extends StatelessWidget {
               children: [
                 HomeList(),
                 _PropertyList(),
-                LifestyleList(kind: 'vehicle'),
-                LifestyleList(kind: 'luxury'),
+                LifestyleList(group: 'road', what: 'cars and bikes'),
+                LifestyleList(group: 'heli', what: 'helicopters'),
+                LifestyleList(group: 'plane', what: 'planes'),
+                LifestyleList(group: 'luxury', what: 'luxuries'),
               ],
             ),
           ),
@@ -161,72 +167,86 @@ class _PropertyCard extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
     );
 
+    final photo = hasPhoto(prop.id);
     return Card(
+      clipBehavior: Clip.antiAlias,
       shape: focus
           ? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.card),
               side: BorderSide(color: p.accent, width: 1.5),
             )
           : null,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.s16,
-          AppSpacing.s12,
-          AppSpacing.s8,
-          AppSpacing.s12,
-        ),
-        child: Row(
-          children: [
-            SignTile(icon: iconFor(prop.id), dimmed: n == 0),
-            const SizedBox(width: AppSpacing.s12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(prop.name, style: context.text.titleMedium),
-                  Text(
-                    '${prop.area} · ${S.ownedUnits(n, prop.maxOwned)}',
-                    style: muted.numbers,
-                  ),
-                  Text(
-                    n > 0
-                        ? S.rentTotal(formatShort(prop.rentPaisaPerSec * n))
-                        : S.rentEach(formatShort(prop.rentPaisaPerSec)),
-                    style: context.text.bodySmall
-                        ?.copyWith(color: p.income)
-                        .numbers,
-                  ),
-                ],
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (photo) PhotoBanner(id: prop.id, dimmed: n == 0),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.s16,
+              AppSpacing.s12,
+              AppSpacing.s8,
+              AppSpacing.s12,
             ),
-            if (full)
-              Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.s8),
-                child: Text(S.allUnitsOwned, style: muted),
-              )
-            else if (focus)
-              FilledButton(style: buyStyle, onPressed: onBuy, child: buyChild)
-            else
-              FilledButton.tonal(
-                style: buyStyle,
-                onPressed: onBuy,
-                child: buyChild,
-              ),
-            if (n > 0)
-              PopupMenuButton<void>(
-                icon: Icon(Icons.more_vert, color: p.inkMuted),
-                itemBuilder: (_) => [
-                  PopupMenuItem<void>(
-                    enabled: !blocked,
-                    onTap: () => _confirmSell(context, ref, n),
-                    child: Text(S.sell, style: TextStyle(color: p.danger)),
+            child: Row(
+              children: [
+                if (!photo) ...[
+                  SignTile(
+                    icon: iconFor(prop.id),
+                    artId: prop.id,
+                    dimmed: n == 0,
                   ),
+                  const SizedBox(width: AppSpacing.s12),
                 ],
-              )
-            else
-              const SizedBox(width: AppSpacing.s8),
-          ],
-        ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(prop.name, style: context.text.titleMedium),
+                      Text(
+                        '${prop.area} · ${S.ownedUnits(n, prop.maxOwned)}',
+                        style: muted.numbers,
+                      ),
+                      Text(
+                        n > 0
+                            ? S.rentTotal(formatShort(prop.rentPaisaPerSec * n))
+                            : S.rentEach(formatShort(prop.rentPaisaPerSec)),
+                        style: context.text.bodySmall
+                            ?.copyWith(color: p.income)
+                            .numbers,
+                      ),
+                    ],
+                  ),
+                ),
+                if (full)
+                  Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.s8),
+                    child: Text(S.allUnitsOwned, style: muted),
+                  )
+                else if (focus)
+                  FilledButton(style: buyStyle, onPressed: onBuy, child: buyChild)
+                else
+                  FilledButton.tonal(
+                    style: buyStyle,
+                    onPressed: onBuy,
+                    child: buyChild,
+                  ),
+                if (n > 0)
+                  PopupMenuButton<void>(
+                    icon: Icon(Icons.more_vert, color: p.inkMuted),
+                    itemBuilder: (_) => [
+                      PopupMenuItem<void>(
+                        enabled: !blocked,
+                        onTap: () => _confirmSell(context, ref, n),
+                        child: Text(S.sell, style: TextStyle(color: p.danger)),
+                      ),
+                    ],
+                  )
+                else
+                  const SizedBox(width: AppSpacing.s8),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

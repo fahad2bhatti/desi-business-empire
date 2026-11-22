@@ -57,6 +57,7 @@ class LifestyleDef {
     required this.id,
     required this.name,
     required this.kind,
+    required this.group,
     required this.pricePaisa,
     required this.incomeBonusPercent,
   });
@@ -66,6 +67,9 @@ class LifestyleDef {
 
   /// `vehicle` or `luxury`.
   final String kind;
+
+  /// The section it is shown in: `road`, `heli`, `plane` or `luxury`.
+  final String group;
   final int pricePaisa;
   final int incomeBonusPercent;
 }
@@ -269,21 +273,19 @@ class EconomyConfig {
           ),
       ],
       lifestyle: [
-        for (final i
-            in ((j['lifestyle'] ?? const []) as List)
-                .cast<Map<String, Object?>>())
+        for (final i in ((j['lifestyle'] ?? const []) as List).cast<Map<String, Object?>>())
           LifestyleDef(
             id: i['id'] as String,
             name: i['name'] as String,
             kind: i['kind'] as String,
+            group: (i['group'] ?? i['kind']) as String,
             pricePaisa: rupees(_int(i['price'])),
             incomeBonusPercent: _int(i['incomeBonusPercent']),
           ),
       ],
       lifestyleSellRefund: _double(j['lifestyleSellRefund'] ?? 0.6),
       homes: [
-        for (final h
-            in ((j['homes'] ?? const []) as List).cast<Map<String, Object?>>())
+        for (final h in ((j['homes'] ?? const []) as List).cast<Map<String, Object?>>())
           HomeDef(
             id: h['id'] as String,
             name: h['name'] as String,
@@ -292,8 +294,7 @@ class EconomyConfig {
           ),
       ],
       goals: [
-        for (final g
-            in ((j['goals'] ?? const []) as List).cast<Map<String, Object?>>())
+        for (final g in ((j['goals'] ?? const []) as List).cast<Map<String, Object?>>())
           _goal(g),
       ],
     );

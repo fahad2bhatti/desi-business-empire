@@ -7,31 +7,24 @@ import 'package:desi_business_empire/domain/economy/game_engine.dart';
 import 'package:desi_business_empire/domain/economy/game_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-final config = EconomyConfig.parse(
-  File('assets/config/economy.json').readAsStringSync(),
-);
+final config = EconomyConfig.parse(File('assets/config/economy.json').readAsStringSync());
 final engine = GameEngine(config);
 final t0 = DateTime.utc(2026, 1, 1, 12);
 
 GameState newGame() => GameState.newGame(config, t0);
 
 void main() {
-  test('config has 6 homes, first is free with no bonus', () {
-    expect(config.homes.length, 6);
+  test('config has 10 homes, first is free with no bonus', () {
+    expect(config.homes.length, 10);
     expect(config.homes.first.pricePaisa, 0);
     expect(config.homes.first.incomeBonusPercent, 0);
   });
 
   test('home prices and bonuses are strictly ascending', () {
     for (var i = 1; i < config.homes.length; i++) {
-      expect(
-        config.homes[i].pricePaisa,
-        greaterThan(config.homes[i - 1].pricePaisa),
-      );
-      expect(
-        config.homes[i].incomeBonusPercent,
-        greaterThan(config.homes[i - 1].incomeBonusPercent),
-      );
+      expect(config.homes[i].pricePaisa, greaterThan(config.homes[i - 1].pricePaisa));
+      expect(config.homes[i].incomeBonusPercent,
+          greaterThan(config.homes[i - 1].incomeBonusPercent));
     }
   });
 

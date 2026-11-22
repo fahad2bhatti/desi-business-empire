@@ -255,11 +255,7 @@ class StatTile extends StatelessWidget {
 }
 
 /// Asks before selling. True only when the player confirmed.
-Future<bool> confirmSell(
-  BuildContext context,
-  String title,
-  String body,
-) async =>
+Future<bool> confirmSell(BuildContext context, String title, String body) async =>
     await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

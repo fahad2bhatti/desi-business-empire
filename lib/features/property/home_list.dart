@@ -6,6 +6,7 @@ import '../../app/theme.dart';
 import '../../core/money.dart';
 import '../../core/strings.dart';
 import '../../domain/economy/advisor.dart';
+import '../common/photos.dart';
 import '../common/run_command.dart';
 import '../common/visuals.dart';
 import '../common/widgets.dart';
@@ -70,35 +71,48 @@ class HomeList extends ConsumerWidget {
         const SizedBox(height: AppSpacing.s12),
         if (current != null)
           Card(
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.s16),
-              child: Row(
-                children: [
-                  SignTile(icon: iconFor(current.id), size: 52),
-                  const SizedBox(width: AppSpacing.s12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(S.yourHome, style: muted),
-                        Text(current.name, style: context.text.titleLarge),
-                      ],
-                    ),
-                  ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (hasPhoto(current.id)) PhotoBanner(id: current.id),
+                Padding(
+                  padding: const EdgeInsets.all(AppSpacing.s16),
+                  child: Row(
                     children: [
-                      Text(
-                        '+${current.incomeBonusPercent}%',
-                        style: context.text.titleLarge
-                            ?.copyWith(color: p.income)
-                            .numbers,
+                      if (!hasPhoto(current.id)) ...[
+                        SignTile(
+                          icon: iconFor(current.id),
+                          artId: current.id,
+                          size: 52,
+                        ),
+                        const SizedBox(width: AppSpacing.s12),
+                      ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(S.yourHome, style: muted),
+                            Text(current.name, style: context.text.titleLarge),
+                          ],
+                        ),
                       ),
-                      Text(S.allIncome, style: muted),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '+${current.incomeBonusPercent}%',
+                            style: context.text.titleLarge
+                                ?.copyWith(color: p.income)
+                                .numbers,
+                          ),
+                          Text(S.allIncome, style: muted),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         const SizedBox(height: AppSpacing.s12),
@@ -118,6 +132,7 @@ class HomeList extends ConsumerWidget {
                   ),
                   leading: SignTile(
                     icon: iconFor(h.id),
+                    artId: h.id,
                     size: 40,
                     dimmed: i > s.homeLevel,
                   ),

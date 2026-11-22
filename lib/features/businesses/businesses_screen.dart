@@ -9,6 +9,7 @@ import '../../domain/economy/advisor.dart';
 import '../../domain/economy/economy_config.dart';
 import '../../domain/economy/game_engine.dart';
 import '../../domain/economy/game_state.dart';
+import '../common/photos.dart';
 import '../common/run_command.dart';
 import '../common/visuals.dart';
 import '../common/widgets.dart';
@@ -186,132 +187,136 @@ class _BusinessCard extends ConsumerWidget {
     }
 
     final milestone = owned ? engine.nextMilestone(level) : null;
+    final photo = hasPhoto(b.id);
     return Card(
+      clipBehavior: Clip.antiAlias,
       shape: focus
           ? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.card),
               side: BorderSide(color: p.accent, width: 1.5),
             )
           : null,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.s16,
-          AppSpacing.s12,
-          AppSpacing.s8,
-          AppSpacing.s12,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                SignTile(
-                  icon: iconFor(b.id),
-                  dot: p.category(b.categoryId),
-                  dimmed: !owned,
-                ),
-                const SizedBox(width: AppSpacing.s12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(b.name, style: context.text.titleMedium),
-                      if (owned)
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(text: S.levelIncome(level)),
-                              TextSpan(
-                                text: S.perSecond(
-                                  formatShort(engine.businessIncome(b, level)),
-                                ),
-                                style: TextStyle(color: p.income),
-                              ),
-                            ],
-                          ),
-                          style: muted.numbers,
-                        )
-                      else
-                        Text(
-                          S.earnsAtLevel1(
-                            formatShort(engine.businessIncome(b, 1)),
-                          ),
-                          style: muted.numbers,
-                        ),
-                    ],
-                  ),
-                ),
-                if (action != null)
-                  action
-                else
-                  Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.s8),
-                    child: Text(S.maxed, style: muted),
-                  ),
-                if (owned)
-                  PopupMenuButton<void>(
-                    icon: Icon(Icons.more_vert, color: p.inkMuted),
-                    itemBuilder: (_) => [
-                      if (level < max)
-                        PopupMenuItem<void>(
-                          enabled:
-                              !blocked && cash >= engine.upgradeCost(b, level),
-                          onTap: () => runCommand(
-                            context,
-                            ref,
-                            (s, now) => engine.upgradeBusiness(
-                              s,
-                              b.id,
-                              now,
-                              times: max,
-                            ),
-                          ),
-                          child: const Text(S.upgradeMax),
-                        ),
-                      PopupMenuItem<void>(
-                        enabled: !blocked,
-                        onTap: () => _confirmSell(context, ref),
-                        child: Text(S.sell, style: TextStyle(color: p.danger)),
-                      ),
-                    ],
-                  )
-                else
-                  const SizedBox(width: AppSpacing.s8),
-              ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (photo) PhotoBanner(id: b.id, dimmed: !owned),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.s16,
+              AppSpacing.s12,
+              AppSpacing.s8,
+              AppSpacing.s12,
             ),
-            if (saving != null) ...[
-              const SizedBox(height: AppSpacing.s12),
-              Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.s8),
-                child: ProgressBar(value: saving, label: S.saveUpFor(b.name)),
-              ),
-            ],
-            if (milestone != null) ...[
-              const SizedBox(height: AppSpacing.s12),
-              Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.s8),
-                child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
                   children: [
+                    if (!photo) ...[
+                      SignTile(
+                        icon: iconFor(b.id),
+                        artId: b.id,
+                        dot: p.category(b.categoryId),
+                        dimmed: !owned,
+                      ),
+                      const SizedBox(width: AppSpacing.s12),
+                    ],
                     Expanded(
-                      child: ProgressBar(
-                        value: level / milestone.level,
-                        label: S.nextBonus(
-                          milestone.level,
-                          milestone.multiplier,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(b.name, style: context.text.titleMedium),
+                          if (owned)
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(text: S.levelIncome(level)),
+                                  TextSpan(
+                                    text: S.perSecond(
+                                      formatShort(engine.businessIncome(b, level)),
+                                    ),
+                                    style: TextStyle(color: p.income),
+                                  ),
+                                ],
+                              ),
+                              style: muted.numbers,
+                            )
+                          else
+                            Text(
+                              S.earnsAtLevel1(
+                                formatShort(engine.businessIncome(b, 1)),
+                              ),
+                              style: muted.numbers,
+                            ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.s12),
-                    Text(
-                      S.nextBonus(milestone.level, milestone.multiplier),
-                      style: muted,
-                    ),
+                    if (action != null)
+                      action
+                    else
+                      Padding(
+                        padding: const EdgeInsets.only(right: AppSpacing.s8),
+                        child: Text(S.maxed, style: muted),
+                      ),
+                    if (owned)
+                      PopupMenuButton<void>(
+                        icon: Icon(Icons.more_vert, color: p.inkMuted),
+                        itemBuilder: (_) => [
+                          if (level < max)
+                            PopupMenuItem<void>(
+                              enabled: !blocked &&
+                                  cash >= engine.upgradeCost(b, level),
+                              onTap: () => runCommand(
+                                context,
+                                ref,
+                                (s, now) =>
+                                    engine.upgradeBusiness(s, b.id, now, times: max),
+                              ),
+                              child: const Text(S.upgradeMax),
+                            ),
+                          PopupMenuItem<void>(
+                            enabled: !blocked,
+                            onTap: () => _confirmSell(context, ref),
+                            child: Text(S.sell, style: TextStyle(color: p.danger)),
+                          ),
+                        ],
+                      )
+                    else
+                      const SizedBox(width: AppSpacing.s8),
                   ],
                 ),
-              ),
-            ],
-          ],
-        ),
+                if (saving != null) ...[
+                  const SizedBox(height: AppSpacing.s12),
+                  Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.s8),
+                    child: ProgressBar(value: saving, label: S.saveUpFor(b.name)),
+                  ),
+                ],
+                if (milestone != null) ...[
+                  const SizedBox(height: AppSpacing.s12),
+                  Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.s8),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ProgressBar(
+                            value: level / milestone.level,
+                            label: S.nextBonus(milestone.level, milestone.multiplier),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.s12),
+                        Text(
+                          S.nextBonus(milestone.level, milestone.multiplier),
+                          style: muted,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

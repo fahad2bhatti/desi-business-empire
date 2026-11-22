@@ -78,7 +78,7 @@ class _WelcomeScreenState extends ConsumerState<WelcomeScreen> {
                   ('kiryana', p.shops),
                   ('factory', p.companies),
                 ]) ...[
-                  SignTile(icon: iconFor(id), dot: color, size: 56),
+                  SignTile(icon: iconFor(id), artId: id, dot: color, size: 56),
                   const SizedBox(width: AppSpacing.s12),
                 ],
               ],

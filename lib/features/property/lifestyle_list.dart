@@ -8,18 +8,20 @@ import '../../core/strings.dart';
 import '../../domain/economy/economy_config.dart';
 import '../../domain/economy/game_engine.dart';
 import '../../domain/economy/game_state.dart';
+import '../common/photos.dart';
 import '../common/run_command.dart';
 import '../common/visuals.dart';
 import '../common/widgets.dart';
 
-/// Vehicles or luxury items ([kind]): each owned once, each adds a
-/// permanent percentage to all income. Focus: the cheapest one not owned
-/// yet, when it is affordable.
+/// One section of vehicles or luxury items ([group]): each owned once, each
+/// adds a permanent percentage to all income. [what] names them in the bonus
+/// line. Focus: the cheapest one not owned yet, when it is affordable.
 class LifestyleList extends ConsumerWidget {
-  const LifestyleList({super.key, required this.kind});
+  const LifestyleList({super.key, required this.group, required this.what});
 
-  /// `vehicle` or `luxury`.
-  final String kind;
+  /// `road`, `heli`, `plane` or `luxury`.
+  final String group;
+  final String what;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,7 +29,7 @@ class LifestyleList extends ConsumerWidget {
     final engine = ref.read(gameControllerProvider.notifier).engine;
     final s = session.state;
     final p = context.palette;
-    final items = engine.config.lifestyle.where((i) => i.kind == kind).toList();
+    final items = engine.config.lifestyle.where((i) => i.group == group).toList();
     final owned = items.where((i) => s.lifestyle.contains(i.id)).toList();
     final bonus = owned.fold(0, (a, i) => a + i.incomeBonusPercent);
     String? focus;
@@ -52,7 +54,7 @@ class LifestyleList extends ConsumerWidget {
           children: [
             Expanded(
               child: Text(
-                kind == 'vehicle' ? S.garageBonus(bonus) : S.luxuryBonus(bonus),
+                S.sectionBonus(what, bonus),
                 style: context.text.bodySmall
                     ?.copyWith(color: p.inkMuted)
                     .numbers,
@@ -127,24 +129,36 @@ class _ItemCard extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.s12),
     );
 
+    final photo = hasPhoto(item.id);
     return Card(
+      clipBehavior: Clip.antiAlias,
       shape: focus
           ? RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppRadius.card),
               side: BorderSide(color: p.accent, width: 1.5),
             )
           : null,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.s16,
-          AppSpacing.s12,
-          AppSpacing.s8,
-          AppSpacing.s12,
-        ),
-        child: Row(
-          children: [
-            SignTile(icon: iconFor(item.id), dimmed: !owned && !canBuy),
-            const SizedBox(width: AppSpacing.s12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (photo) PhotoBanner(id: item.id, dimmed: !owned && !canBuy),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.s16,
+              AppSpacing.s12,
+              AppSpacing.s8,
+              AppSpacing.s12,
+            ),
+            child: Row(
+              children: [
+                if (!photo) ...[
+                  SignTile(
+                    icon: iconFor(item.id),
+                    artId: item.id,
+                    dimmed: !owned && !canBuy,
+                  ),
+                  const SizedBox(width: AppSpacing.s12),
+                ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,8 +214,10 @@ class _ItemCard extends ConsumerWidget {
                 ),
               const SizedBox(width: AppSpacing.s8),
             ],
-          ],
-        ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
