@@ -59,12 +59,28 @@ extension Settle on GameEngine {
         : math.min(seconds, config.offlineCapMinutes * 60);
     final earned = incomePerSec(s) * credited;
     final end = s.lastSettledAt.add(Duration(seconds: seconds));
+
+    // Income tax builds up with income; each missed return deadline adds
+    // the late penalty and moves the deadline one period on.
+    var due = s.taxDuePaisa + earned * incomeTaxPercent(s) ~/ 100;
+    var periodStart = taxPeriodStart(s);
+    var missed = s.taxMissed;
+    final period = config.tax.period;
+    for (var i = 0; i < 100 && !end.isBefore(periodStart.add(period)); i++) {
+      due += due * config.tax.latePenaltyPercent ~/ 100;
+      periodStart = periodStart.add(period);
+      missed++;
+    }
+
     return Settlement(
       state: s.copyWith(
         revision: s.revision + 1,
         cashPaisa: s.cashPaisa + earned,
         totalEarnedPaisa: s.totalEarnedPaisa + earned,
         lastSettledAt: end,
+        taxDuePaisa: due,
+        taxPeriodStart: periodStart,
+        taxMissed: missed,
       ),
       entries: [
         if (earned > 0)

@@ -209,7 +209,7 @@ abstract final class S {
   // ---------- more ----------
   static const moreTitle = 'More';
   static const accounts = 'Accounts';
-  static const accountsSubtitle = 'Cash and recent entries';
+  static const accountsSubtitle = 'Cash, tax and every buy and sell';
   static const empireName = 'Empire name';
   static const defaultName = 'My Empire';
   static const sound = 'Sound';
@@ -252,6 +252,9 @@ abstract final class S {
   static const entryBuyItem = 'Bought lifestyle item';
   static const entrySellItem = 'Sold lifestyle item';
   static const entryMoveHome = 'Moved home';
+  static const entryTax = 'Tax return';
+  static const transactions = 'Buys, sells and tax';
+  static const noTransactions = 'Nothing bought or sold yet.';
   static String ago(Duration d) {
     if (d.inMinutes < 1) {
       return 'just now';
@@ -259,8 +262,28 @@ abstract final class S {
     if (d.inHours < 1) {
       return '${d.inMinutes} min ago';
     }
-    return '${d.inHours} h ago';
+    if (d.inDays < 1) {
+      return '${d.inHours} h ago';
+    }
+    return d.inDays == 1 ? '1 day ago' : '${d.inDays} days ago';
   }
+
+  // ---------- tax ----------
+  static const tax = 'Tax';
+  static const taxDue = 'Tax due';
+  static const taxPaid = 'Tax paid so far';
+  static String taxIncomeRate(int percent) => 'Income tax now: $percent%';
+  static String taxDueIn(String wait) => 'Return due in $wait';
+  static String taxOverdue(int missed, int penalty) =>
+      'Overdue · $missed missed · +$penalty% late fee each time';
+  static String taxExplain(int hours) =>
+      'Tax builds up on income and on every purchase. File a return at least every $hours hours or a late fee is added.';
+  static const fileReturn = 'File return';
+  static String taxFiled(String amount) => 'Return filed. Paid $amount.';
+  static const taxReminderTitle = 'Tax return due';
+  static String taxReminder(String due, String wait) =>
+      '$due due · file within $wait';
+  static String taxReminderOverdue(String due) => '$due due · overdue, late fees are adding up';
 
   // ---------- goals ----------
   static String goalTaps(int n) => 'Tap Work $n times';

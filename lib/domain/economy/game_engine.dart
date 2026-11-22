@@ -109,9 +109,46 @@ class GameEngine {
     return total;
   }
 
-  /// Cash plus what everything owned would sell for.
+  // ---------- tax ----------
+
+  /// Income tax rate now, from the income per second.
+  int incomeTaxPercent(GameState s) =>
+      TaxConfig.percentFor(config.tax.incomeSlabs, incomePerSec(s));
+
+  int purchaseTaxPercent(int pricePaisa) =>
+      TaxConfig.percentFor(config.tax.purchaseSlabs, pricePaisa);
+
+  /// Tax added to what is due when something costing [pricePaisa] is bought.
+  int purchaseTax(int pricePaisa) =>
+      pricePaisa * purchaseTaxPercent(pricePaisa) ~/ 100;
+
+  DateTime taxPeriodStart(GameState s) => s.taxPeriodStart ?? s.lastSettledAt;
+
+  /// When the next return must be filed.
+  DateTime taxDeadline(GameState s) =>
+      taxPeriodStart(s).add(config.tax.period);
+
+  /// Pays everything due and starts a new tax period.
+  CommandResult fileTaxReturn(GameState s, DateTime now) {
+    final due = s.taxDuePaisa;
+    if (due > s.cashPaisa) {
+      return _noFunds(due, s);
+    }
+    return _ok(
+      s.copyWith(
+        cashPaisa: s.cashPaisa - due,
+        taxDuePaisa: 0,
+        taxPaidPaisa: s.taxPaidPaisa + due,
+        taxPeriodStart: now,
+        taxMissed: 0,
+      ),
+      [if (due > 0) _entry(LedgerType.tax, -due, 'return', now)],
+    );
+  }
+
+  /// Cash plus what everything owned would sell for, minus tax due.
   int netWorth(GameState s) {
-    var worth = s.cashPaisa;
+    var worth = s.cashPaisa - s.taxDuePaisa;
     for (final id in s.businesses.keys) {
       worth += businessSellValue(s, id);
     }
@@ -156,6 +193,7 @@ class GameEngine {
     return _ok(
       s.copyWith(
         cashPaisa: s.cashPaisa - cost,
+        taxDuePaisa: s.taxDuePaisa + purchaseTax(cost),
         businesses: {...s.businesses, id: 1},
         invested: {...s.invested, id: cost},
       ),
@@ -202,6 +240,7 @@ class GameEngine {
     return _ok(
       s.copyWith(
         cashPaisa: cash,
+        taxDuePaisa: s.taxDuePaisa + purchaseTax(spent),
         businesses: {...s.businesses, id: level},
         invested: {...s.invested, id: (s.invested[id] ?? 0) + spent},
       ),
@@ -243,6 +282,7 @@ class GameEngine {
     return _ok(
       s.copyWith(
         cashPaisa: s.cashPaisa - cost,
+        taxDuePaisa: s.taxDuePaisa + purchaseTax(cost),
         properties: {...s.properties, id: n + 1},
       ),
       [_entry(LedgerType.buyProperty, -cost, '$id #${n + 1}', now)],
@@ -284,6 +324,7 @@ class GameEngine {
     return _ok(
       s.copyWith(
         cashPaisa: s.cashPaisa - item.pricePaisa,
+        taxDuePaisa: s.taxDuePaisa + purchaseTax(item.pricePaisa),
         lifestyle: {...s.lifestyle, id},
       ),
       [_entry(LedgerType.buyItem, -item.pricePaisa, id, now)],
@@ -320,6 +361,7 @@ class GameEngine {
     return _ok(
       s.copyWith(
         cashPaisa: s.cashPaisa - next.pricePaisa,
+        taxDuePaisa: s.taxDuePaisa + purchaseTax(next.pricePaisa),
         homeLevel: s.homeLevel + 1,
       ),
       [_entry(LedgerType.moveHome, -next.pricePaisa, next.id, now)],

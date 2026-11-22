@@ -157,10 +157,27 @@ class SaveRepository {
     _db.ledgerRows,
   )..where((t) => t.at.isBiggerOrEqualValue(since))).get();
 
+  /// Buys, sells, rewards and tax, newest first: everything except the
+  /// per-second income and Work taps.
+  Future<List<LedgerRow>> transactions({int limit = 200}) =>
+      (_db.select(_db.ledgerRows)
+            ..where((t) => t.type.isNotIn(_noisyTypes))
+            ..orderBy([
+              (t) => OrderingTerm.desc(t.revision),
+              (t) => OrderingTerm.desc(t.idx),
+            ])
+            ..limit(limit))
+          .get();
+
   /// Keeps the ledger small: the foreground tick writes a few rows a second.
-  Future<int> pruneLedger(DateTime before) => (_db.delete(
-    _db.ledgerRows,
-  )..where((t) => t.at.isSmallerThanValue(before))).go();
+  /// Only income and Work rows are pruned; transactions are kept.
+  Future<int> pruneLedger(DateTime before) =>
+      (_db.delete(_db.ledgerRows)..where(
+            (t) => t.at.isSmallerThanValue(before) & t.type.isIn(_noisyTypes),
+          ))
+          .go();
+
+  static final _noisyTypes = [LedgerType.income.name, LedgerType.work.name];
 
   SaveSlotsCompanion _slot(String slot, GameState s, int configVersion) =>
       SaveSlotsCompanion.insert(

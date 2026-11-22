@@ -81,6 +81,16 @@ List<String> validateConfig(EconomyConfig c) {
     check(i.kind == 'vehicle' || i.kind == 'luxury', '$where: kind must be vehicle or luxury');
     check(const {'road', 'bike', 'heli', 'plane', 'luxury', 'watches', 'jewellery', 'art', 'yachts'}.contains(i.group), '$where: unknown group ${i.group}');
   }
+  check(c.tax.periodHours > 0, 'tax: periodHours must be > 0');
+  check(c.tax.latePenaltyPercent >= 0, 'tax: latePenaltyPercent must be >= 0');
+  for (final (name, slabs) in [('incomePerSecond', c.tax.incomeSlabs), ('purchase', c.tax.purchaseSlabs)]) {
+    for (final (i, s) in slabs.indexed) {
+      check(s.percent >= 0 && s.percent <= 100, 'tax $name: percent must be 0..100');
+      if (i > 0) {
+        check(s.fromPaisa > slabs[i - 1].fromPaisa, 'tax $name: slabs must ascend');
+      }
+    }
+  }
   check(c.homes.isNotEmpty, 'no homes');
   for (final (i, h) in c.homes.indexed) {
     final where = 'home ${h.id}';

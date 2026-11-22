@@ -14,12 +14,17 @@ class GameState {
     this.claimedGoals = const {},
     this.lifestyle = const {},
     this.homeLevel = 0,
+    this.taxDuePaisa = 0,
+    this.taxPaidPaisa = 0,
+    this.taxPeriodStart,
+    this.taxMissed = 0,
   });
 
   factory GameState.newGame(EconomyConfig config, DateTime now) => GameState(
     revision: 0,
     cashPaisa: config.startCashPaisa,
     lastSettledAt: now,
+    taxPeriodStart: now,
   );
 
   /// Increases by one with every successful command or settlement.
@@ -53,6 +58,19 @@ class GameState {
   /// Index into the config's homes: where the player lives now.
   final int homeLevel;
 
+  /// Tax built up since the last return, not paid yet.
+  final int taxDuePaisa;
+
+  /// Lifetime tax paid.
+  final int taxPaidPaisa;
+
+  /// When the current tax period began (the last return, or the start).
+  /// Null in saves from before tax; treat as [lastSettledAt].
+  final DateTime? taxPeriodStart;
+
+  /// Return deadlines missed since the last return.
+  final int taxMissed;
+
   int level(String businessId) => businesses[businessId] ?? 0;
   int owned(String propertyId) => properties[propertyId] ?? 0;
 
@@ -68,6 +86,10 @@ class GameState {
     Set<String>? claimedGoals,
     Set<String>? lifestyle,
     int? homeLevel,
+    int? taxDuePaisa,
+    int? taxPaidPaisa,
+    DateTime? taxPeriodStart,
+    int? taxMissed,
   }) => GameState(
     revision: revision ?? this.revision,
     cashPaisa: cashPaisa ?? this.cashPaisa,
@@ -80,5 +102,9 @@ class GameState {
     claimedGoals: claimedGoals ?? this.claimedGoals,
     lifestyle: lifestyle ?? this.lifestyle,
     homeLevel: homeLevel ?? this.homeLevel,
+    taxDuePaisa: taxDuePaisa ?? this.taxDuePaisa,
+    taxPaidPaisa: taxPaidPaisa ?? this.taxPaidPaisa,
+    taxPeriodStart: taxPeriodStart ?? this.taxPeriodStart,
+    taxMissed: taxMissed ?? this.taxMissed,
   );
 }

@@ -530,6 +530,24 @@
     {"id": "kanada", "name": "Air Kanada 777", "kind": "vehicle", "group": "plane", "price": 350000000000, "incomeBonusPercent": 1},
     {"id": "jet", "name": "Jumbo Jet", "kind": "vehicle", "group": "plane", "price": 500000000000, "incomeBonusPercent": 10}
   ],
+  "tax": {
+    "_note": "Income tax by income per second (Rs) and purchase tax by price (Rs). A return is due every periodHours; each missed deadline adds latePenaltyPercent of what is due.",
+    "periodHours": 60,
+    "latePenaltyPercent": 10,
+    "incomePerSecond": [
+      {"from": 0, "percent": 0},
+      {"from": 1000, "percent": 5},
+      {"from": 100000, "percent": 10},
+      {"from": 10000000, "percent": 15},
+      {"from": 1000000000, "percent": 20}
+    ],
+    "purchase": [
+      {"from": 0, "percent": 0},
+      {"from": 1000000, "percent": 1},
+      {"from": 100000000, "percent": 2},
+      {"from": 10000000000, "percent": 3}
+    ]
+  },
   "homes": [
     {
       "id": "room",

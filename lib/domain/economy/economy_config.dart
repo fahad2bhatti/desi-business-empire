@@ -134,6 +134,69 @@ class GoalDef {
   final String? businessId;
 }
 
+/// One tax band: [percent] applies from [fromPaisa] upwards.
+class TaxSlab {
+  const TaxSlab({required this.fromPaisa, required this.percent});
+
+  final int fromPaisa;
+  final int percent;
+}
+
+/// Income tax and purchase tax. Tax builds up as "due" and is paid by
+/// filing a return; a return is due every [periodHours]. Each deadline
+/// missed adds [latePenaltyPercent] of what is due.
+class TaxConfig {
+  const TaxConfig({
+    required this.periodHours,
+    required this.latePenaltyPercent,
+    required this.incomeSlabs,
+    required this.purchaseSlabs,
+  });
+
+  /// No tax at all (configs without a `tax` block).
+  static const none = TaxConfig(
+    periodHours: 60,
+    latePenaltyPercent: 0,
+    incomeSlabs: [],
+    purchaseSlabs: [],
+  );
+
+  final int periodHours;
+  final int latePenaltyPercent;
+
+  /// By income per second, ascending.
+  final List<TaxSlab> incomeSlabs;
+
+  /// By the price paid, ascending.
+  final List<TaxSlab> purchaseSlabs;
+
+  Duration get period => Duration(hours: periodHours);
+
+  /// The percent of the highest slab that [amountPaisa] reaches.
+  static int percentFor(List<TaxSlab> slabs, int amountPaisa) {
+    var percent = 0;
+    for (final s in slabs) {
+      if (amountPaisa >= s.fromPaisa) {
+        percent = s.percent;
+      }
+    }
+    return percent;
+  }
+
+  static TaxConfig fromJson(Map<String, Object?> j) {
+    List<TaxSlab> slabs(Object? v) => [
+      for (final s in ((v ?? const []) as List).cast<Map<String, Object?>>())
+        TaxSlab(fromPaisa: rupees(_int(s['from'])), percent: _int(s['percent'])),
+    ];
+    return TaxConfig(
+      periodHours: _int(j['periodHours']),
+      latePenaltyPercent: _int(j['latePenaltyPercent'] ?? 0),
+      incomeSlabs: slabs(j['incomePerSecond']),
+      purchaseSlabs: slabs(j['purchase']),
+    );
+  }
+}
+
 class EconomyConfig {
   const EconomyConfig({
     required this.version,
@@ -154,6 +217,7 @@ class EconomyConfig {
     required this.lifestyle,
     required this.lifestyleSellRefund,
     this.homes = const [],
+    this.tax = TaxConfig.none,
   });
 
   final int version;
@@ -194,6 +258,8 @@ class EconomyConfig {
 
   /// Cheapest first; index 0 is where every player starts.
   final List<HomeDef> homes;
+
+  final TaxConfig tax;
 
   BusinessDef? business(String id) {
     for (final b in businesses) {
@@ -298,6 +364,9 @@ class EconomyConfig {
         for (final g in ((j['goals'] ?? const []) as List).cast<Map<String, Object?>>())
           _goal(g),
       ],
+      tax: j['tax'] == null
+          ? TaxConfig.none
+          : TaxConfig.fromJson(j['tax']! as Map<String, Object?>),
     );
   }
 

@@ -18,6 +18,10 @@ Map<String, Object?> encodeGameState(GameState s) => {
   'claimedGoals': s.claimedGoals.toList()..sort(),
   'lifestyle': s.lifestyle.toList()..sort(),
   'homeLevel': s.homeLevel,
+  'taxDuePaisa': s.taxDuePaisa,
+  'taxPaidPaisa': s.taxPaidPaisa,
+  'taxPeriodStart': s.taxPeriodStart?.toIso8601String(),
+  'taxMissed': s.taxMissed,
 };
 
 int _int(Object? v) => (v as num).toInt();
@@ -45,12 +49,24 @@ GameState decodeGameState(Map<String, Object?> j, EconomyConfig config) {
       for (final id in (j['lifestyle'] ?? const []) as List) id as String,
     },
     homeLevel: _int(j['homeLevel'] ?? 0),
+    // Tax was added later; older saves start with nothing due.
+    taxDuePaisa: _int(j['taxDuePaisa'] ?? 0),
+    taxPaidPaisa: _int(j['taxPaidPaisa'] ?? 0),
+    taxPeriodStart: j['taxPeriodStart'] == null
+        ? null
+        : DateTime.parse(j['taxPeriodStart']! as String).toUtc(),
+    taxMissed: _int(j['taxMissed'] ?? 0),
   );
   if (s.homeLevel < 0 ||
       (s.homeLevel > 0 && s.homeLevel >= config.homes.length)) {
     throw FormatException('bad home ${s.homeLevel}');
   }
-  if (s.cashPaisa < 0 || s.totalEarnedPaisa < 0 || s.taps < 0) {
+  if (s.cashPaisa < 0 ||
+      s.totalEarnedPaisa < 0 ||
+      s.taps < 0 ||
+      s.taxDuePaisa < 0 ||
+      s.taxPaidPaisa < 0 ||
+      s.taxMissed < 0) {
     throw const FormatException('negative counter');
   }
   for (final e in s.businesses.entries) {

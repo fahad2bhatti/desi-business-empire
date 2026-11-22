@@ -86,3 +86,8 @@ Business cards use the same photo banner: samosa, chai, chaat, rickshaw, taxi, l
 - Don't use emoji as icons.
 - Don't put any color on price text inside `FilledButton` (let it inherit).
 - Don't copy Business Empire: RichMan UI directly (genre reference only).
+
+## Tax & Accounts
+- Tax is a card on the Accounts screen: amount due, time left to the return, income tax rate now, and a File return button. Overdue states use the danger colour and show the missed count and penalty.
+- The Empire screen has a Tax row that opens Accounts.
+- Money uses short units everywhere: K, M, B, T (never lakh, crore, arab or kharab).

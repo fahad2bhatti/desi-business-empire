@@ -80,3 +80,10 @@ After an approved decision, record date, decision, rationale and affected files.
 - Motorbike, Small Plot, Shop Space, Apartment Block and Shopping Plaza now have photos.
 - Empire screen: Work button and the Businesses / Property / Vehicles / Home rows show small photo thumbnails (`PhotoThumb` in photos.dart: samosa, kiryana, plaza, sportscar, current home) instead of glyph tiles; glyph stays as fallback.
 - `formatShort` now uses K / M / B / T instead of lakh / crore / arab / kharab. Goal ids still say lakh/crore internally (ids only, never shown).
+
+## 2026-11-22 — Tax system and Accounts
+- Tax lives in `tax` in economy.json: `periodHours` 60, `latePenaltyPercent` 10, `incomePerSecond` slabs (income tax on every credited second), `purchase` slabs (one-time tax on buys, upgrades, property, home moves).
+- Tax is owed in `taxDuePaisa` and is NOT taken from cash until the player files a return (`fileTaxReturn`). Net worth subtracts tax due.
+- A missed deadline adds `latePenaltyPercent` to what is due and increments `taxMissed`.
+- Accounts (More → Accounts) shows the tax card and buys/sells/tax (`transactions()`, which skips per-second income and work rows). Income is kept as a 24h total, not as ledger rows.
+- Money display in Accounts uses formatShort (K/M/B/T).

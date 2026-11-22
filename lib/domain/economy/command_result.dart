@@ -12,6 +12,7 @@ enum LedgerType {
   buyItem,
   sellItem,
   moveHome,
+  tax,
 }
 
 /// One money movement. The repository stores these with the new state in

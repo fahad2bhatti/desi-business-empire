@@ -216,6 +216,13 @@ class _Overview extends StatelessWidget {
         S.rowVehicles(ownedVehicles.length, vehicles.length),
         '/property?tab=vehicles',
       ),
+      (
+        Icons.receipt_long,
+        '',
+        S.tax,
+        '${S.taxDue}: ${formatShort(s.taxDuePaisa)}',
+        '/more/wallet',
+      ),
       if (home != null)
         (
           iconFor(home.id),
