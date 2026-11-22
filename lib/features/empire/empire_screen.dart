@@ -222,7 +222,7 @@ class _Overview extends StatelessWidget {
       ),
       (
         Icons.receipt_long,
-        'goal_income',
+        'tax',
         S.tax,
         '${S.taxDue}: ${formatShort(s.taxDuePaisa)}',
         '/more/wallet',

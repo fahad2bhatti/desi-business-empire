@@ -5,6 +5,7 @@ import '../../app/theme.dart';
 /// Ids that have a real photo in assets/images/ID.jpg. Anything not listed
 /// keeps its drawn art.
 const _photoIds = {
+  'tax',
   'goal_taps',
   'goal_levels',
   'goal_income',
