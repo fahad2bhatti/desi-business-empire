@@ -130,7 +130,12 @@ class WalletScreen extends ConsumerWidget {
           Text(S.notRealMoney, style: muted),
           const SizedBox(height: AppSpacing.s24),
           const SectionTitle(S.tax),
-          _TaxCard(engine: engine, state: s, now: now, blocked: session.saveFailed),
+          _TaxCard(
+            engine: engine,
+            state: s,
+            now: now,
+            blocked: session.saveFailed,
+          ),
           const SizedBox(height: AppSpacing.s24),
           const SectionTitle(S.transactions),
           if (ledger.isEmpty)
@@ -207,9 +212,9 @@ class _TaxCard extends ConsumerWidget {
                       Text(S.taxDue, style: muted),
                       Text(
                         due,
-                        style: context.text.headlineSmall?.copyWith(
-                          color: overdue ? p.danger : p.ink,
-                        ).numbers,
+                        style: context.text.headlineSmall
+                            ?.copyWith(color: overdue ? p.danger : p.ink)
+                            .numbers,
                       ),
                     ],
                   ),

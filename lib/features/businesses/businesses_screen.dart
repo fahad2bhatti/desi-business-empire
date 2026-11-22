@@ -243,7 +243,9 @@ class _BusinessCard extends ConsumerWidget {
                                   TextSpan(text: S.levelIncome(level)),
                                   TextSpan(
                                     text: S.perSecond(
-                                      formatShort(engine.businessIncome(b, level)),
+                                      formatShort(
+                                        engine.businessIncome(b, level),
+                                      ),
                                     ),
                                     style: TextStyle(color: p.income),
                                   ),
@@ -274,20 +276,28 @@ class _BusinessCard extends ConsumerWidget {
                         itemBuilder: (_) => [
                           if (level < max)
                             PopupMenuItem<void>(
-                              enabled: !blocked &&
+                              enabled:
+                                  !blocked &&
                                   cash >= engine.upgradeCost(b, level),
                               onTap: () => runCommand(
                                 context,
                                 ref,
-                                (s, now) =>
-                                    engine.upgradeBusiness(s, b.id, now, times: max),
+                                (s, now) => engine.upgradeBusiness(
+                                  s,
+                                  b.id,
+                                  now,
+                                  times: max,
+                                ),
                               ),
                               child: const Text(S.upgradeMax),
                             ),
                           PopupMenuItem<void>(
                             enabled: !blocked,
                             onTap: () => _confirmSell(context, ref),
-                            child: Text(S.sell, style: TextStyle(color: p.danger)),
+                            child: Text(
+                              S.sell,
+                              style: TextStyle(color: p.danger),
+                            ),
                           ),
                         ],
                       )
@@ -299,7 +309,10 @@ class _BusinessCard extends ConsumerWidget {
                   const SizedBox(height: AppSpacing.s12),
                   Padding(
                     padding: const EdgeInsets.only(right: AppSpacing.s8),
-                    child: ProgressBar(value: saving, label: S.saveUpFor(b.name)),
+                    child: ProgressBar(
+                      value: saving,
+                      label: S.saveUpFor(b.name),
+                    ),
                   ),
                 ],
                 if (milestone != null) ...[
@@ -311,7 +324,10 @@ class _BusinessCard extends ConsumerWidget {
                         Expanded(
                           child: ProgressBar(
                             value: level / milestone.level,
-                            label: S.nextBonus(milestone.level, milestone.multiplier),
+                            label: S.nextBonus(
+                              milestone.level,
+                              milestone.multiplier,
+                            ),
                           ),
                         ),
                         const SizedBox(width: AppSpacing.s12),

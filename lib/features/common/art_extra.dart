@@ -10,8 +10,15 @@ const _dark = 0xFF2B333D;
 const _wall = 0xFFE8DCC8;
 const _door = 0xFF6B4A33;
 
-void _r(Canvas c, double l, double t, double w, double h, int col,
-    [double rad = 0]) {
+void _r(
+  Canvas c,
+  double l,
+  double t,
+  double w,
+  double h,
+  int col, [
+  double rad = 0,
+]) {
   c.drawRRect(
     RRect.fromRectAndRadius(Rect.fromLTWH(l, t, w, h), Radius.circular(rad)),
     _p(col),
@@ -44,7 +51,14 @@ ArtFn _house(double w, int roof, {int floors = 1, int wall = _wall}) => (c) {
   _r(c, x, top, w, h, wall);
   _poly(c, [x - 4, top, 50, top - 14, x + w + 4, top], roof);
   _r(c, 46, 54 - 11, 8, 11, _door, 1);
-  _windows(c, x + 6, top + 4, ((w - 12) / 14).floor().clamp(1, 5).toInt(), floors, 14);
+  _windows(
+    c,
+    x + 6,
+    top + 4,
+    ((w - 12) / 14).floor().clamp(1, 5).toInt(),
+    floors,
+    14,
+  );
 };
 
 ArtFn _tower(int floors, int col, {double w = 34}) => (c) {
@@ -63,8 +77,15 @@ final Map<String, ArtFn> extraArt = {
   },
   'chai': (c) {
     _r(c, 28, 20, 36, 28, 0xFFF1EEE8, 5);
-    c.drawArc(const Rect.fromLTWH(58, 25, 18, 16), -1.57, 3.14, false,
-        _p(0xFFF1EEE8)..style = PaintingStyle.stroke..strokeWidth = 4);
+    c.drawArc(
+      const Rect.fromLTWH(58, 25, 18, 16),
+      -1.57,
+      3.14,
+      false,
+      _p(0xFFF1EEE8)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4,
+    );
     _r(c, 31, 23, 30, 8, 0xFFC08A52, 3);
     _r(c, 22, 48, 48, 4, 0xFFB5BDC7, 2);
     for (final x in [38.0, 46.0, 54.0]) {
@@ -96,8 +117,28 @@ final Map<String, ArtFn> extraArt = {
     _r(c, 41, 24, 18, 5, 0xFFF1EEE8, 1.5);
   },
   'cloth': (c) {
-    _poly(c, [36, 12, 64, 12, 82, 24, 72, 32, 66, 28, 66, 54, 34, 54, 34, 28,
-      28, 32, 18, 24], 0xFF5B7FD0);
+    _poly(c, [
+      36,
+      12,
+      64,
+      12,
+      82,
+      24,
+      72,
+      32,
+      66,
+      28,
+      66,
+      54,
+      34,
+      54,
+      34,
+      28,
+      28,
+      32,
+      18,
+      24,
+    ], 0xFF5B7FD0);
     _poly(c, [42, 12, 50, 22, 58, 12], 0xFFE8EDF5);
   },
   'mechanic': (c) {
@@ -117,8 +158,13 @@ final Map<String, ArtFn> extraArt = {
   },
   'hall': (c) {
     _r(c, 14, 24, 72, 30, 0xFFE8DCC8);
-    c.drawArc(const Rect.fromLTWH(28, 4, 44, 44), 3.14, 3.14, true,
-        _p(0xFFC9524A));
+    c.drawArc(
+      const Rect.fromLTWH(28, 4, 44, 44),
+      3.14,
+      3.14,
+      true,
+      _p(0xFFC9524A),
+    );
     _r(c, 44, 36, 12, 18, _door, 6);
     for (final x in [14.0, 80.0]) {
       _r(c, x, 14, 6, 40, 0xFFD9A441, 1);
@@ -126,7 +172,22 @@ final Map<String, ArtFn> extraArt = {
   },
   'factory': (c) {
     _r(c, 12, 28, 76, 26, 0xFF8895A4);
-    _poly(c, [12, 28, 12, 18, 32, 28, 32, 18, 52, 28, 52, 18, 72, 28], 0xFF8895A4);
+    _poly(c, [
+      12,
+      28,
+      12,
+      18,
+      32,
+      28,
+      32,
+      18,
+      52,
+      28,
+      52,
+      18,
+      72,
+      28,
+    ], 0xFF8895A4);
     _r(c, 70, 8, 10, 46, 0xFF6B7785);
     _r(c, 68, 6, 14, 4, 0xFF4A5461);
     _windows(c, 18, 36, 4, 1, 14);
@@ -181,11 +242,31 @@ final Map<String, ArtFn> extraArt = {
   },
   'motorbike': (c) {
     for (final x in [24.0, 76.0]) {
-      c.drawCircle(Offset(x, 42), 11,
-          _p(0xFF1B2128)..style = PaintingStyle.stroke..strokeWidth = 4);
+      c.drawCircle(
+        Offset(x, 42),
+        11,
+        _p(0xFF1B2128)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 4,
+      );
       _o(c, x, 42, 3, 0xFFAAB6C4);
     }
-    _poly(c, [24, 42, 40, 24, 62, 24, 76, 42, 66, 42, 54, 32, 38, 36], 0xFFC9524A);
+    _poly(c, [
+      24,
+      42,
+      40,
+      24,
+      62,
+      24,
+      76,
+      42,
+      66,
+      42,
+      54,
+      32,
+      38,
+      36,
+    ], 0xFFC9524A);
     _r(c, 38, 20, 22, 6, _dark, 3);
     _r(c, 62, 16, 3, 12, _dark);
     _r(c, 58, 14, 12, 3, _dark, 1);
@@ -216,8 +297,7 @@ final Map<String, ArtFn> extraArt = {
     c.drawOval(const Rect.fromLTWH(30, 16, 46, 26), _p(0xFFC9524A));
     _poly(c, [32, 24, 12, 26, 12, 32, 34, 34], 0xFFC9524A);
     _r(c, 8, 20, 4, 14, _dark, 1);
-    c.drawArc(const Rect.fromLTWH(54, 19, 20, 16), 3.2, 3.2, true,
-        _p(_glass));
+    c.drawArc(const Rect.fromLTWH(54, 19, 20, 16), 3.2, 3.2, true, _p(_glass));
     _r(c, 30, 50, 52, 3, _dark, 1.5);
     _r(c, 40, 42, 3, 8, _dark);
     _r(c, 64, 42, 3, 8, _dark);

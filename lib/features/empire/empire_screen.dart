@@ -33,9 +33,7 @@ class EmpireScreen extends ConsumerWidget {
     ref.listen<int>(
       gameControllerProvider.select((a) {
         final st = a.value?.state;
-        return st == null
-            ? 0
-            : engine.config.cards.indexOf(engine.card(st));
+        return st == null ? 0 : engine.config.cards.indexOf(engine.card(st));
       }),
       (before, now) {
         if (before != null && now > before) {
@@ -265,7 +263,8 @@ class _Overview extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          for (final (i, (icon, photo, title, subtitle, path)) in rows.indexed) ...[
+          for (final (i, (icon, photo, title, subtitle, path))
+              in rows.indexed) ...[
             if (i > 0) const Divider(indent: AppSpacing.s16),
             ListTile(
               contentPadding: const EdgeInsets.symmetric(
@@ -458,88 +457,91 @@ class _BankCard extends StatelessWidget {
       child: GestureDetector(
         onTap: () => _showCards(context, engine, state),
         child: AspectRatio(
-        aspectRatio: 1.7,
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.s20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppRadius.card + 4),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Color.lerp(color, Colors.white, 0.18)!,
-                color,
-                Color.lerp(color, Colors.black, 0.22)!,
-              ],
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x33000000),
-                blurRadius: 18,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 32,
-                      height: 32,
-                      errorBuilder: (_, _, _) => const SizedBox(width: 32),
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    card.name.toUpperCase(),
-                    style: context.text.titleMedium?.copyWith(
-                      color: on,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
+          aspectRatio: 1.7,
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.s20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppRadius.card + 4),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(color, Colors.white, 0.18)!,
+                  color,
+                  Color.lerp(color, Colors.black, 0.22)!,
                 ],
               ),
-              const Spacer(),
-              Text(S.netWorth, style: small?.copyWith(color: on.withValues(alpha: 0.8))),
-              Text(
-                formatShort(worth),
-                style: context.text.headlineMedium
-                    ?.copyWith(color: on, fontWeight: FontWeight.w700)
-                    .numbers,
-              ),
-              const SizedBox(height: AppSpacing.s4),
-              Text(limit, style: small),
-              const SizedBox(height: AppSpacing.s12),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 6,
-                  color: on,
-                  backgroundColor: on.withValues(alpha: 0.25),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 18,
+                  offset: Offset(0, 8),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.s4),
-              Text(
-                next == null
-                    ? S.cardTop
-                    : S.cardNext(
-                        next.name,
-                        formatShort(next.netWorthPaisa),
-                        formatShort(worth),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        'assets/images/logo.png',
+                        width: 32,
+                        height: 32,
+                        errorBuilder: (_, _, _) => const SizedBox(width: 32),
                       ),
-                style: small?.numbers,
-              ),
-            ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      card.name.toUpperCase(),
+                      style: context.text.titleMedium?.copyWith(
+                        color: on,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  S.netWorth,
+                  style: small?.copyWith(color: on.withValues(alpha: 0.8)),
+                ),
+                Text(
+                  formatShort(worth),
+                  style: context.text.headlineMedium
+                      ?.copyWith(color: on, fontWeight: FontWeight.w700)
+                      .numbers,
+                ),
+                const SizedBox(height: AppSpacing.s4),
+                Text(limit, style: small),
+                const SizedBox(height: AppSpacing.s12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 6,
+                    color: on,
+                    backgroundColor: on.withValues(alpha: 0.25),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.s4),
+                Text(
+                  next == null
+                      ? S.cardTop
+                      : S.cardNext(
+                          next.name,
+                          formatShort(next.netWorthPaisa),
+                          formatShort(worth),
+                        ),
+                  style: small?.numbers,
+                ),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

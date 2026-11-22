@@ -125,8 +125,7 @@ class GameEngine {
   DateTime taxPeriodStart(GameState s) => s.taxPeriodStart ?? s.lastSettledAt;
 
   /// When the next return must be filed.
-  DateTime taxDeadline(GameState s) =>
-      taxPeriodStart(s).add(config.tax.period);
+  DateTime taxDeadline(GameState s) => taxPeriodStart(s).add(config.tax.period);
 
   /// Pays everything due and starts a new tax period.
   CommandResult fileTaxReturn(GameState s, DateTime now) {

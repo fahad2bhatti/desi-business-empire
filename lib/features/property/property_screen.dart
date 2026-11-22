@@ -23,7 +23,15 @@ class PropertyScreen extends StatelessWidget {
 
   final String? initialTab;
 
-  static const _tabs = ['home', 'property', 'vehicles', 'bikes', 'helicopters', 'planes', 'luxury'];
+  static const _tabs = [
+    'home',
+    'property',
+    'vehicles',
+    'bikes',
+    'helicopters',
+    'planes',
+    'luxury',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +66,13 @@ class PropertyScreen extends StatelessWidget {
                 LifestyleList(
                   group: 'luxury',
                   what: 'luxuries',
-                  summaryGroups: {'luxury', 'watches', 'jewellery', 'art', 'yachts'},
+                  summaryGroups: {
+                    'luxury',
+                    'watches',
+                    'jewellery',
+                    'art',
+                    'yachts',
+                  },
                   header: [
                     LifestyleCategoryCard(
                       group: 'watches',
@@ -254,7 +268,11 @@ class _PropertyCard extends ConsumerWidget {
                     child: Text(S.allUnitsOwned, style: muted),
                   )
                 else if (focus)
-                  FilledButton(style: buyStyle, onPressed: onBuy, child: buyChild)
+                  FilledButton(
+                    style: buyStyle,
+                    onPressed: onBuy,
+                    child: buyChild,
+                  )
                 else
                   FilledButton.tonal(
                     style: buyStyle,

@@ -91,7 +91,8 @@ abstract final class S {
   static String focusGain(String gain, String payback) =>
       '+$gain/s income · pays back in $payback';
   static String focusWaiting(String amount) => '$amount waiting for you';
-  static String readyIn(String wait) => 'Ready in $wait. Work to get there faster.';
+  static String readyIn(String wait) =>
+      'Ready in $wait. Work to get there faster.';
   static const workToSave = 'Tap Work to save up for it.';
   static const allDone = 'You own everything. Enjoy the empire.';
   static const yourEmpire = 'Your empire';
@@ -139,7 +140,8 @@ abstract final class S {
       'You get $value back for one unit.';
 
   // ---------- lifestyle ----------
-  static const lifestyleIntro = 'Vehicles and luxuries raise all your income for good.';
+  static const lifestyleIntro =
+      'Vehicles and luxuries raise all your income for good.';
   static String lifestyleBonus(int percent) => '+$percent% on all income';
   static String totalBonus(int percent) => 'Lifestyle bonus: +$percent% income';
   static const owned = 'Owned';
@@ -150,14 +152,16 @@ abstract final class S {
   static const kindLuxury = 'Luxury';
   static String categoryInfo(int owned, int total, int percent) =>
       '$owned of $total owned · +$percent% income';
-  static String sectionBonus(String what, int percent) => 'Your $what add +$percent% to all income';
+  static String sectionBonus(String what, int percent) =>
+      'Your $what add +$percent% to all income';
   static String ownedOf(int n, int total) => '$n of $total';
 
   // ---------- home ----------
   static const yourHome = 'Your home';
   static const allIncome = 'all income';
   static const homes = 'Homes';
-  static const homeIntro = 'A better home raises all your income. Move up one step at a time.';
+  static const homeIntro =
+      'A better home raises all your income. Move up one step at a time.';
   static String bonusBecomes(int percent) => 'Bonus becomes +$percent%';
   static String moveFor(String price) => 'Move · $price';
   static const youLiveHere = 'You live here';
@@ -301,17 +305,23 @@ abstract final class S {
   static const taxReminderTitle = 'Tax return due';
   static String taxReminder(String due, String wait) =>
       '$due due · file within $wait';
-  static String taxReminderOverdue(String due) => '$due due · overdue, late fees are adding up';
+  static String taxReminderOverdue(String due) =>
+      '$due due · overdue, late fees are adding up';
 
   // ---------- goals ----------
   static String goalTaps(int n) => 'Tap Work $n times';
-  static String goalOwn(int n) => n == 1 ? 'Buy your first business' : 'Own $n businesses';
-  static String goalLevel(String business, int level) => 'Get $business to level $level';
+  static String goalOwn(int n) =>
+      n == 1 ? 'Buy your first business' : 'Own $n businesses';
+  static String goalLevel(String business, int level) =>
+      'Get $business to level $level';
   static String goalTotalLevels(int n) => 'Reach $n business levels in total';
-  static String goalUnits(int n) => n == 1 ? 'Buy your first property' : 'Own $n property units';
+  static String goalUnits(int n) =>
+      n == 1 ? 'Buy your first property' : 'Own $n property units';
   static String goalIncome(String amount) => 'Earn $amount every second';
   static String goalWorth(String amount) => 'Reach a net worth of $amount';
-  static String goalLifestyle(int n) => n == 1 ? 'Buy your first vehicle or luxury' : 'Own $n vehicles or luxuries';
+  static String goalLifestyle(int n) => n == 1
+      ? 'Buy your first vehicle or luxury'
+      : 'Own $n vehicles or luxuries';
   static String goalHome(String name) => 'Move into a $name';
   static const goalsIntro = 'Finish goals to collect cash rewards.';
   static const readyToClaim = 'Ready to collect';
@@ -323,7 +333,8 @@ abstract final class S {
   static String goalsDone(int done, int total) => '$done of $total done';
   static const nextGoal = 'Next goal';
   static const allGoalsDone = 'Every goal is complete.';
-  static String goalsReady(int n) => n == 1 ? '1 reward ready' : '$n rewards ready';
+  static String goalsReady(int n) =>
+      n == 1 ? '1 reward ready' : '$n rewards ready';
   static String collectAll(String reward) => 'Collect all · $reward';
 
   // ---------- refusals ----------

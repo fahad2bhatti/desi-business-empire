@@ -39,10 +39,14 @@ class LifestyleList extends ConsumerWidget {
     final engine = ref.read(gameControllerProvider.notifier).engine;
     final s = session.state;
     final p = context.palette;
-    final items = engine.config.lifestyle.where((i) => i.group == group).toList();
+    final items = engine.config.lifestyle
+        .where((i) => i.group == group)
+        .toList();
     final counted = summaryGroups == null
         ? items
-        : engine.config.lifestyle.where((i) => summaryGroups!.contains(i.group)).toList();
+        : engine.config.lifestyle
+              .where((i) => summaryGroups!.contains(i.group))
+              .toList();
     final owned = counted.where((i) => s.lifestyle.contains(i.id)).toList();
     final bonus = owned.fold(0, (a, i) => a + i.incomeBonusPercent);
     String? focus;
@@ -178,61 +182,65 @@ class _ItemCard extends ConsumerWidget {
                   ),
                   const SizedBox(width: AppSpacing.s12),
                 ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(item.name, style: context.text.titleMedium),
-                  Text(
-                    S.lifestyleBonus(item.incomeBonusPercent),
-                    style: context.text.bodySmall?.copyWith(
-                      color: owned ? p.income : p.inkMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (owned)
-              PopupMenuButton<void>(
-                tooltip: S.owned,
-                itemBuilder: (_) => [
-                  PopupMenuItem<void>(
-                    enabled: !blocked,
-                    onTap: () => _confirmSell(context, ref),
-                    child: Text(S.sell, style: TextStyle(color: p.danger)),
-                  ),
-                ],
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.s8,
-                    vertical: AppSpacing.s12,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(Icons.check, color: p.income, size: 18),
-                      const SizedBox(width: AppSpacing.s4),
+                      Text(item.name, style: context.text.titleMedium),
                       Text(
-                        S.owned,
-                        style: context.text.titleSmall?.copyWith(
-                          color: p.income,
+                        S.lifestyleBonus(item.incomeBonusPercent),
+                        style: context.text.bodySmall?.copyWith(
+                          color: owned ? p.income : p.inkMuted,
                         ),
                       ),
                     ],
                   ),
                 ),
-              )
-            else ...[
-              if (focus)
-                FilledButton(style: buyStyle, onPressed: onBuy, child: buyChild)
-              else
-                FilledButton.tonal(
-                  style: buyStyle,
-                  onPressed: onBuy,
-                  child: buyChild,
-                ),
-              const SizedBox(width: AppSpacing.s8),
-            ],
+                if (owned)
+                  PopupMenuButton<void>(
+                    tooltip: S.owned,
+                    itemBuilder: (_) => [
+                      PopupMenuItem<void>(
+                        enabled: !blocked,
+                        onTap: () => _confirmSell(context, ref),
+                        child: Text(S.sell, style: TextStyle(color: p.danger)),
+                      ),
+                    ],
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.s8,
+                        vertical: AppSpacing.s12,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check, color: p.income, size: 18),
+                          const SizedBox(width: AppSpacing.s4),
+                          Text(
+                            S.owned,
+                            style: context.text.titleSmall?.copyWith(
+                              color: p.income,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                else ...[
+                  if (focus)
+                    FilledButton(
+                      style: buyStyle,
+                      onPressed: onBuy,
+                      child: buyChild,
+                    )
+                  else
+                    FilledButton.tonal(
+                      style: buyStyle,
+                      onPressed: onBuy,
+                      child: buyChild,
+                    ),
+                  const SizedBox(width: AppSpacing.s8),
+                ],
               ],
             ),
           ),
@@ -280,7 +288,9 @@ class LifestyleCategoryCard extends ConsumerWidget {
     final s = ref.watch(gameControllerProvider).requireValue.state;
     final engine = ref.read(gameControllerProvider.notifier).engine;
     final p = context.palette;
-    final items = engine.config.lifestyle.where((i) => i.group == group).toList();
+    final items = engine.config.lifestyle
+        .where((i) => i.group == group)
+        .toList();
     final owned = items.where((i) => s.lifestyle.contains(i.id)).toList();
     final bonus = owned.fold(0, (a, i) => a + i.incomeBonusPercent);
     return Card(
@@ -315,7 +325,9 @@ class LifestyleCategoryCard extends ConsumerWidget {
                         Text(
                           S.categoryInfo(owned.length, items.length, bonus),
                           style: context.text.bodySmall
-                              ?.copyWith(color: bonus > 0 ? p.income : p.inkMuted)
+                              ?.copyWith(
+                                color: bonus > 0 ? p.income : p.inkMuted,
+                              )
                               .numbers,
                         ),
                       ],

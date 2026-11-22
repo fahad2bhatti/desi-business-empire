@@ -210,7 +210,10 @@ class TaxConfig {
   static TaxConfig fromJson(Map<String, Object?> j) {
     List<TaxSlab> slabs(Object? v) => [
       for (final s in ((v ?? const []) as List).cast<Map<String, Object?>>())
-        TaxSlab(fromPaisa: rupees(_int(s['from'])), percent: _int(s['percent'])),
+        TaxSlab(
+          fromPaisa: rupees(_int(s['from'])),
+          percent: _int(s['percent']),
+        ),
     ];
     return TaxConfig(
       periodHours: _int(j['periodHours']),
@@ -243,7 +246,12 @@ class EconomyConfig {
     this.homes = const [],
     this.tax = TaxConfig.none,
     this.cards = const [
-      CardDef(id: 'basic', name: 'Basic', netWorthPaisa: 0, limitPaisa: noCardLimit),
+      CardDef(
+        id: 'basic',
+        name: 'Basic',
+        netWorthPaisa: 0,
+        limitPaisa: noCardLimit,
+      ),
     ],
   });
 
@@ -370,7 +378,9 @@ class EconomyConfig {
           ),
       ],
       lifestyle: [
-        for (final i in ((j['lifestyle'] ?? const []) as List).cast<Map<String, Object?>>())
+        for (final i
+            in ((j['lifestyle'] ?? const []) as List)
+                .cast<Map<String, Object?>>())
           LifestyleDef(
             id: i['id'] as String,
             name: i['name'] as String,
@@ -382,7 +392,8 @@ class EconomyConfig {
       ],
       lifestyleSellRefund: _double(j['lifestyleSellRefund'] ?? 0.6),
       homes: [
-        for (final h in ((j['homes'] ?? const []) as List).cast<Map<String, Object?>>())
+        for (final h
+            in ((j['homes'] ?? const []) as List).cast<Map<String, Object?>>())
           HomeDef(
             id: h['id'] as String,
             name: h['name'] as String,
@@ -391,7 +402,8 @@ class EconomyConfig {
           ),
       ],
       goals: [
-        for (final g in ((j['goals'] ?? const []) as List).cast<Map<String, Object?>>())
+        for (final g
+            in ((j['goals'] ?? const []) as List).cast<Map<String, Object?>>())
           _goal(g),
       ],
       tax: j['tax'] == null
@@ -399,15 +411,23 @@ class EconomyConfig {
           : TaxConfig.fromJson(j['tax']! as Map<String, Object?>),
       cards: j['cards'] == null
           ? const [
-              CardDef(id: 'basic', name: 'Basic', netWorthPaisa: 0, limitPaisa: noCardLimit),
+              CardDef(
+                id: 'basic',
+                name: 'Basic',
+                netWorthPaisa: 0,
+                limitPaisa: noCardLimit,
+              ),
             ]
           : [
-              for (final c in (j['cards']! as List).cast<Map<String, Object?>>())
+              for (final c
+                  in (j['cards']! as List).cast<Map<String, Object?>>())
                 CardDef(
                   id: c['id'] as String,
                   name: c['name'] as String,
                   netWorthPaisa: rupees(_int(c['netWorth'])),
-                  limitPaisa: c['limit'] == null ? noCardLimit : rupees(_int(c['limit'])),
+                  limitPaisa: c['limit'] == null
+                      ? noCardLimit
+                      : rupees(_int(c['limit'])),
                 ),
             ],
     );

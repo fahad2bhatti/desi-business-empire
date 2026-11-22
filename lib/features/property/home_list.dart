@@ -38,7 +38,8 @@ class HomeList extends ConsumerWidget {
           icon: iconFor(next.id),
           photoId: next.id,
           title: S.focusMove(next.name),
-          detail: '$cost · ${S.needsCard(engine.cardFor(next.pricePaisa).name)}',
+          detail:
+              '$cost · ${S.needsCard(engine.cardFor(next.pricePaisa).name)}',
         );
       } else if (next.pricePaisa <= s.cashPaisa) {
         focus = FocusCard(

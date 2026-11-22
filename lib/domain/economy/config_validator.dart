@@ -65,29 +65,63 @@ List<String> validateConfig(EconomyConfig c) {
     check(g.target > 0, '$where: target must be > 0');
     check(g.rewardPaisa > 0, '$where: reward must be > 0');
     if (g.type == GoalType.businessLevel) {
-      check(g.businessId != null && c.business(g.businessId!) != null, '$where: needs a valid business');
+      check(
+        g.businessId != null && c.business(g.businessId!) != null,
+        '$where: needs a valid business',
+      );
       check(g.target <= c.maxLevel, '$where: level above maxLevel');
     }
     if (g.type == GoalType.businessesOwned) {
-      check(g.target <= c.businesses.length, '$where: more businesses than exist');
+      check(
+        g.target <= c.businesses.length,
+        '$where: more businesses than exist',
+      );
     }
   }
-  check(c.lifestyleSellRefund > 0 && c.lifestyleSellRefund <= 1, 'lifestyleSellRefund must be in (0, 1]');
+  check(
+    c.lifestyleSellRefund > 0 && c.lifestyleSellRefund <= 1,
+    'lifestyleSellRefund must be in (0, 1]',
+  );
   for (final i in c.lifestyle) {
     final where = 'lifestyle ${i.id}';
     check(ids.add(i.id), '$where: duplicate id');
     check(i.pricePaisa > 0, '$where: price must be > 0');
     check(i.incomeBonusPercent > 0, '$where: bonus must be > 0');
-    check(i.kind == 'vehicle' || i.kind == 'luxury', '$where: kind must be vehicle or luxury');
-    check(const {'road', 'bike', 'heli', 'plane', 'luxury', 'watches', 'jewellery', 'art', 'yachts'}.contains(i.group), '$where: unknown group ${i.group}');
+    check(
+      i.kind == 'vehicle' || i.kind == 'luxury',
+      '$where: kind must be vehicle or luxury',
+    );
+    check(
+      const {
+        'road',
+        'bike',
+        'heli',
+        'plane',
+        'luxury',
+        'watches',
+        'jewellery',
+        'art',
+        'yachts',
+      }.contains(i.group),
+      '$where: unknown group ${i.group}',
+    );
   }
   check(c.tax.periodHours > 0, 'tax: periodHours must be > 0');
   check(c.tax.latePenaltyPercent >= 0, 'tax: latePenaltyPercent must be >= 0');
-  for (final (name, slabs) in [('incomePerSecond', c.tax.incomeSlabs), ('purchase', c.tax.purchaseSlabs)]) {
+  for (final (name, slabs) in [
+    ('incomePerSecond', c.tax.incomeSlabs),
+    ('purchase', c.tax.purchaseSlabs),
+  ]) {
     for (final (i, s) in slabs.indexed) {
-      check(s.percent >= 0 && s.percent <= 100, 'tax $name: percent must be 0..100');
+      check(
+        s.percent >= 0 && s.percent <= 100,
+        'tax $name: percent must be 0..100',
+      );
       if (i > 0) {
-        check(s.fromPaisa > slabs[i - 1].fromPaisa, 'tax $name: slabs must ascend');
+        check(
+          s.fromPaisa > slabs[i - 1].fromPaisa,
+          'tax $name: slabs must ascend',
+        );
       }
     }
   }
@@ -96,30 +130,54 @@ List<String> validateConfig(EconomyConfig c) {
   for (final (i, k) in c.cards.indexed) {
     check(cardIds.add(k.id), 'card ${k.id}: duplicate id');
     if (i == 0) {
-      check(k.netWorthPaisa == 0, 'card ${k.id}: the first card needs no net worth');
+      check(
+        k.netWorthPaisa == 0,
+        'card ${k.id}: the first card needs no net worth',
+      );
     } else {
-      check(k.netWorthPaisa > c.cards[i - 1].netWorthPaisa, 'card ${k.id}: net worth must ascend');
-      check(k.limitPaisa > c.cards[i - 1].limitPaisa, 'card ${k.id}: limit must ascend');
+      check(
+        k.netWorthPaisa > c.cards[i - 1].netWorthPaisa,
+        'card ${k.id}: net worth must ascend',
+      );
+      check(
+        k.limitPaisa > c.cards[i - 1].limitPaisa,
+        'card ${k.id}: limit must ascend',
+      );
     }
   }
-  check(c.cards.last.limitPaisa == noCardLimit, 'the top card must have no limit');
+  check(
+    c.cards.last.limitPaisa == noCardLimit,
+    'the top card must have no limit',
+  );
   check(c.homes.isNotEmpty, 'no homes');
   for (final (i, h) in c.homes.indexed) {
     final where = 'home ${h.id}';
     check(ids.add(h.id), '$where: duplicate id');
     if (i == 0) {
-      check(h.pricePaisa == 0 && h.incomeBonusPercent == 0, '$where: the first home must be free with no bonus');
+      check(
+        h.pricePaisa == 0 && h.incomeBonusPercent == 0,
+        '$where: the first home must be free with no bonus',
+      );
     } else {
       final prev = c.homes[i - 1];
-      check(h.pricePaisa > prev.pricePaisa, '$where: must cost more than ${prev.id}');
-      check(h.incomeBonusPercent > prev.incomeBonusPercent, '$where: bonus must grow');
+      check(
+        h.pricePaisa > prev.pricePaisa,
+        '$where: must cost more than ${prev.id}',
+      );
+      check(
+        h.incomeBonusPercent > prev.incomeBonusPercent,
+        '$where: bonus must grow',
+      );
     }
   }
   for (final g in c.goals.where((g) => g.type == GoalType.homeLevel)) {
     check(g.target < c.homes.length, 'goal ${g.id}: home level does not exist');
   }
   for (final g in c.goals.where((g) => g.type == GoalType.lifestyleOwned)) {
-    check(g.target <= c.lifestyle.length, 'goal ${g.id}: more items than exist');
+    check(
+      g.target <= c.lifestyle.length,
+      'goal ${g.id}: more items than exist',
+    );
   }
   return errors;
 }
