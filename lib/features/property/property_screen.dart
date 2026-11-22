@@ -16,14 +16,14 @@ import 'home_list.dart';
 import 'lifestyle_list.dart';
 
 /// Assets tab: one section per kind of asset. [initialTab] is one of
-/// `home`, `property`, `vehicles` (cars and bikes), `helicopters`, `planes`,
+/// `home`, `property`, `vehicles` (cars), `bikes`, `helicopters`, `planes`,
 /// `luxury`.
 class PropertyScreen extends StatelessWidget {
   const PropertyScreen({super.key, this.initialTab});
 
   final String? initialTab;
 
-  static const _tabs = ['home', 'property', 'vehicles', 'helicopters', 'planes', 'luxury'];
+  static const _tabs = ['home', 'property', 'vehicles', 'bikes', 'helicopters', 'planes', 'luxury'];
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +40,7 @@ class PropertyScreen extends StatelessWidget {
               Tab(text: S.tabHome),
               Tab(text: S.property),
               Tab(text: S.tabCars),
+              Tab(text: S.tabBikes),
               Tab(text: S.tabHelis),
               Tab(text: S.tabPlanes),
               Tab(text: S.tabLuxury),
@@ -50,7 +51,8 @@ class PropertyScreen extends StatelessWidget {
               children: [
                 HomeList(),
                 _PropertyList(),
-                LifestyleList(group: 'road', what: 'cars and bikes'),
+                LifestyleList(group: 'road', what: 'cars'),
+                LifestyleList(group: 'bike', what: 'bikes'),
                 LifestyleList(group: 'heli', what: 'helicopters'),
                 LifestyleList(group: 'plane', what: 'planes'),
                 LifestyleList(

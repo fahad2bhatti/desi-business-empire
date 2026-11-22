@@ -84,6 +84,16 @@ const _photoIds = {
   'darkyacht',
   'superyacht',
   'megayacht',
+  'kidsbike',
+  'cruiserbike',
+  'hunter',
+  'adventure',
+  'r25',
+  'gsx8t',
+  'gsxr750',
+  'r1',
+  'gsxr1000',
+  'ninjah2',
 };
 
 bool hasPhoto(String id) => _photoIds.contains(id);

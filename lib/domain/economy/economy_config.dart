@@ -68,7 +68,7 @@ class LifestyleDef {
   /// `vehicle` or `luxury`.
   final String kind;
 
-  /// The section it is shown in: `road`, `heli`, `plane`, `luxury`, or one
+  /// The section it is shown in: `road`, `bike`, `heli`, `plane`, `luxury`, or one
   /// of the luxury sub-sections `watches`, `jewellery`, `art` and `yachts`.
   final String group;
   final int pricePaisa;

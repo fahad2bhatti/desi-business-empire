@@ -37,7 +37,8 @@ abstract final class S {
   static const lifestyle = 'Lifestyle';
   static const tabHome = 'Home';
   static const tabVehicles = 'Vehicles';
-  static const tabCars = 'Cars & Bikes';
+  static const tabCars = 'Cars';
+  static const tabBikes = 'Bikes';
   static const tabHelis = 'Helicopters';
   static const tabPlanes = 'Planes';
   static const tabLuxury = 'Luxury';

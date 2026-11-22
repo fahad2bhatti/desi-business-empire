@@ -69,3 +69,9 @@ After an approved decision, record date, decision, rationale and affected files.
 - The earlier watches/yachts config from Fahad's local copy was overwritten by the luxury.zip patch and was not in git; only its 13 photos survived, so the items were rebuilt from those photos.
 - Totals: 54 items / +124%. `LifestyleList.summaryGroups` makes the Luxury tab's bonus line count all four categories.
 - Not verified on device yet.
+
+## 2026-11-22 — Bikes tab
+- Motorbike moved from `road` to new `bike` group. 10 new bikes added (Kids Electric Bike, Kee-Way Cruiser 200, Royal Hunter 350, Benelly TRK 251, Yamah R-25, Suzki GSX-8T, Suzki GSX-R750, Yamah R-One, Suzki GSX-R1000, Kawasake Ninja H2).
+- Assets tabs are now Cars, Bikes, Helicopters, Planes, Luxury (`bikes` tab key added to `PropertyScreen._tabs`).
+- Totals: 64 items / +140%, 33 vehicles.
+- Not verified on device yet.
