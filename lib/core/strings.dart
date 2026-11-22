@@ -41,7 +41,9 @@ abstract final class S {
   static const tabHelis = 'Helicopters';
   static const tabPlanes = 'Planes';
   static const tabLuxury = 'Luxury';
+  static const watches = 'Watches';
   static const jewellery = 'Jewellery';
+  static const yachts = 'Yachts';
   static const artCollection = 'Art Collection';
   static const tabMore = 'More';
   static const tabGoals = 'Goals';

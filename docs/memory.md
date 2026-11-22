@@ -63,3 +63,9 @@ After an approved decision, record date, decision, rationale and affected files.
 - All 18 new items have photos (uploaded art-gallery / jewellery-set photography), priced by look from Rs 85,000 (pendant) up to Rs 10B (museum wing) / Rs 90M (emerald necklace), bonuses 1-4%.
 - Lifestyle totals now 43 items / +106%. Vehicle count unchanged at 23.
 - Not yet verified on device (no flutter binary in this sandbox) — Fahad should run `flutter analyze && flutter test` after unzip.
+
+## 2026-11-22 — Watches & Yachts categories
+- Watches (6) and Yachts (7) are now Luxury categories alongside Jewellery and Art; the Luxury tab shows four category cards and no loose items. `watch` and `yacht` ids moved into `watches`/`yachts` (Yacht repriced to Rs 150 crore, bonus 2, so the yacht ladder ascends from sailboat Rs 3 crore to gigayacht Rs 20,000 crore).
+- The earlier watches/yachts config from Fahad's local copy was overwritten by the luxury.zip patch and was not in git; only its 13 photos survived, so the items were rebuilt from those photos.
+- Totals: 54 items / +124%. `LifestyleList.summaryGroups` makes the Luxury tab's bonus line count all four categories.
+- Not verified on device yet.

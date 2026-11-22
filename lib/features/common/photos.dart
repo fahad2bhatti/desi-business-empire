@@ -71,6 +71,19 @@ const _photoIds = {
   'painting',
   'oldmasters',
   'museum',
+  'watch',
+  'wstreet',
+  'wskeleton',
+  'wdress',
+  'wvintage',
+  'wdiver',
+  'sailboat',
+  'sportyacht',
+  'flybridge',
+  'yacht',
+  'darkyacht',
+  'superyacht',
+  'megayacht',
 };
 
 bool hasPhoto(String id) => _photoIds.contains(id);

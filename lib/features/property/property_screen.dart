@@ -56,7 +56,13 @@ class PropertyScreen extends StatelessWidget {
                 LifestyleList(
                   group: 'luxury',
                   what: 'luxuries',
+                  summaryGroups: {'luxury', 'watches', 'jewellery', 'art', 'yachts'},
                   header: [
+                    LifestyleCategoryCard(
+                      group: 'watches',
+                      title: S.watches,
+                      photoId: 'wdiver',
+                    ),
                     LifestyleCategoryCard(
                       group: 'jewellery',
                       title: S.jewellery,
@@ -66,6 +72,11 @@ class PropertyScreen extends StatelessWidget {
                       group: 'art',
                       title: S.artCollection,
                       photoId: 'gallery',
+                    ),
+                    LifestyleCategoryCard(
+                      group: 'yachts',
+                      title: S.yachts,
+                      photoId: 'superyacht',
                     ),
                   ],
                 ),

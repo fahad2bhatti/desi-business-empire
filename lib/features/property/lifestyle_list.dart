@@ -17,18 +17,21 @@ import '../common/widgets.dart';
 /// adds a permanent percentage to all income. [what] names them in the bonus
 /// line. Focus: the cheapest one not owned yet, when it is affordable.
 /// [header] sits above the items (the Luxury tab puts its sub-sections there).
+/// [summaryGroups], when set, makes the bonus line count those groups too.
 class LifestyleList extends ConsumerWidget {
   const LifestyleList({
     super.key,
     required this.group,
     required this.what,
     this.header = const [],
+    this.summaryGroups,
   });
 
   /// `road`, `heli`, `plane`, `luxury`, `jewellery` or `art`.
   final String group;
   final String what;
   final List<Widget> header;
+  final Set<String>? summaryGroups;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,7 +40,10 @@ class LifestyleList extends ConsumerWidget {
     final s = session.state;
     final p = context.palette;
     final items = engine.config.lifestyle.where((i) => i.group == group).toList();
-    final owned = items.where((i) => s.lifestyle.contains(i.id)).toList();
+    final counted = summaryGroups == null
+        ? items
+        : engine.config.lifestyle.where((i) => summaryGroups!.contains(i.group)).toList();
+    final owned = counted.where((i) => s.lifestyle.contains(i.id)).toList();
     final bonus = owned.fold(0, (a, i) => a + i.incomeBonusPercent);
     String? focus;
     for (final i in items) {
@@ -68,7 +74,7 @@ class LifestyleList extends ConsumerWidget {
               ),
             ),
             Text(
-              S.ownedOf(owned.length, items.length),
+              S.ownedOf(owned.length, counted.length),
               style: context.text.bodySmall
                   ?.copyWith(color: p.inkMuted)
                   .numbers,
