@@ -91,7 +91,7 @@ class DesiBusinessEmpireApp extends ConsumerWidget {
     theme: _light,
     darkTheme: _dark,
     themeMode: ref.watch(
-      prefsProvider.select((a) => a.value?.themeMode ?? ThemeMode.dark),
+      prefsProvider.select((a) => a.value?.themeMode ?? ThemeMode.light),
     ),
     routerConfig: _router,
   );

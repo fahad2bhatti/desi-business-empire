@@ -51,23 +51,31 @@ class EmpireScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.s20,
-        AppSpacing.s16,
+        AppSpacing.s8,
         AppSpacing.s20,
         AppSpacing.s32,
       ),
       children: [
         const TutorialCoach(),
-        _BankCard(engine: engine, state: s),
+        Center(child: Text(S.tabEmpire, style: context.text.headlineSmall)),
         const SizedBox(height: AppSpacing.s16),
+        _Hero(
+          netWorthPaisa: engine.netWorth(s),
+          incomePaisaPerSec: engine.incomePerSec(s),
+        ),
+        const SizedBox(height: AppSpacing.s20),
+        _BankCard(engine: engine, state: s),
+        const SizedBox(height: AppSpacing.s20),
+        _Overview(engine: engine, state: s),
+        const SizedBox(height: AppSpacing.s20),
+        NextMoveCard(engine: engine, state: s, blocked: session.saveFailed),
+        const SizedBox(height: AppSpacing.s12),
         _WorkButton(
           pay: formatShort(engine.config.workPayPaisa),
           enabled: !session.saveFailed,
           onTap: () =>
               runCommand(context, ref, (state, now) => engine.work(state, now)),
         ),
-        const SizedBox(height: AppSpacing.s24),
-        const SectionTitle(S.yourEmpire),
-        _Overview(engine: engine, state: s),
         if (goal != null &&
             engine.goalStatus(s, goal) == GoalStatus.inProgress) ...[
           const SizedBox(height: AppSpacing.s24),
@@ -86,6 +94,66 @@ class EmpireScreen extends ConsumerWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// Centred net worth, with income per second in a soft green pill. The cash
+/// counter that other tabs show at the top lives here as the net worth.
+class _Hero extends StatelessWidget {
+  const _Hero({required this.netWorthPaisa, required this.incomePaisaPerSec});
+
+  final int netWorthPaisa;
+  final int incomePaisaPerSec;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    return Semantics(
+      label:
+          '${S.netWorth} ${formatShort(netWorthPaisa)}, ${S.perSecond(formatShort(incomePaisaPerSec))}',
+      excludeSemantics: true,
+      child: Column(
+        children: [
+          Text(
+            S.netWorth,
+            style: context.text.titleSmall?.copyWith(color: p.inkMuted),
+          ),
+          const SizedBox(height: AppSpacing.s4),
+          TweenAnimationBuilder<double>(
+            tween: Tween(end: netWorthPaisa.toDouble()),
+            duration: reduceMotion ? Duration.zero : AppMotion.counter,
+            curve: AppMotion.curve,
+            builder: (context, value, _) => FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                formatShort(value.round()),
+                style: context.text.displaySmall
+                    ?.copyWith(fontSize: 44, height: 1.1)
+                    .numbers,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.s8),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: p.income.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.s12,
+                vertical: AppSpacing.s4 + 2,
+              ),
+              child: Text(
+                S.perSecond(formatShort(incomePaisaPerSec)),
+                style: context.text.titleSmall?.copyWith(color: p.income).numbers,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -197,7 +265,8 @@ class NextMoveCard extends ConsumerWidget {
   }
 }
 
-/// Four quiet rows that lead to the other tabs.
+/// What the empire is worth, split by kind: a coloured bar, then two columns
+/// of soft tiles. Each tile opens the tab where that kind is managed.
 class _Overview extends StatelessWidget {
   const _Overview({required this.engine, required this.state});
 
@@ -208,84 +277,154 @@ class _Overview extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = state;
     final c = engine.config;
-    final p = context.palette;
-    final units = s.properties.values.fold(0, (a, b) => a + b);
-    var rent = 0;
-    for (final prop in c.properties) {
-      rent += prop.rentPaisaPerSec * s.owned(prop.id);
-    }
-    final vehicles = c.lifestyle.where((i) => i.kind == 'vehicle');
-    final ownedVehicles = vehicles.where((i) => s.lifestyle.contains(i.id));
-    final home = engine.currentHome(s);
 
-    final rows = [
-      (
-        Icons.storefront,
-        'kiryana',
-        S.tabBusinesses,
-        S.rowBusinesses(s.businesses.length, c.businesses.length),
-        '/businesses',
-      ),
-      (
-        Icons.apartment,
-        'plaza',
-        S.property,
-        S.rowProperty(units, formatShort(rent)),
-        '/property?tab=property',
-      ),
-      (
-        Icons.directions_car,
-        'sportscar',
-        S.tabVehicles,
-        S.rowVehicles(ownedVehicles.length, vehicles.length),
+    final worth = <String, int>{for (final cat in c.categories) cat.id: 0};
+    for (final id in s.businesses.keys) {
+      final b = c.business(id);
+      if (b != null) {
+        worth[b.categoryId] =
+            (worth[b.categoryId] ?? 0) + engine.businessSellValue(s, id);
+      }
+    }
+    var property = 0;
+    for (final prop in c.properties) {
+      for (var i = s.owned(prop.id); i > 0; i--) {
+        property += engine.propertySellValue(prop, i);
+      }
+    }
+    var lifestyle = 0;
+    for (final item in c.lifestyle) {
+      if (s.lifestyle.contains(item.id)) {
+        lifestyle += engine.itemSellValue(item);
+      }
+    }
+    lifestyle += ((engine.currentHome(s)?.pricePaisa ?? 0) *
+            c.lifestyleSellRefund)
+        .round();
+
+    final tiles = <_TileData>[
+      for (final cat in c.categories)
+        _TileData(cat.id, cat.name, worth[cat.id] ?? 0, '/businesses'),
+      _TileData('property', S.property, property, '/property?tab=property'),
+      _TileData(
+        'lifestyle',
+        S.lifestyle,
+        lifestyle,
         '/property?tab=vehicles',
       ),
-      (
-        Icons.receipt_long,
-        'tax',
-        S.tax,
-        '${S.taxDue}: ${formatShort(s.taxDuePaisa)}',
-        '/more/wallet',
-      ),
-      if (home != null)
-        (
-          iconFor(home.id),
-          home.id,
-          S.tabHome,
-          S.rowHome(home.name, home.incomeBonusPercent),
-          '/property?tab=home',
-        ),
     ];
+    final total = tiles.fold<int>(0, (a, t) => a + (t.paisa > 0 ? t.paisa : 0));
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          for (final (i, (icon, photo, title, subtitle, path))
-              in rows.indexed) ...[
-            if (i > 0) const Divider(indent: AppSpacing.s16),
-            ListTile(
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.s16,
-                vertical: AppSpacing.s4,
-              ),
-              leading: PhotoThumb(
-                id: photo,
-                size: 44,
-                fallback: SignTile(icon: icon, size: 40),
-              ),
-              title: Text(title, style: context.text.titleSmall),
-              subtitle: Text(
-                subtitle,
-                style: context.text.bodySmall
-                    ?.copyWith(color: p.inkMuted)
-                    .numbers,
-              ),
-              trailing: Icon(Icons.chevron_right, color: p.inkMuted),
-              onTap: () => context.go(path),
+    final p = context.palette;
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: SizedBox(
+            height: 8,
+            child: Row(
+              children: [
+                for (final (i, t) in tiles.indexed) ...[
+                  if (i > 0) const SizedBox(width: 4),
+                  Expanded(
+                    flex: total == 0
+                        ? 1
+                        : ((t.paisa > 0 ? t.paisa : 0) * 1000 ~/ total).clamp(
+                            12,
+                            1000,
+                          ),
+                    child: ColoredBox(color: p.category(t.id)),
+                  ),
+                ],
+              ],
             ),
-          ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.s16),
+        for (var i = 0; i < tiles.length; i += 2) ...[
+          if (i > 0) const SizedBox(height: AppSpacing.s12),
+          Row(
+            children: [
+              Expanded(child: _CategoryTile(data: tiles[i])),
+              const SizedBox(width: AppSpacing.s12),
+              if (i + 1 < tiles.length)
+                Expanded(child: _CategoryTile(data: tiles[i + 1]))
+              else
+                const Spacer(),
+            ],
+          ),
         ],
+      ],
+    );
+  }
+}
+
+class _TileData {
+  const _TileData(this.id, this.label, this.paisa, this.path);
+
+  final String id;
+  final String label;
+  final int paisa;
+  final String path;
+}
+
+/// Soft tile in the category's colour with a strip on its left edge.
+class _CategoryTile extends StatelessWidget {
+  const _CategoryTile({required this.data});
+
+  final _TileData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Semantics(
+      button: true,
+      label: '${data.label}, ${formatShort(data.paisa)}',
+      excludeSemantics: true,
+      child: Material(
+        color: p.tint(data.id),
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => context.go(data.path),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(width: 9, child: ColoredBox(color: p.category(data.id))),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.s12,
+                      vertical: AppSpacing.s12,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          data.label,
+                          style: context.text.bodySmall?.copyWith(
+                            color: p.inkMuted,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: AppSpacing.s4 / 2),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            formatShort(data.paisa),
+                            style: context.text.titleMedium?.numbers,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

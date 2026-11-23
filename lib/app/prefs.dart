@@ -19,7 +19,7 @@ class AppPrefs {
     this.tutorialStep = Tutorial.welcome,
     this.sound = true,
     this.haptics = true,
-    this.themeMode = ThemeMode.dark,
+    this.themeMode = ThemeMode.light,
   });
 
   /// Chosen by the player on the welcome screen; `null` until then.
@@ -69,7 +69,7 @@ class PrefsController extends AsyncNotifier<AppPrefs> {
       tutorialStep: int.tryParse(m[_tutorial] ?? '') ?? Tutorial.welcome,
       sound: m[_sound] != 'false',
       haptics: m[_haptics] != 'false',
-      themeMode: ThemeMode.values.asNameMap()[m[_theme]] ?? ThemeMode.dark,
+      themeMode: ThemeMode.values.asNameMap()[m[_theme]] ?? ThemeMode.light,
     );
   }
 

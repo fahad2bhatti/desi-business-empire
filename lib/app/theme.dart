@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-/// Direction: calm private-banking app, in a dark and a light theme.
+/// Direction: calm private-banking app, in a dark and a light theme. Light is
+/// the default: airy, muted colours, generous spacing, soft round cards.
 ///
 /// The focus rule: every screen has exactly one accent-filled element, the
 /// thing the player should do next ([FocusCard] or one `FilledButton`).
@@ -18,9 +19,9 @@ abstract final class AppSpacing {
 }
 
 abstract final class AppRadius {
-  static const control = 12.0;
-  static const card = 16.0;
-  static const tile = 12.0;
+  static const control = 14.0;
+  static const card = 22.0;
+  static const tile = 16.0;
 }
 
 abstract final class AppMotion {
@@ -51,6 +52,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
     required this.shops,
     required this.companies,
     required this.property,
+    required this.lifestyle,
   });
 
   final Brightness brightness;
@@ -80,6 +82,7 @@ class AppPalette extends ThemeExtension<AppPalette> {
   final Color shops;
   final Color companies;
   final Color property;
+  final Color lifestyle;
 
   Color get hairline => ink.withValues(alpha: 0.08);
 
@@ -88,8 +91,16 @@ class AppPalette extends ThemeExtension<AppPalette> {
     'transport' => transport,
     'shops' => shops,
     'companies' => companies,
+    'lifestyle' => lifestyle,
     _ => property,
   };
+
+  /// Soft background for a category tile: the category colour, very light,
+  /// over the screen surface.
+  Color tint(String id) => Color.alphaBlend(
+    category(id).withValues(alpha: brightness == Brightness.dark ? 0.16 : 0.13),
+    surface,
+  );
 
   static const dark = AppPalette(
     brightness: Brightness.dark,
@@ -109,27 +120,30 @@ class AppPalette extends ThemeExtension<AppPalette> {
     shops: Color(0xFF7FA6E8),
     companies: Color(0xFFA792E0),
     property: Color(0xFF6CC4A1),
+    lifestyle: Color(0xFFC79A96),
   );
 
   static const light = AppPalette(
     brightness: Brightness.light,
-    background: Color(0xFFF3F5F8),
+    background: Color(0xFFF5F6F3),
     surface: Color(0xFFFFFFFF),
-    surfaceRaised: Color(0xFFE9EDF2),
-    ink: Color(0xFF121820),
-    inkMuted: Color(0xFF56616E),
-    accent: Color(0xFF2F5FD0),
+    surfaceRaised: Color(0xFFE9EEF2),
+    ink: Color(0xFF1E2A32),
+    inkMuted: Color(0xFF6C7782),
+    accent: Color(0xFF3E6A8A),
     onAccent: Color(0xFFFFFFFF),
-    accentInk: Color(0xFF2A55BD),
-    income: Color(0xFF0B7341),
-    danger: Color(0xFFBF332A),
+    accentInk: Color(0xFF3E6A8A),
+    income: Color(0xFF4E9672),
+    danger: Color(0xFFB5544C),
     onDanger: Color(0xFFFFFFFF),
-    street: Color(0xFFC46A2C),
-    transport: Color(0xFF2B8A9C),
-    shops: Color(0xFF3C6FC9),
-    companies: Color(0xFF7A5CC7),
-    property: Color(0xFF2E8F69),
+    street: Color(0xFFD9A872),
+    transport: Color(0xFF7FB0B8),
+    shops: Color(0xFF8FA3CE),
+    companies: Color(0xFFAB9CC9),
+    property: Color(0xFF8DB89F),
+    lifestyle: Color(0xFFC9A3A0),
   );
+
 
   @override
   AppPalette copyWith() => this;
@@ -277,17 +291,27 @@ ThemeData buildAppTheme([AppPalette p = AppPalette.dark]) {
     ),
     navigationBarTheme: NavigationBarThemeData(
       backgroundColor: p.surface,
-      indicatorColor: p.surfaceRaised,
+      indicatorColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
       elevation: 0,
+      height: 72,
       labelTextStyle: WidgetStateProperty.resolveWith(
         (states) => text.labelSmall?.copyWith(
-          color: states.contains(WidgetState.selected) ? p.ink : p.inkMuted,
+          fontSize: 12,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.w700
+              : FontWeight.w500,
+          color: states.contains(WidgetState.selected)
+              ? p.accentInk
+              : p.inkMuted,
         ),
       ),
       iconTheme: WidgetStateProperty.resolveWith(
         (states) => IconThemeData(
           size: 26,
-          color: states.contains(WidgetState.selected) ? p.ink : p.inkMuted,
+          color: states.contains(WidgetState.selected)
+              ? p.accentInk
+              : p.inkMuted,
         ),
       ),
     ),

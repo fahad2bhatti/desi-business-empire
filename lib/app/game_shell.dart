@@ -102,12 +102,15 @@ class GameShell extends ConsumerWidget {
           children: [
             SafeArea(
               bottom: false,
-              child: MoneyHeader(
-                empireName: settings.businessName ?? S.defaultName,
-                cashPaisa: session.state.cashPaisa,
-                incomePaisaPerSec: engine.incomePerSec(session.state),
-                netWorthPaisa: engine.netWorth(session.state),
-              ),
+              // The Empire tab shows its own centred net worth instead.
+              child: shell.currentIndex == 0
+                  ? const SizedBox(height: AppSpacing.s8)
+                  : MoneyHeader(
+                      empireName: settings.businessName ?? S.defaultName,
+                      cashPaisa: session.state.cashPaisa,
+                      incomePaisaPerSec: engine.incomePerSec(session.state),
+                      netWorthPaisa: engine.netWorth(session.state),
+                    ),
             ),
             if (session.saveFailed)
               Padding(
