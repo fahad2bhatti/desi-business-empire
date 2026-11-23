@@ -273,6 +273,23 @@ abstract final class S {
   }
 
   // ---------- tax ----------
+  // ---------- leaderboard ----------
+  static const leaderboard = 'Leaderboard';
+  static const leaderboardSubtitle = 'Richest empires, updated daily';
+  static const leaderboardIntro =
+      'Empires ranked by net worth. Your score is sent once a day.';
+  static String leaderboardYourRank(int rank) => 'Your rank: #$rank';
+  static const leaderboardEmpty = 'No empires on the board yet. Be the first.';
+  static const leaderboardOffline =
+      'Could not reach the leaderboard. Check your internet and try again.';
+  static const scoreUpdate = 'Update my score';
+  static const scoreReady = 'Send your latest net worth now.';
+  static String scoreWait(int minutes) =>
+      'You can update again in $minutes min.';
+  static const scoreSent = 'Score sent';
+  static const scoreTooSoon = 'Please wait a little before updating again.';
+  static const scoreNoName = 'Pick an empire name first.';
+
   // ---------- bank card ----------
   static const bankCard = 'Bank card';
   static String cardShort(String card) => '$card card';

@@ -1,0 +1,28 @@
+rules_version = '2';
+
+// One document per player in "players". Anyone signed in (anonymously) can
+// read the board; a player can only write their own row, with a plain
+// name and number, and at most once every 50 minutes.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /players/{uid} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == uid
+        && validRow();
+      allow update: if request.auth != null && request.auth.uid == uid
+        && validRow()
+        && request.time > resource.data.updatedAt + duration.value(50, 'm');
+      allow delete: if false;
+
+      function validRow() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['name', 'netWorth', 'card', 'updatedAt'])
+          && d.name is string && d.name.size() >= 2 && d.name.size() <= 30
+          && d.netWorth is int && d.netWorth >= 0
+          && d.netWorth <= 1000000000000000000
+          && d.card is string && d.card.size() <= 20
+          && d.updatedAt == request.time;
+      }
+    }
+  }
+}

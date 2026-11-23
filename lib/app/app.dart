@@ -7,6 +7,7 @@ import '../features/businesses/businesses_screen.dart';
 import '../features/empire/empire_screen.dart';
 import '../features/goals/goals_screen.dart';
 import '../features/more/more_screen.dart';
+import '../features/more/leaderboard_screen.dart';
 import '../features/more/wallet_screen.dart';
 import '../features/property/property_screen.dart';
 import 'game_shell.dart';
@@ -63,6 +64,10 @@ final _router = GoRouter(
                 GoRoute(
                   path: 'wallet',
                   builder: (context, state) => const WalletScreen(),
+                ),
+                GoRoute(
+                  path: 'leaderboard',
+                  builder: (context, state) => const LeaderboardScreen(),
                 ),
               ],
             ),

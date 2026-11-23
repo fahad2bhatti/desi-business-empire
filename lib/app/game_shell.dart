@@ -12,6 +12,7 @@ import '../features/onboarding/tutorial.dart';
 import '../features/onboarding/welcome_screen.dart';
 import '../domain/economy/goals.dart';
 import 'game_controller.dart';
+import 'leaderboard.dart';
 import 'prefs.dart';
 import 'theme.dart';
 
@@ -38,6 +39,16 @@ class GameShell extends ConsumerWidget {
         }
       });
     });
+
+    // Once a day, send the score on the first launch of that day.
+    ref.listen(gameControllerProvider.select((a) => a.hasValue), (
+      before,
+      loaded,
+    ) {
+      if (loaded) {
+        ref.read(leaderboardSyncProvider).send(manual: false);
+      }
+    }, fireImmediately: true);
 
     ref.listen(gameControllerProvider.select((a) => a.value?.state.revision), (
       before,

@@ -51,6 +51,13 @@ class MoreScreen extends ConsumerWidget {
               onTap: () => context.go('/more/wallet'),
             ),
             ListTile(
+              leading: Icon(Icons.leaderboard_outlined, color: p.inkMuted),
+              title: const Text(S.leaderboard),
+              subtitle: const Text(S.leaderboardSubtitle),
+              trailing: Icon(Icons.chevron_right, color: p.inkMuted),
+              onTap: () => context.go('/more/leaderboard'),
+            ),
+            ListTile(
               leading: Icon(Icons.storefront_outlined, color: p.inkMuted),
               title: const Text(S.empireName),
               subtitle: Text(prefs.businessName ?? S.defaultName),

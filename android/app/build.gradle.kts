@@ -47,3 +47,8 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+// Firebase (leaderboard) turns on once google-services.json is in this folder.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
