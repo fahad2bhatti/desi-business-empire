@@ -52,9 +52,7 @@ class LeaderboardSync {
             netWorthPaisa: worth < 0 ? 0 : worth,
             cardId: engine.card(session.state).id,
           );
-      await _ref
-          .read(prefsRepositoryProvider)
-          .set(_key, now.toIso8601String());
+      await _ref.read(prefsRepositoryProvider).set(_key, now.toIso8601String());
       return SendOutcome.sent;
     } catch (_) {
       // No internet, Firebase not set up, or the daily quota is used up:
@@ -64,9 +62,7 @@ class LeaderboardSync {
   }
 }
 
-final leaderboardSyncProvider = Provider<LeaderboardSync>(
-  LeaderboardSync.new,
-);
+final leaderboardSyncProvider = Provider<LeaderboardSync>(LeaderboardSync.new);
 
 /// When the last score went out; drives the button's countdown.
 final lastScoreSentProvider = FutureProvider.autoDispose<DateTime?>(

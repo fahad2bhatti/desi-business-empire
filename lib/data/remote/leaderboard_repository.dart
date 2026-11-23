@@ -60,12 +60,13 @@ class FirestoreLeaderboardRepository implements LeaderboardRepository {
     });
   }
 
-  LeaderboardEntry _entry(String id, Map<String, dynamic> d) => LeaderboardEntry(
-    id: id,
-    name: (d['name'] as String?) ?? '',
-    netWorthPaisa: (d['netWorth'] as num?)?.toInt() ?? 0,
-    cardId: (d['card'] as String?) ?? '',
-  );
+  LeaderboardEntry _entry(String id, Map<String, dynamic> d) =>
+      LeaderboardEntry(
+        id: id,
+        name: (d['name'] as String?) ?? '',
+        netWorthPaisa: (d['netWorth'] as num?)?.toInt() ?? 0,
+        cardId: (d['card'] as String?) ?? '',
+      );
 
   @override
   Future<List<LeaderboardEntry>> top({int limit = 50}) async {

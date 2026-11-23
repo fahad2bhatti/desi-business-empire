@@ -17,7 +17,8 @@ class LeaderboardScreen extends ConsumerWidget {
     final board = ref.watch(leaderboardProvider);
     final p = context.palette;
     final cards = {
-      for (final c in ref.read(gameControllerProvider.notifier).engine.config.cards)
+      for (final c
+          in ref.read(gameControllerProvider.notifier).engine.config.cards)
         c.id: c.name,
     };
     final myId = ref.read(leaderboardRepositoryProvider).myId;
@@ -27,9 +28,9 @@ class LeaderboardScreen extends ConsumerWidget {
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(leaderboardProvider);
-          await ref.read(leaderboardProvider.future).catchError(
-            (_) => const LeaderboardView(entries: []),
-          );
+          await ref
+              .read(leaderboardProvider.future)
+              .catchError((_) => const LeaderboardView(entries: []));
         },
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -106,9 +107,9 @@ class LeaderboardScreen extends ConsumerWidget {
                   width: 36,
                   child: Text(
                     '${i + 1}',
-                    style: context.text.titleMedium?.copyWith(
-                      color: i < 3 ? p.accent : p.inkMuted,
-                    ).numbers,
+                    style: context.text.titleMedium
+                        ?.copyWith(color: i < 3 ? p.accent : p.inkMuted)
+                        .numbers,
                   ),
                 ),
                 Expanded(
