@@ -425,8 +425,32 @@ Color _cardColor(String id) => switch (id) {
   _ => const Color(0xFF1F3A5F),
 };
 
-/// The player's bank card, drawn like a real one: logo, card name, net
-/// worth, what it lets them buy, and how far the next card is.
+/// The card's picture, with a plain tile in its colour if it cannot load.
+class _CardPicture extends StatelessWidget {
+  const _CardPicture({required this.id, this.width});
+
+  final String id;
+  final double? width;
+
+  @override
+  Widget build(BuildContext context) => Image.asset(
+    'assets/images/card_$id.webp',
+    width: width,
+    fit: BoxFit.contain,
+    errorBuilder: (_, _, _) => AspectRatio(
+      aspectRatio: 1.6,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: _cardColor(id),
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+      ),
+    ),
+  );
+}
+
+/// The player's bank card as a big picture. Under it: net worth, what the
+/// card lets them buy, and how far the next card is. Tap for every card.
 class _BankCard extends StatelessWidget {
   const _BankCard({required this.engine, required this.state});
 
@@ -435,17 +459,15 @@ class _BankCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final card = engine.card(state);
     final next = engine.nextCard(state);
     final worth = engine.netWorth(state);
-    final color = _cardColor(card.id);
-    final dark = ThemeData.estimateBrightnessForColor(color) == Brightness.dark;
-    final on = dark ? Colors.white : const Color(0xFF14181D);
     final span = next == null ? 1 : next.netWorthPaisa - card.netWorthPaisa;
     final progress = next == null
         ? 1.0
         : ((worth - card.netWorthPaisa) / span).clamp(0.0, 1.0);
-    final small = context.text.bodySmall?.copyWith(color: on);
+    final muted = context.text.bodySmall?.copyWith(color: p.inkMuted);
     final limit = card.limitPaisa == noCardLimit
         ? S.cardNoLimit
         : S.cardLimit(formatShort(card.limitPaisa));
@@ -456,91 +478,48 @@ class _BankCard extends StatelessWidget {
           '${S.cardShort(card.name)}. ${S.netWorth} ${formatShort(worth)}. $limit',
       child: GestureDetector(
         onTap: () => _showCards(context, engine, state),
-        child: AspectRatio(
-          aspectRatio: 1.7,
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.s20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.card + 4),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color.lerp(color, Colors.white, 0.18)!,
-                  color,
-                  Color.lerp(color, Colors.black, 0.22)!,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.card + 4),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x40000000),
+                    blurRadius: 18,
+                    offset: Offset(0, 8),
+                  ),
                 ],
               ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 18,
-                  offset: Offset(0, 8),
-                ),
-              ],
+              child: _CardPicture(id: card.id),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: AppSpacing.s12),
+            Row(
               children: [
-                Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.asset(
-                        'assets/images/logo.png',
-                        width: 32,
-                        height: 32,
-                        errorBuilder: (_, _, _) => const SizedBox(width: 32),
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      card.name.toUpperCase(),
-                      style: context.text.titleMedium?.copyWith(
-                        color: on,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
+                Expanded(child: Text(limit, style: muted)),
                 Text(
-                  S.netWorth,
-                  style: small?.copyWith(color: on.withValues(alpha: 0.8)),
-                ),
-                Text(
-                  formatShort(worth),
-                  style: context.text.headlineMedium
-                      ?.copyWith(color: on, fontWeight: FontWeight.w700)
+                  '${S.netWorth} ${formatShort(worth)}',
+                  style: context.text.labelLarge
+                      ?.copyWith(color: p.ink)
                       .numbers,
                 ),
-                const SizedBox(height: AppSpacing.s4),
-                Text(limit, style: small),
-                const SizedBox(height: AppSpacing.s12),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 6,
-                    color: on,
-                    backgroundColor: on.withValues(alpha: 0.25),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.s4),
-                Text(
-                  next == null
-                      ? S.cardTop
-                      : S.cardNext(
-                          next.name,
-                          formatShort(next.netWorthPaisa),
-                          formatShort(worth),
-                        ),
-                  style: small?.numbers,
-                ),
               ],
             ),
-          ),
+            const SizedBox(height: AppSpacing.s8),
+            ProgressBar(value: progress),
+            const SizedBox(height: AppSpacing.s4),
+            Text(
+              next == null
+                  ? S.cardTop
+                  : S.cardNext(
+                      next.name,
+                      formatShort(next.netWorthPaisa),
+                      formatShort(worth),
+                    ),
+              style: muted?.numbers,
+            ),
+          ],
         ),
       ),
     );
@@ -599,10 +578,6 @@ class _CardRow extends StatelessWidget {
     final p = context.palette;
     final locked = index > current;
     final isCurrent = index == current;
-    final color = _cardColor(card.id);
-    final on = ThemeData.estimateBrightnessForColor(color) == Brightness.dark
-        ? Colors.white
-        : const Color(0xFF14181D);
     final limit = card.limitPaisa == noCardLimit
         ? S.cardNoLimit
         : S.cardLimit(formatShort(card.limitPaisa));
@@ -628,17 +603,15 @@ class _CardRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                width: 64,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  locked ? Icons.lock_outline : Icons.credit_card,
-                  color: on,
-                  size: 20,
+              SizedBox(
+                width: 80,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    _CardPicture(id: card.id, width: 80),
+                    if (locked)
+                      const Icon(Icons.lock_outline, color: Colors.white),
+                  ],
                 ),
               ),
               const SizedBox(width: AppSpacing.s12),
