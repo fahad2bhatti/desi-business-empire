@@ -65,8 +65,6 @@ class EmpireScreen extends ConsumerWidget {
           onTap: () =>
               runCommand(context, ref, (state, now) => engine.work(state, now)),
         ),
-        const SizedBox(height: AppSpacing.s12),
-        NextMoveCard(engine: engine, state: s, blocked: session.saveFailed),
         const SizedBox(height: AppSpacing.s24),
         const SectionTitle(S.yourEmpire),
         _Overview(engine: engine, state: s),
@@ -495,17 +493,7 @@ class _BankCard extends StatelessWidget {
               child: _CardPicture(id: card.id),
             ),
             const SizedBox(height: AppSpacing.s12),
-            Row(
-              children: [
-                Expanded(child: Text(limit, style: muted)),
-                Text(
-                  '${S.netWorth} ${formatShort(worth)}',
-                  style: context.text.labelLarge
-                      ?.copyWith(color: p.ink)
-                      .numbers,
-                ),
-              ],
-            ),
+            Text(limit, style: muted),
             const SizedBox(height: AppSpacing.s8),
             ProgressBar(value: progress),
             const SizedBox(height: AppSpacing.s4),
