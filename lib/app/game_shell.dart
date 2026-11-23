@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../core/strings.dart';
 import '../features/common/load_error.dart';
-import '../features/common/money_header.dart';
 import '../features/common/widgets.dart';
 import '../features/offline/offline_summary_sheet.dart';
 import '../features/onboarding/tutorial.dart';
@@ -103,17 +102,10 @@ class GameShell extends ConsumerWidget {
       child: Scaffold(
         body: Column(
           children: [
-            SafeArea(
+            // Net worth and income live on the Empire tab only.
+            const SafeArea(
               bottom: false,
-              // The Empire tab shows its own centred net worth instead.
-              child: shell.currentIndex == _empireTab
-                  ? const SizedBox(height: AppSpacing.s8)
-                  : MoneyHeader(
-                      empireName: settings.businessName ?? S.defaultName,
-                      cashPaisa: session.state.cashPaisa,
-                      incomePaisaPerSec: engine.incomePerSec(session.state),
-                      netWorthPaisa: engine.netWorth(session.state),
-                    ),
+              child: SizedBox(height: AppSpacing.s8),
             ),
             if (session.saveFailed)
               Padding(

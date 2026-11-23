@@ -70,9 +70,9 @@ class HomeList extends ConsumerWidget {
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
+        AppSpacing.s20,
         AppSpacing.s16,
-        AppSpacing.s16,
-        AppSpacing.s16,
+        AppSpacing.s20,
         AppSpacing.s32,
       ),
       children: [

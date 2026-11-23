@@ -33,6 +33,7 @@ abstract final class S {
   static const tabEmpire = 'Empire';
   static const tabBusinesses = 'Businesses';
   static const tabProperty = 'Assets';
+  static const assetsSubtitle = 'Property, vehicles and luxuries';
   static const property = 'Property';
   static const lifestyle = 'Lifestyle';
   static const tabHome = 'Home';
