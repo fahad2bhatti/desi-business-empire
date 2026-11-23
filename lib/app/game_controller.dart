@@ -82,9 +82,17 @@ class SaveBlockedException implements Exception {
 }
 
 /// Owns the save: every economic change goes engine -> database -> UI,
-/// one at a time, and the UI only sees a change after it is stored.
+/// one at a time, and the UI only sees a change after it is stored. The one
+/// exception is the once-a-second income tick, which shows at once and is
+/// stored with the next write (see [_flushEvery]).
 class GameController extends AsyncNotifier<GameSession> {
   static const _backupEvery = Duration(minutes: 5);
+
+  /// Income ticks run in memory every second; the database gets them in one
+  /// write this often (and at once on every purchase, pause and resume). A
+  /// crash loses nothing: the stored time is older, so the next start
+  /// settles the gap again.
+  static const _flushEvery = Duration(seconds: 15);
   static const _keepLedger = Duration(days: 2);
 
   late EconomyConfig _config;
@@ -94,11 +102,16 @@ class GameController extends AsyncNotifier<GameSession> {
   Timer? _ticker;
   AppLifecycleListener? _lifecycle;
   DateTime? _lastBackup;
+  DateTime? _lastFlush;
+  // Ledger entries earned by ticks that are not stored yet.
+  final List<LedgerEntry> _pending = [];
   Future<void> _queue = Future.value();
 
   @override
   Future<GameSession> build() async {
     ref.onDispose(_stop);
+    _pending.clear();
+    _lastFlush = null;
     _repo = ref.watch(saveRepositoryProvider);
     _clock = ref.watch(clockProvider);
     _config = await ref.watch(economyConfigProvider.future);
@@ -141,8 +154,14 @@ class GameController extends AsyncNotifier<GameSession> {
     final now = _clock.nowUtc();
     try {
       final settled = engine.advanceTo(cur.state, now, foreground: true);
-      if (!identical(settled.state, cur.state)) {
-        await _repo.commit(settled.state, settled.entries, _config.version);
+      if (!identical(settled.state, cur.state) || _pending.isNotEmpty) {
+        await _repo.commit(
+          settled.state,
+          _mergedIncome([..._pending, ...settled.entries]),
+          _config.version,
+        );
+        _pending.clear();
+        _lastFlush = now;
       }
       final result = command(settled.state, now);
       switch (result) {
@@ -170,6 +189,7 @@ class GameController extends AsyncNotifier<GameSession> {
     final loaded = await _repo.load(_config);
     final cur = state.value;
     if (loaded == null || cur == null) return;
+    _pending.clear();
     state = AsyncData(GameSession(state: loaded.state, offline: cur.offline));
   });
 
@@ -189,40 +209,83 @@ class GameController extends AsyncNotifier<GameSession> {
 
   // ---------- time ----------
 
-  Future<void> _tick() => _serial(() async {
+  /// Moves the game on in memory every second. The database gets the
+  /// result every [_flushEvery], or at once when [flush] is set.
+  Future<void> _tick({bool flush = false}) => _serial(() async {
     final cur = state.value;
     if (cur == null || cur.saveFailed) return;
     final now = _clock.nowUtc();
     final r = engine.advanceTo(cur.state, now, foreground: true);
-    if (identical(r.state, cur.state)) return;
+    var next = cur;
+    if (!identical(r.state, cur.state)) {
+      _pending.addAll(r.entries);
+      next = cur.copyWith(state: r.state);
+      state = AsyncData(next);
+    }
+    final last = _lastFlush;
+    final due = flush || last == null || now.difference(last) >= _flushEvery;
+    if (!due || _pending.isEmpty) return;
     try {
-      await _repo.commit(r.state, r.entries, _config.version);
-      state = AsyncData(cur.copyWith(state: r.state));
-      final last = _lastBackup;
-      if (last == null || now.difference(last) >= _backupEvery) {
+      await _repo.commit(next.state, _mergedIncome(_pending), _config.version);
+      _pending.clear();
+      _lastFlush = now;
+      final lastBackup = _lastBackup;
+      if (lastBackup == null || now.difference(lastBackup) >= _backupEvery) {
         await _repo.backup();
         await _repo.pruneLedger(now.subtract(_keepLedger));
         _lastBackup = now;
       }
     } catch (_) {
-      state = AsyncData(cur.copyWith(saveFailed: true));
+      state = AsyncData(next.copyWith(saveFailed: true));
     }
   });
+
+  /// Folds the per-second income entries into one ledger row.
+  List<LedgerEntry> _mergedIncome(List<LedgerEntry> entries) {
+    var sum = 0;
+    DateTime? at;
+    final rest = <LedgerEntry>[];
+    for (final e in entries) {
+      if (e.type == LedgerType.income && e.reason == 'income') {
+        sum += e.deltaPaisa;
+        at = e.at;
+      } else {
+        rest.add(e);
+      }
+    }
+    return [
+      if (at != null)
+        LedgerEntry(
+          type: LedgerType.income,
+          deltaPaisa: sum,
+          reason: 'income',
+          at: at,
+        ),
+      ...rest,
+    ];
+  }
 
   void _onPause() {
     _ticker?.cancel();
     _ticker = null;
-    _tick().then((_) => _serial(_repo.backup)).ignore();
+    _tick(flush: true).then((_) => _serial(_repo.backup)).ignore();
   }
 
   void _onResume() {
     _serial(() async {
       final cur = state.value;
       if (cur == null || cur.saveFailed) return;
-      final r = engine.advanceTo(cur.state, _clock.nowUtc(), foreground: false);
-      if (identical(r.state, cur.state)) return;
+      final now = _clock.nowUtc();
+      final r = engine.advanceTo(cur.state, now, foreground: false);
+      if (identical(r.state, cur.state) && _pending.isEmpty) return;
       try {
-        await _repo.commit(r.state, r.entries, _config.version);
+        await _repo.commit(
+          r.state,
+          _mergedIncome([..._pending, ...r.entries]),
+          _config.version,
+        );
+        _pending.clear();
+        _lastFlush = now;
         state = AsyncData(
           cur.copyWith(state: r.state, offline: _worthShowing(r) ? r : null),
         );
