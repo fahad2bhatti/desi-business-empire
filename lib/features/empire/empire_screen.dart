@@ -148,7 +148,9 @@ class _Hero extends StatelessWidget {
               ),
               child: Text(
                 S.perSecond(formatShort(incomePaisaPerSec)),
-                style: context.text.titleSmall?.copyWith(color: p.income).numbers,
+                style: context.text.titleSmall
+                    ?.copyWith(color: p.income)
+                    .numbers,
               ),
             ),
           ),
@@ -298,20 +300,15 @@ class _Overview extends StatelessWidget {
         lifestyle += engine.itemSellValue(item);
       }
     }
-    lifestyle += ((engine.currentHome(s)?.pricePaisa ?? 0) *
-            c.lifestyleSellRefund)
-        .round();
+    lifestyle +=
+        ((engine.currentHome(s)?.pricePaisa ?? 0) * c.lifestyleSellRefund)
+            .round();
 
     final tiles = <_TileData>[
       for (final cat in c.categories)
         _TileData(cat.id, cat.name, worth[cat.id] ?? 0, '/businesses'),
       _TileData('property', S.property, property, '/property?tab=property'),
-      _TileData(
-        'lifestyle',
-        S.lifestyle,
-        lifestyle,
-        '/property?tab=vehicles',
-      ),
+      _TileData('lifestyle', S.lifestyle, lifestyle, '/property?tab=vehicles'),
     ];
     final total = tiles.fold<int>(0, (a, t) => a + (t.paisa > 0 ? t.paisa : 0));
 
@@ -391,7 +388,10 @@ class _CategoryTile extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(width: 9, child: ColoredBox(color: p.category(data.id))),
+                SizedBox(
+                  width: 9,
+                  child: ColoredBox(color: p.category(data.id)),
+                ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(

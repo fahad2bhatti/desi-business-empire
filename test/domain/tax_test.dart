@@ -10,7 +10,9 @@ import 'package:desi_business_empire/domain/economy/game_state.dart';
 import 'package:desi_business_empire/domain/economy/settlement.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-final config = EconomyConfig.parse(File('assets/config/economy.json').readAsStringSync());
+final config = EconomyConfig.parse(
+  File('assets/config/economy.json').readAsStringSync(),
+);
 final engine = GameEngine(config);
 final t0 = DateTime.utc(2026, 1, 1, 12);
 
@@ -38,10 +40,10 @@ void main() {
   });
 
   test('filing a return pays what is due and starts a new period', () {
-    final s = GameState.newGame(config, t0).copyWith(
-      cashPaisa: rupees(5000),
-      taxDuePaisa: rupees(1200),
-    );
+    final s = GameState.newGame(
+      config,
+      t0,
+    ).copyWith(cashPaisa: rupees(5000), taxDuePaisa: rupees(1200));
     final later = t0.add(const Duration(hours: 30));
     final r = engine.fileTaxReturn(s, later) as Success;
     expect(r.state.cashPaisa, rupees(3800));
@@ -53,17 +55,21 @@ void main() {
   });
 
   test('a return with too little cash fails and changes nothing', () {
-    final s = GameState.newGame(config, t0).copyWith(
-      cashPaisa: rupees(100),
-      taxDuePaisa: rupees(1200),
-    );
+    final s = GameState.newGame(
+      config,
+      t0,
+    ).copyWith(cashPaisa: rupees(100), taxDuePaisa: rupees(1200));
     final f = engine.fileTaxReturn(s, t0) as Failure;
     expect(f.reason, FailReason.insufficientFunds);
   });
 
   test('a missed deadline adds the late fee and moves the deadline on', () {
     final s = GameState.newGame(config, t0).copyWith(taxDuePaisa: rupees(1000));
-    final r = engine.advanceTo(s, t0.add(const Duration(hours: 61)), foreground: true);
+    final r = engine.advanceTo(
+      s,
+      t0.add(const Duration(hours: 61)),
+      foreground: true,
+    );
     final p = config.tax.latePenaltyPercent;
     expect(r.state.taxDuePaisa, rupees(1000) + rupees(1000) * p ~/ 100);
     expect(r.state.taxMissed, 1);
@@ -78,7 +84,10 @@ void main() {
       taxPeriodStart: t0.add(const Duration(hours: 60)),
     );
     final json = jsonEncode(encodeGameState(s));
-    final back = decodeGameState(jsonDecode(json) as Map<String, Object?>, config);
+    final back = decodeGameState(
+      jsonDecode(json) as Map<String, Object?>,
+      config,
+    );
     expect(back.taxDuePaisa, rupees(77));
     expect(back.taxPaidPaisa, rupees(900));
     expect(back.taxMissed, 2);

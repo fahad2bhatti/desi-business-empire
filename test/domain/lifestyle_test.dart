@@ -11,7 +11,9 @@ import 'package:desi_business_empire/domain/economy/goals.dart';
 import 'package:desi_business_empire/domain/economy/settlement.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-final config = EconomyConfig.parse(File('assets/config/economy.json').readAsStringSync());
+final config = EconomyConfig.parse(
+  File('assets/config/economy.json').readAsStringSync(),
+);
 final engine = GameEngine(config);
 final t0 = DateTime.utc(2026, 1, 1, 12);
 
@@ -31,16 +33,37 @@ void main() {
   });
 
   test('every item sits in a section and each section is sorted by price', () {
-    for (final g in ['road', 'bike', 'heli', 'plane', 'watches', 'jewellery', 'art', 'yachts']) {
+    for (final g in [
+      'road',
+      'bike',
+      'heli',
+      'plane',
+      'watches',
+      'jewellery',
+      'art',
+      'yachts',
+    ]) {
       final items = config.lifestyle.where((i) => i.group == g).toList();
       expect(items, isNotEmpty, reason: g);
       for (var i = 1; i < items.length; i++) {
-        expect(items[i].pricePaisa, greaterThan(items[i - 1].pricePaisa), reason: g);
+        expect(
+          items[i].pricePaisa,
+          greaterThan(items[i - 1].pricePaisa),
+          reason: g,
+        );
       }
     }
     expect(
       config.lifestyle
-          .where((i) => const {'luxury', 'watches', 'jewellery', 'art', 'yachts'}.contains(i.group))
+          .where(
+            (i) => const {
+              'luxury',
+              'watches',
+              'jewellery',
+              'art',
+              'yachts',
+            }.contains(i.group),
+          )
           .every((i) => i.kind == 'luxury'),
       isTrue,
     );
@@ -54,17 +77,28 @@ void main() {
   test('buying an item costs its price and raises all income by its bonus', () {
     final f = engine.buyItem(owner(cashPkr: 10000), 'motorbike', t0) as Failure;
     expect(f.reason, FailReason.insufficientFunds);
-    final s = (engine.buyItem(owner(cashPkr: 50000), 'motorbike', t0) as Success).state;
+    final s = (engine.buyItem(
+      owner(cashPkr: 50000),
+      'motorbike',
+      t0,
+    ) as Success).state;
     expect(s.cashPaisa, 0);
     expect(engine.lifestyleBonusPercent(s), 2);
     expect(engine.baseIncomePerSec(s), rupees(47));
     expect(engine.incomePerSec(s), rupees(47) * 102 ~/ 100);
-    expect((engine.buyItem(s, 'motorbike', t0) as Failure).reason, FailReason.alreadyOwned);
+    expect(
+      (engine.buyItem(s, 'motorbike', t0) as Failure).reason,
+      FailReason.alreadyOwned,
+    );
   });
 
   test('offline income includes the bonus', () {
     final s = owner().copyWith(lifestyle: {'motorbike', 'watch'});
-    final r = engine.advanceTo(s, t0.add(const Duration(minutes: 10)), foreground: false);
+    final r = engine.advanceTo(
+      s,
+      t0.add(const Duration(minutes: 10)),
+      foreground: false,
+    );
     expect(r.earnedPaisa, rupees(47) * 105 ~/ 100 * 600);
   });
 
@@ -73,19 +107,31 @@ void main() {
     final r = engine.sellItem(s, 'car', t0) as Success;
     expect(r.state.cashPaisa, rupees(800000) * 60 ~/ 100);
     expect(engine.lifestyleBonusPercent(r.state), 0);
-    expect((engine.sellItem(r.state, 'car', t0) as Failure).reason, FailReason.notOwned);
+    expect(
+      (engine.sellItem(r.state, 'car', t0) as Failure).reason,
+      FailReason.notOwned,
+    );
   });
 
   test('net worth counts item resale value', () {
     final plain = owner();
     final rich = plain.copyWith(lifestyle: {'watch'});
-    expect(engine.netWorth(rich) - engine.netWorth(plain), rupees(500000) * 60 ~/ 100);
+    expect(
+      engine.netWorth(rich) - engine.netWorth(plain),
+      rupees(500000) * 60 ~/ 100,
+    );
   });
 
   test('items survive a save round trip and count for goals', () {
     final s = owner().copyWith(lifestyle: {'motorbike'});
-    final back = decodeGameState(jsonDecode(jsonEncode(encodeGameState(s))) as Map<String, Object?>, config);
+    final back = decodeGameState(
+      jsonDecode(jsonEncode(encodeGameState(s))) as Map<String, Object?>,
+      config,
+    );
     expect(back.lifestyle, {'motorbike'});
-    expect(engine.goalStatus(back, config.goal('lifestyle1')!), GoalStatus.claimable);
+    expect(
+      engine.goalStatus(back, config.goal('lifestyle1')!),
+      GoalStatus.claimable,
+    );
   });
 }

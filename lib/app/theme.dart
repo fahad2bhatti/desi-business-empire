@@ -129,11 +129,11 @@ class AppPalette extends ThemeExtension<AppPalette> {
     surface: Color(0xFFFFFFFF),
     surfaceRaised: Color(0xFFE9EEF2),
     ink: Color(0xFF1E2A32),
-    inkMuted: Color(0xFF6C7782),
+    inkMuted: Color(0xFF5F6A75),
     accent: Color(0xFF3E6A8A),
     onAccent: Color(0xFFFFFFFF),
     accentInk: Color(0xFF3E6A8A),
-    income: Color(0xFF4E9672),
+    income: Color(0xFF2F7553),
     danger: Color(0xFFB5544C),
     onDanger: Color(0xFFFFFFFF),
     street: Color(0xFFD9A872),
@@ -143,7 +143,6 @@ class AppPalette extends ThemeExtension<AppPalette> {
     property: Color(0xFF8DB89F),
     lifestyle: Color(0xFFC9A3A0),
   );
-
 
   @override
   AppPalette copyWith() => this;
