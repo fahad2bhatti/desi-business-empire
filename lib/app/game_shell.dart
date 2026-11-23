@@ -16,6 +16,9 @@ import 'leaderboard.dart';
 import 'prefs.dart';
 import 'theme.dart';
 
+/// Empire sits in the middle of the five tabs.
+const _empireTab = 2;
+
 /// Loads the game once for every tab, shows the welcome screen on first
 /// launch, the money header, the offline summary and the save-error
 /// banner, moves the tutorial forward, and holds the bottom navigation.
@@ -87,7 +90,7 @@ class GameShell extends ConsumerWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (settings.businessName == null) {
-      return WelcomeScreen(onDone: () => shell.goBranch(0));
+      return WelcomeScreen(onDone: () => shell.goBranch(_empireTab));
     }
     final engine = ref.read(gameControllerProvider.notifier).engine;
     final ready = engine.claimableGoals(session.state);
@@ -103,7 +106,7 @@ class GameShell extends ConsumerWidget {
             SafeArea(
               bottom: false,
               // The Empire tab shows its own centred net worth instead.
-              child: shell.currentIndex == 0
+              child: shell.currentIndex == _empireTab
                   ? const SizedBox(height: AppSpacing.s8)
                   : MoneyHeader(
                       empireName: settings.businessName ?? S.defaultName,
@@ -147,11 +150,6 @@ class GameShell extends ConsumerWidget {
               shell.goBranch(i, initialLocation: i == shell.currentIndex),
           destinations: [
             const NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined),
-              selectedIcon: Icon(Icons.dashboard),
-              label: S.tabEmpire,
-            ),
-            const NavigationDestination(
               icon: Icon(Icons.storefront_outlined),
               selectedIcon: Icon(Icons.storefront),
               label: S.tabBusinesses,
@@ -160,6 +158,11 @@ class GameShell extends ConsumerWidget {
               icon: Icon(Icons.apartment_outlined),
               selectedIcon: Icon(Icons.apartment),
               label: S.tabProperty,
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard),
+              label: S.tabEmpire,
             ),
             NavigationDestination(
               icon: Badge(
