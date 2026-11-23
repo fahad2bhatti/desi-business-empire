@@ -48,7 +48,7 @@ class GameShell extends ConsumerWidget {
       if (loaded) {
         ref.read(leaderboardSyncProvider).send(manual: false);
       }
-    }, fireImmediately: true);
+    });
 
     ref.listen(gameControllerProvider.select((a) => a.value?.state.revision), (
       before,
