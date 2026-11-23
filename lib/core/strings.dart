@@ -113,6 +113,7 @@ abstract final class S {
   static String upgradeFor(String price) => 'Upgrade · $price';
   static const upgradeMax = 'Upgrade max';
   static const maxed = 'Max level';
+  static const totalIncome = 'Total income';
   static String plusIncome(String amount) => '+$amount/s';
   static String earnsAtLevel1(String amount) => 'Earns $amount/s at level 1';
   static const sell = 'Sell';
