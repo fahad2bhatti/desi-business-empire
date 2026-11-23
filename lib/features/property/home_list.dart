@@ -6,6 +6,7 @@ import '../../app/theme.dart';
 import '../../core/money.dart';
 import '../../core/strings.dart';
 import '../../domain/economy/advisor.dart';
+import '../../domain/economy/economy_config.dart';
 import '../common/photos.dart';
 import '../common/run_command.dart';
 import '../common/visuals.dart';
@@ -128,55 +129,141 @@ class HomeList extends ConsumerWidget {
         focus,
         const SizedBox(height: AppSpacing.s24),
         const SectionTitle(S.homes),
-        Card(
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            children: [
-              for (final (i, h) in homes.indexed) ...[
-                if (i > 0) const Divider(indent: AppSpacing.s16),
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.s16,
-                    vertical: AppSpacing.s4,
-                  ),
-                  leading: SignTile(
-                    icon: iconFor(h.id),
-                    artId: h.id,
-                    size: 40,
-                    dimmed: i > s.homeLevel,
-                  ),
-                  title: Text(
-                    h.name,
-                    style: context.text.titleSmall?.copyWith(
-                      color: i > s.homeLevel ? p.inkMuted : p.ink,
-                    ),
-                  ),
-                  subtitle: Text(
-                    [
-                      if (h.incomeBonusPercent > 0)
-                        S.lifestyleBonus(h.incomeBonusPercent),
-                      if (i > s.homeLevel) formatShort(h.pricePaisa),
-                    ].join(' · '),
-                    style: muted.numbers,
-                  ),
-                  trailing: i < s.homeLevel
-                      ? Icon(Icons.check, color: p.income)
-                      : i == s.homeLevel
-                      ? Text(
-                          S.youLiveHere,
-                          style: context.text.labelLarge?.copyWith(
-                            color: p.accentInk,
-                          ),
-                        )
-                      : i > s.homeLevel + 1
-                      ? Icon(Icons.lock_outline, color: p.inkMuted, size: 18)
-                      : null,
-                ),
-              ],
-            ],
+        for (final (i, h) in homes.indexed) ...[
+          _HomeRow(
+            home: h,
+            thumb: SignTile(
+              icon: iconFor(h.id),
+              artId: h.id,
+              size: 64,
+              dimmed: i > s.homeLevel,
+            ),
+            owned: i < s.homeLevel,
+            current: i == s.homeLevel,
+            locked: i > s.homeLevel + 1,
+            future: i > s.homeLevel,
           ),
-        ),
+          const SizedBox(height: AppSpacing.s12),
+        ],
       ],
     );
   }
+}
+
+/// One home as its own soft card: big picture, name, bonus and a bold price.
+class _HomeRow extends StatelessWidget {
+  const _HomeRow({
+    required this.home,
+    required this.thumb,
+    required this.owned,
+    required this.current,
+    required this.locked,
+    required this.future,
+  });
+
+  final HomeDef home;
+  final Widget thumb;
+  final bool owned;
+  final bool current;
+  final bool locked;
+  final bool future;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final dim = future ? p.inkMuted : p.ink;
+    final Widget end;
+    if (owned) {
+      end = _RoundBadge(
+        color: p.income,
+        child: Icon(Icons.check_rounded, color: p.income, size: 22),
+      );
+    } else if (current) {
+      end = Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.s12,
+          vertical: AppSpacing.s8,
+        ),
+        decoration: BoxDecoration(
+          color: Color.alphaBlend(p.accent.withValues(alpha: 0.12), p.surface),
+          borderRadius: BorderRadius.circular(AppRadius.control),
+        ),
+        child: Text(
+          S.youLiveHere,
+          style: context.text.labelLarge?.copyWith(color: p.accentInk),
+        ),
+      );
+    } else if (locked) {
+      end = _RoundBadge(
+        color: p.inkMuted,
+        child: Icon(Icons.lock_outline_rounded, color: p.inkMuted, size: 22),
+      );
+    } else {
+      end = const SizedBox.shrink();
+    }
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.s12),
+        child: Row(
+          children: [
+            thumb,
+            const SizedBox(width: AppSpacing.s16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    home.name,
+                    style: context.text.titleMedium?.copyWith(
+                      color: dim,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (home.incomeBonusPercent > 0)
+                    Text(
+                      S.lifestyleBonus(home.incomeBonusPercent),
+                      style: context.text.bodySmall?.copyWith(
+                        color: future ? p.inkMuted : p.income,
+                      ),
+                    ),
+                  if (future) ...[
+                    const SizedBox(height: AppSpacing.s4),
+                    Text(
+                      formatShort(home.pricePaisa),
+                      style: context.text.titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w700, color: p.ink)
+                          .numbers,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            end,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RoundBadge extends StatelessWidget {
+  const _RoundBadge({required this.color, required this.child});
+
+  final Color color;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 40,
+    height: 40,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: Color.alphaBlend(
+        color.withValues(alpha: 0.12),
+        context.palette.surface,
+      ),
+    ),
+    child: child,
+  );
 }
