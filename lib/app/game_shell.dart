@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 
 import '../core/strings.dart';
 import '../features/common/load_error.dart';
-import '../features/common/money_header.dart';
 import '../features/common/widgets.dart';
 import '../features/offline/offline_summary_sheet.dart';
 import '../features/onboarding/tutorial.dart';
@@ -15,6 +14,9 @@ import 'game_controller.dart';
 import 'leaderboard.dart';
 import 'prefs.dart';
 import 'theme.dart';
+
+/// Empire sits in the middle of the five tabs.
+const _empireTab = 2;
 
 /// Loads the game once for every tab, shows the welcome screen on first
 /// launch, the money header, the offline summary and the save-error
@@ -87,7 +89,7 @@ class GameShell extends ConsumerWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (settings.businessName == null) {
-      return WelcomeScreen(onDone: () => shell.goBranch(0));
+      return WelcomeScreen(onDone: () => shell.goBranch(_empireTab));
     }
     final engine = ref.read(gameControllerProvider.notifier).engine;
     final ready = engine.claimableGoals(session.state);
@@ -100,14 +102,10 @@ class GameShell extends ConsumerWidget {
       child: Scaffold(
         body: Column(
           children: [
-            SafeArea(
+            // Net worth and income live on the Empire tab only.
+            const SafeArea(
               bottom: false,
-              child: MoneyHeader(
-                empireName: settings.businessName ?? S.defaultName,
-                cashPaisa: session.state.cashPaisa,
-                incomePaisaPerSec: engine.incomePerSec(session.state),
-                netWorthPaisa: engine.netWorth(session.state),
-              ),
+              child: SizedBox(height: AppSpacing.s8),
             ),
             if (session.saveFailed)
               Padding(
@@ -144,11 +142,6 @@ class GameShell extends ConsumerWidget {
               shell.goBranch(i, initialLocation: i == shell.currentIndex),
           destinations: [
             const NavigationDestination(
-              icon: Icon(Icons.dashboard_outlined),
-              selectedIcon: Icon(Icons.dashboard),
-              label: S.tabEmpire,
-            ),
-            const NavigationDestination(
               icon: Icon(Icons.storefront_outlined),
               selectedIcon: Icon(Icons.storefront),
               label: S.tabBusinesses,
@@ -157,6 +150,11 @@ class GameShell extends ConsumerWidget {
               icon: Icon(Icons.apartment_outlined),
               selectedIcon: Icon(Icons.apartment),
               label: S.tabProperty,
+            ),
+            const NavigationDestination(
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard),
+              label: S.tabEmpire,
             ),
             NavigationDestination(
               icon: Badge(

@@ -61,9 +61,9 @@ class LifestyleList extends ConsumerWidget {
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
+        AppSpacing.s20,
         AppSpacing.s16,
-        AppSpacing.s16,
-        AppSpacing.s16,
+        AppSpacing.s20,
         AppSpacing.s32,
       ),
       children: [
@@ -86,7 +86,7 @@ class LifestyleList extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.s12),
-        for (final h in header) ...[h, const SizedBox(height: AppSpacing.s8)],
+        for (final h in header) ...[h, const SizedBox(height: AppSpacing.s12)],
         for (final item in items) ...[
           _ItemCard(
             item: item,
@@ -95,7 +95,7 @@ class LifestyleList extends ConsumerWidget {
             blocked: session.saveFailed,
             focus: item.id == focus,
           ),
-          const SizedBox(height: AppSpacing.s8),
+          const SizedBox(height: AppSpacing.s12),
         ],
       ],
     );

@@ -28,10 +28,25 @@ class BusinessesScreen extends ConsumerWidget {
     final s = session.state;
     final p = context.palette;
 
+    var ownedCount = 0;
+    var income = 0;
+    for (final b in engine.config.businesses) {
+      final level = s.level(b.id);
+      if (level > 0) {
+        ownedCount++;
+      }
+      income += engine.businessIncome(b, level);
+    }
+
     return DefaultTabController(
       length: categories.length,
       child: Column(
         children: [
+          _Header(
+            owned: ownedCount,
+            total: engine.config.businesses.length,
+            incomePaisaPerSec: income,
+          ),
           TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
@@ -68,6 +83,82 @@ class BusinessesScreen extends ConsumerWidget {
   }
 }
 
+/// Title, how many businesses are owned, and what they earn together.
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.owned,
+    required this.total,
+    required this.incomePaisaPerSec,
+  });
+
+  final int owned;
+  final int total;
+  final int incomePaisaPerSec;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.s20,
+        AppSpacing.s8,
+        AppSpacing.s20,
+        AppSpacing.s12,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            S.tabBusinesses,
+            style: context.text.headlineSmall?.copyWith(fontSize: 28),
+          ),
+          Text(
+            S.rowBusinesses(owned, total),
+            style: context.text.bodyMedium?.copyWith(color: p.inkMuted),
+          ),
+          const SizedBox(height: AppSpacing.s16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.s20,
+                vertical: AppSpacing.s16,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          S.totalIncome,
+                          style: context.text.bodySmall?.copyWith(
+                            color: p.inkMuted,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.s4),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            S.perSecond(formatShort(incomePaisaPerSec)),
+                            style: context.text.titleLarge
+                                ?.copyWith(color: p.income, fontSize: 26)
+                                .numbers,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _CategoryList extends StatelessWidget {
   const _CategoryList({
     required this.category,
@@ -95,9 +186,9 @@ class _CategoryList extends StatelessWidget {
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
+        AppSpacing.s20,
         AppSpacing.s16,
-        AppSpacing.s16,
-        AppSpacing.s16,
+        AppSpacing.s20,
         AppSpacing.s32,
       ),
       children: [
@@ -117,7 +208,7 @@ class _CategoryList extends StatelessWidget {
             blocked: blocked,
             focus: b.id == focus,
           ),
-          const SizedBox(height: AppSpacing.s8),
+          const SizedBox(height: AppSpacing.s12),
         ],
       ],
     );
@@ -197,7 +288,6 @@ class _BusinessCard extends ConsumerWidget {
     }
 
     final milestone = owned ? engine.nextMilestone(level) : null;
-    final photo = hasPhoto(b.id);
     return Card(
       clipBehavior: Clip.antiAlias,
       shape: focus
@@ -209,28 +299,32 @@ class _BusinessCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (photo) PhotoBanner(id: b.id, dimmed: !owned),
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.s16,
-              AppSpacing.s12,
+              AppSpacing.s16,
               AppSpacing.s8,
-              AppSpacing.s12,
+              AppSpacing.s16,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
                   children: [
-                    if (!photo) ...[
-                      SignTile(
-                        icon: iconFor(b.id),
-                        artId: b.id,
-                        dot: p.category(b.categoryId),
-                        dimmed: !owned,
+                    Opacity(
+                      opacity: owned ? 1 : 0.6,
+                      child: PhotoThumb(
+                        id: b.id,
+                        size: 52,
+                        fallback: SignTile(
+                          icon: iconFor(b.id),
+                          artId: b.id,
+                          dot: p.category(b.categoryId),
+                          dimmed: !owned,
+                        ),
                       ),
-                      const SizedBox(width: AppSpacing.s12),
-                    ],
+                    ),
+                    const SizedBox(width: AppSpacing.s12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,

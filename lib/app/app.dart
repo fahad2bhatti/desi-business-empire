@@ -14,20 +14,12 @@ import 'game_shell.dart';
 import 'prefs.dart';
 import 'theme.dart';
 
-/// Tabs: Empire, Businesses, Assets, Goals, More.
+/// Tabs: Businesses, Assets, Empire (in the middle), Goals, More.
 final _router = GoRouter(
   routes: [
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => GameShell(shell: shell),
       branches: [
-        StatefulShellBranch(
-          routes: [
-            GoRoute(
-              path: '/',
-              builder: (context, state) => const EmpireScreen(),
-            ),
-          ],
-        ),
         StatefulShellBranch(
           routes: [
             GoRoute(
@@ -44,6 +36,14 @@ final _router = GoRouter(
                 final tab = state.uri.queryParameters['tab'];
                 return PropertyScreen(key: ValueKey(tab), initialTab: tab);
               },
+            ),
+          ],
+        ),
+        StatefulShellBranch(
+          routes: [
+            GoRoute(
+              path: '/',
+              builder: (context, state) => const EmpireScreen(),
             ),
           ],
         ),
@@ -91,7 +91,7 @@ class DesiBusinessEmpireApp extends ConsumerWidget {
     theme: _light,
     darkTheme: _dark,
     themeMode: ref.watch(
-      prefsProvider.select((a) => a.value?.themeMode ?? ThemeMode.dark),
+      prefsProvider.select((a) => a.value?.themeMode ?? ThemeMode.light),
     ),
     routerConfig: _router,
   );

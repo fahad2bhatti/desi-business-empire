@@ -33,6 +33,7 @@ abstract final class S {
   static const tabEmpire = 'Empire';
   static const tabBusinesses = 'Businesses';
   static const tabProperty = 'Assets';
+  static const assetsSubtitle = 'Property, vehicles and luxuries';
   static const property = 'Property';
   static const lifestyle = 'Lifestyle';
   static const tabHome = 'Home';
@@ -113,6 +114,7 @@ abstract final class S {
   static String upgradeFor(String price) => 'Upgrade · $price';
   static const upgradeMax = 'Upgrade max';
   static const maxed = 'Max level';
+  static const totalIncome = 'Total income';
   static String plusIncome(String amount) => '+$amount/s';
   static String earnsAtLevel1(String amount) => 'Earns $amount/s at level 1';
   static const sell = 'Sell';

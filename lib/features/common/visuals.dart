@@ -77,7 +77,7 @@ class SignTile extends StatelessWidget {
     required this.icon,
     this.artId,
     this.dot,
-    this.size = 52,
+    this.size = 64,
     this.dimmed = false,
   });
 
@@ -123,8 +123,8 @@ class SignTile extends StatelessWidget {
                   )
                 : Icon(
                     icon,
-                    color: dimmed ? p.inkMuted : p.ink,
-                    size: size * 0.55,
+                    color: dimmed ? p.inkMuted : p.accentInk,
+                    size: size * 0.5,
                   ),
           ),
           if (dot != null)

@@ -41,6 +41,7 @@ class PropertyScreen extends StatelessWidget {
       initialIndex: start < 0 ? 0 : start,
       child: const Column(
         children: [
+          _Header(),
           TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
@@ -105,6 +106,39 @@ class PropertyScreen extends StatelessWidget {
   }
 }
 
+/// Title and a one-line description above the asset tabs.
+class _Header extends StatelessWidget {
+  const _Header();
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(
+      AppSpacing.s20,
+      AppSpacing.s8,
+      AppSpacing.s20,
+      AppSpacing.s12,
+    ),
+    child: Align(
+      alignment: Alignment.centerLeft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            S.tabProperty,
+            style: context.text.headlineSmall?.copyWith(fontSize: 28),
+          ),
+          Text(
+            S.assetsSubtitle,
+            style: context.text.bodyMedium?.copyWith(
+              color: context.palette.inkMuted,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 class _PropertyList extends ConsumerWidget {
   const _PropertyList();
 
@@ -132,9 +166,9 @@ class _PropertyList extends ConsumerWidget {
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
+        AppSpacing.s20,
         AppSpacing.s16,
-        AppSpacing.s16,
-        AppSpacing.s16,
+        AppSpacing.s20,
         AppSpacing.s32,
       ),
       children: [
@@ -153,7 +187,7 @@ class _PropertyList extends ConsumerWidget {
             blocked: session.saveFailed,
             focus: prop.id == focus,
           ),
-          const SizedBox(height: AppSpacing.s8),
+          const SizedBox(height: AppSpacing.s12),
         ],
       ],
     );

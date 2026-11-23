@@ -8,7 +8,9 @@ import 'package:desi_business_empire/domain/economy/game_engine.dart';
 import 'package:desi_business_empire/domain/economy/game_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-final config = EconomyConfig.parse(File('assets/config/economy.json').readAsStringSync());
+final config = EconomyConfig.parse(
+  File('assets/config/economy.json').readAsStringSync(),
+);
 final engine = GameEngine(config);
 final t0 = DateTime.utc(2026, 1, 1, 12);
 
@@ -85,10 +87,8 @@ void main() {
   test('an upgrade above the card limit is refused', () {
     final b = config.business('rickshaw')!;
     final cost = engine.upgradeCost(b, 30);
-    final s = withCash(0).copyWith(
-      cashPaisa: cost + rupees(1),
-      businesses: {'rickshaw': 30},
-    );
+    final s = withCash(0)
+        .copyWith(cashPaisa: cost + rupees(1), businesses: {'rickshaw': 30});
     final limit = engine.card(s).limitPaisa;
     expect(cost, greaterThan(limit));
     final f = engine.upgradeBusiness(s, 'rickshaw', t0) as Failure;
