@@ -128,7 +128,7 @@ class _Hero extends StatelessWidget {
             builder: (context, value, _) => FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
-                formatShort(value.round()),
+                formatRs(value.round() - value.round() % paisaPerRupee),
                 style: context.text.displaySmall
                     ?.copyWith(fontSize: 44, height: 1.1)
                     .numbers,
