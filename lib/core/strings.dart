@@ -96,6 +96,14 @@ abstract final class S {
       'Ready in $wait. Work to get there faster.';
   static const workToSave = 'Tap Work to save up for it.';
   static const allDone = 'You own everything. Enjoy the empire.';
+  static const nextMove = 'Next move';
+  static String aSecond(String amount) => '+$amount a second';
+  static const actionBuy = 'Buy';
+  static const actionUpgrade = 'Upgrade';
+  static const actionMove = 'Move';
+  static const actionCollect = 'Collect';
+  static const cardBalance = 'Balance';
+  static const cardExpiry = '05/29';
   static const yourEmpire = 'Your empire';
   static String rowBusinesses(int owned, int total) => '$owned of $total owned';
   static String rowProperty(int units, String rent) =>
@@ -301,10 +309,12 @@ abstract final class S {
   static const cardTop = 'Top card reached';
   static const cardsTitle = 'Bank cards';
   static const cardsIntro =
-      'Your card follows your net worth. A better card lets you buy bigger things.';
+      'Pick any card you have unlocked. A better card unlocks as your net worth grows.';
   static const cardYours = 'Your card';
   static String cardNeedsWorth(String worth) => 'Needs a net worth of $worth';
   static const cardUnlocked = 'Unlocked';
+  static const cardInUse = 'In use';
+  static const cardTapToUse = 'Tap to use this card';
   static const cardStart = 'Where everyone starts';
   static String cardUpgraded(String card) => 'Card upgraded: $card';
   static String cardLimit(String limit) => 'Buy anything up to $limit';

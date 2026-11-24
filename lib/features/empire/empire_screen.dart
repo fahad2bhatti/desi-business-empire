@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/game_controller.dart';
+import '../../app/prefs.dart';
 import '../../app/theme.dart';
 import '../../core/money.dart';
 import '../../core/strings.dart';
@@ -13,7 +14,6 @@ import '../../domain/economy/game_state.dart';
 import '../../domain/economy/goals.dart';
 import '../common/photos.dart';
 import '../common/run_command.dart';
-import '../common/visuals.dart';
 import '../common/widgets.dart';
 import '../goals/goals_screen.dart';
 import '../onboarding/tutorial.dart';
@@ -98,8 +98,32 @@ class EmpireScreen extends ConsumerWidget {
   }
 }
 
-/// Centred net worth, with income per second in a soft green pill. The cash
-/// counter that other tabs show at the top lives here as the net worth.
+/// `Rs 3.69B` -> `Rs 3.69 B`. Empire screen only; other screens keep
+/// [formatShort] as it is.
+String _short(int paisa) => formatShort(paisa).replaceFirstMapped(
+  RegExp(r'(\d)([KMBT])$'),
+  (m) => '${m[1]} ${m[2]}',
+);
+
+/// Whole rupees in Indian grouping: `Rs 1,84,29,27,711`.
+String _indian(int paisa) {
+  final digits = (paisa.abs() ~/ paisaPerRupee).toString();
+  final String grouped;
+  if (digits.length <= 3) {
+    grouped = digits;
+  } else {
+    final head = digits.substring(0, digits.length - 3);
+    final buf = StringBuffer();
+    for (var i = 0; i < head.length; i++) {
+      if (i > 0 && (head.length - i) % 2 == 0) buf.write(',');
+      buf.write(head[i]);
+    }
+    grouped = '$buf,${digits.substring(digits.length - 3)}';
+  }
+  return '${paisa < 0 ? '− ' : ''}Rs $grouped';
+}
+
+/// Centred net worth, with income per second in a soft green pill.
 class _Hero extends StatelessWidget {
   const _Hero({required this.netWorthPaisa, required this.incomePaisaPerSec});
 
@@ -128,9 +152,13 @@ class _Hero extends StatelessWidget {
             builder: (context, value, _) => FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
-                formatRs(value.round() - value.round() % paisaPerRupee),
+                _short(value.round()),
                 style: context.text.displaySmall
-                    ?.copyWith(fontSize: 44, height: 1.1)
+                    ?.copyWith(
+                      fontSize: 44,
+                      height: 1.1,
+                      fontWeight: FontWeight.w800,
+                    )
                     .numbers,
               ),
             ),
@@ -147,7 +175,7 @@ class _Hero extends StatelessWidget {
                 vertical: AppSpacing.s4 + 2,
               ),
               child: Text(
-                S.perSecond(formatShort(incomePaisaPerSec)),
+                S.aSecond(_short(incomePaisaPerSec)),
                 style: context.text.titleSmall
                     ?.copyWith(color: p.income)
                     .numbers,
@@ -160,7 +188,9 @@ class _Hero extends StatelessWidget {
   }
 }
 
-/// The focus card for the advisor's best move.
+/// The advisor's best move: small label, name, cost and gain, and a white
+/// action button on the right. When it cannot be afforded yet, a progress bar
+/// takes the button's place.
 class NextMoveCard extends ConsumerWidget {
   const NextMoveCard({
     super.key,
@@ -178,70 +208,51 @@ class NextMoveCard extends ConsumerWidget {
     final s = state;
     final move = engine.nextMove(s);
     if (move == null) {
-      return const FocusCard(
-        icon: Icons.emoji_events,
-        photoId: 'goal_trophy',
-        title: S.allDone,
-      );
+      return const _MoveCard(title: S.allDone);
     }
     final c = engine.config;
-    final cost = formatShort(move.costPaisa);
-    final (
-      IconData icon,
-      String title,
-      String action,
-      String? done,
-    ) = switch (move.kind) {
+    final cost = _short(move.costPaisa);
+    final (String title, String action, String? done) = switch (move.kind) {
       MoveKind.claimGoals => (
-        Icons.emoji_events,
         S.focusClaim,
-        S.collectAll(formatShort(move.gainPaisa)),
+        S.actionCollect,
         S.collected(formatShort(move.gainPaisa)),
       ),
       MoveKind.buyBusiness => (
-        iconFor(move.id!),
         S.focusBuy(c.business(move.id!)!.name),
-        S.buyFor(cost),
+        S.actionBuy,
         null,
       ),
       MoveKind.upgradeBusiness => (
-        iconFor(move.id!),
         S.focusUpgrade(c.business(move.id!)!.name),
-        S.upgradeFor(cost),
+        S.actionUpgrade,
         null,
       ),
       MoveKind.moveHome => (
-        iconFor(engine.nextHome(s)!.id),
         S.focusMove(engine.nextHome(s)!.name),
-        S.moveFor(cost),
+        S.actionMove,
         S.movedTo(engine.nextHome(s)!.name),
       ),
       MoveKind.buyItem => (
-        iconFor(move.id!),
         S.focusBuy(c.item(move.id!)!.name),
-        S.buyFor(cost),
+        S.actionBuy,
         null,
       ),
     };
     final detail = move.kind == MoveKind.claimGoals
-        ? S.focusWaiting(formatShort(move.gainPaisa))
-        : S.focusGain(
-            formatShort(move.gainPaisa),
-            S.eta(move.payback.isFinite ? move.payback.ceil() : 0),
-          );
+        ? S.focusWaiting(_short(move.gainPaisa))
+        : '$cost · ${S.aSecond(_short(move.gainPaisa))}';
     final affordable = move.costPaisa <= s.cashPaisa;
     if (!affordable) {
       final wait = engine.secondsUntil(s, move.costPaisa);
-      return FocusCard(
-        icon: icon,
+      return _MoveCard(
         title: title,
-        detail: '$cost · $detail',
+        detail: detail,
         progress: s.cashPaisa / move.costPaisa,
         progressText: wait == null ? S.workToSave : S.readyIn(S.eta(wait)),
       );
     }
-    return FocusCard(
-      icon: icon,
+    return _MoveCard(
       title: title,
       detail: detail,
       actionLabel: action,
@@ -263,6 +274,116 @@ class NextMoveCard extends ConsumerWidget {
               },
               successText: done,
             ),
+    );
+  }
+}
+
+/// The one accent-filled element on the Empire screen.
+class _MoveCard extends StatelessWidget {
+  const _MoveCard({
+    required this.title,
+    this.detail,
+    this.progress,
+    this.progressText,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String title;
+  final String? detail;
+  final double? progress;
+  final String? progressText;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final on = p.onAccent;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: p.accent,
+        borderRadius: BorderRadius.circular(AppRadius.card),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.s20,
+          AppSpacing.s16,
+          AppSpacing.s16,
+          AppSpacing.s16,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              S.nextMove,
+              style: context.text.bodySmall?.copyWith(
+                color: on.withValues(alpha: 0.78),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.s4),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: context.text.titleLarge?.copyWith(
+                          color: on,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      if (detail != null) ...[
+                        const SizedBox(height: AppSpacing.s4),
+                        Text(
+                          detail!,
+                          style: context.text.bodySmall
+                              ?.copyWith(color: on.withValues(alpha: 0.85))
+                              .numbers,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (actionLabel != null) ...[
+                  const SizedBox(width: AppSpacing.s12),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: on,
+                      foregroundColor: p.accent,
+                      minimumSize: const Size(76, 44),
+                    ),
+                    onPressed: onAction,
+                    child: Text(actionLabel!),
+                  ),
+                ],
+              ],
+            ),
+            if (progress != null) ...[
+              const SizedBox(height: AppSpacing.s12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(3),
+                child: LinearProgressIndicator(
+                  value: progress!.clamp(0.0, 1.0).toDouble(),
+                  minHeight: 6,
+                  color: on,
+                  backgroundColor: on.withValues(alpha: 0.24),
+                  semanticsLabel: title,
+                ),
+              ),
+              if (progressText != null) ...[
+                const SizedBox(height: AppSpacing.s8),
+                Text(
+                  progressText!,
+                  style: context.text.bodySmall?.copyWith(color: on).numbers,
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -315,26 +436,28 @@ class _Overview extends StatelessWidget {
     final p = context.palette;
     return Column(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: SizedBox(
-            height: 8,
-            child: Row(
-              children: [
-                for (final (i, t) in tiles.indexed) ...[
-                  if (i > 0) const SizedBox(width: 4),
-                  Expanded(
-                    flex: total == 0
-                        ? 1
-                        : ((t.paisa > 0 ? t.paisa : 0) * 1000 ~/ total).clamp(
-                            12,
-                            1000,
-                          ),
-                    child: ColoredBox(color: p.category(t.id)),
+        SizedBox(
+          height: 6,
+          child: Row(
+            children: [
+              for (final (i, t) in tiles.indexed) ...[
+                if (i > 0) const SizedBox(width: 4),
+                Expanded(
+                  flex: total == 0
+                      ? 1
+                      : ((t.paisa > 0 ? t.paisa : 0) * 1000 ~/ total).clamp(
+                          12,
+                          1000,
+                        ),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: p.category(t.id),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
                   ),
-                ],
+                ),
               ],
-            ),
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.s16),
@@ -413,8 +536,10 @@ class _CategoryTile extends StatelessWidget {
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
                           child: Text(
-                            formatShort(data.paisa),
-                            style: context.text.titleMedium?.numbers,
+                            _short(data.paisa),
+                            style: context.text.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700)
+                                .numbers,
                           ),
                         ),
                       ],
@@ -552,59 +677,214 @@ class _WorkButtonState extends State<_WorkButton> {
   }
 }
 
-/// Metal colour for each card.
-Color _cardColor(String id) => switch (id) {
-  'bronze' => const Color(0xFF9A6A3C),
-  'silver' => const Color(0xFFA9B1BA),
-  'gold' => const Color(0xFFC9A227),
-  'platinum' => const Color(0xFF7D8A99),
-  'diamond' => const Color(0xFF4A9BD0),
-  _ => const Color(0xFF1F3A5F),
+/// Card colours, dark to light, and the digits printed on each card.
+({Color top, Color bottom, String last4}) _cardLook(String id) => switch (id) {
+  'bronze' => (
+    top: const Color(0xFF8A5A33),
+    bottom: const Color(0xFF5E3B20),
+    last4: '2184',
+  ),
+  'silver' => (
+    top: const Color(0xFF8C96A1),
+    bottom: const Color(0xFF5B6570),
+    last4: '5530',
+  ),
+  'gold' => (
+    top: const Color(0xFFB8912A),
+    bottom: const Color(0xFF7A5D14),
+    last4: '9017',
+  ),
+  'platinum' => (
+    top: const Color(0xFF4A5560),
+    bottom: const Color(0xFF343D46),
+    last4: '7439',
+  ),
+  'diamond' => (
+    top: const Color(0xFF3B86B8),
+    bottom: const Color(0xFF245A82),
+    last4: '3862',
+  ),
+  _ => (
+    top: const Color(0xFF2C4A72),
+    bottom: const Color(0xFF14213A),
+    last4: '1001',
+  ),
 };
 
-/// The card's picture, with a plain tile in its colour if it cannot load.
-class _CardPicture extends StatelessWidget {
-  const _CardPicture({required this.id, this.width});
+/// A bank card drawn in code: soft gradient, two faint circles, the balance
+/// and the card number. [compact] is the small version for the card list.
+class _CardFace extends StatelessWidget {
+  const _CardFace({
+    required this.card,
+    this.balancePaisa = 0,
+    this.compact = false,
+  });
 
-  final String id;
-  final double? width;
+  final CardDef card;
+  final int balancePaisa;
+  final bool compact;
 
   @override
-  Widget build(BuildContext context) => Image.asset(
-    'assets/images/card_$id.webp',
-    width: width,
-    fit: BoxFit.contain,
-    errorBuilder: (_, _, _) => AspectRatio(
-      aspectRatio: 1.6,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: _cardColor(id),
-          borderRadius: BorderRadius.circular(AppRadius.card),
-        ),
+  Widget build(BuildContext context) {
+    final look = _cardLook(card.id);
+    const white = Colors.white;
+    return AspectRatio(
+      aspectRatio: compact ? 1.6 : 1.55,
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final w = box.maxWidth;
+          final k = w / 340;
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(compact ? 10 : AppRadius.card),
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [look.top, look.bottom],
+                ),
+              ),
+              child: Stack(
+                children: [
+                  Positioned(
+                    right: -w * 0.12,
+                    top: -w * 0.16,
+                    child: _Disc(size: w * 0.62, alpha: 0.07),
+                  ),
+                  Positioned(
+                    right: w * 0.16,
+                    bottom: -w * 0.30,
+                    child: _Disc(size: w * 0.55, alpha: 0.05),
+                  ),
+                  if (compact)
+                    Center(
+                      child: Icon(
+                        Icons.diamond_outlined,
+                        color: white.withValues(alpha: 0.85),
+                        size: 18,
+                      ),
+                    )
+                  else
+                    Padding(
+                      padding: EdgeInsets.all(20 * k),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                S.cardShort(card.name),
+                                style: TextStyle(
+                                  color: white.withValues(alpha: 0.82),
+                                  fontSize: 14 * k,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const Spacer(),
+                              Icon(
+                                Icons.diamond_outlined,
+                                color: white.withValues(alpha: 0.9),
+                                size: 24 * k,
+                              ),
+                            ],
+                          ),
+                          const Spacer(),
+                          Text(
+                            S.cardBalance,
+                            style: TextStyle(
+                              color: white.withValues(alpha: 0.7),
+                              fontSize: 13 * k,
+                            ),
+                          ),
+                          SizedBox(height: 2 * k),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              _indian(balancePaisa),
+                              style: TextStyle(
+                                color: white,
+                                fontSize: 28 * k,
+                                fontWeight: FontWeight.w800,
+                                height: 1.15,
+                              ).numbers,
+                            ),
+                          ),
+                          SizedBox(height: 18 * k),
+                          Row(
+                            children: [
+                              Text(
+                                '•••• ${look.last4}',
+                                style: TextStyle(
+                                  color: white.withValues(alpha: 0.75),
+                                  fontSize: 12 * k,
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                              const Spacer(),
+                              Text(
+                                S.cardExpiry,
+                                style: TextStyle(
+                                  color: white.withValues(alpha: 0.75),
+                                  fontSize: 12 * k,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
+    );
+  }
+}
+
+class _Disc extends StatelessWidget {
+  const _Disc({required this.size, required this.alpha});
+
+  final double size;
+  final double alpha;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size,
+    height: size,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: Colors.white.withValues(alpha: alpha),
     ),
   );
 }
 
-/// The player's bank card as a big picture. Under it: net worth, what the
-/// card lets them buy, and how far the next card is. Tap for every card.
-class _BankCard extends StatelessWidget {
+/// Index of the card on show: the one the player picked if it is unlocked,
+/// otherwise the best one they hold.
+int _usedCard(List<CardDef> cards, int best, String? pickedId) {
+  final i = cards.indexWhere((c) => c.id == pickedId);
+  return i < 0 || i > best ? best : i;
+}
+
+/// The player's bank card with their cash as the balance. Tap to see every
+/// card and pick any unlocked one.
+class _BankCard extends ConsumerWidget {
   const _BankCard({required this.engine, required this.state});
 
   final GameEngine engine;
   final GameState state;
 
   @override
-  Widget build(BuildContext context) {
-    final p = context.palette;
-    final card = engine.card(state);
-    final next = engine.nextCard(state);
-    final worth = engine.netWorth(state);
-    final span = next == null ? 1 : next.netWorthPaisa - card.netWorthPaisa;
-    final progress = next == null
-        ? 1.0
-        : ((worth - card.netWorthPaisa) / span).clamp(0.0, 1.0);
-    final muted = context.text.bodySmall?.copyWith(color: p.inkMuted);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cards = engine.config.cards;
+    final picked = ref.watch(prefsProvider.select((a) => a.value?.cardId));
+    final card = cards[_usedCard(
+      cards,
+      cards.indexOf(engine.card(state)),
+      picked,
+    )];
     final limit = card.limitPaisa == noCardLimit
         ? S.cardNoLimit
         : S.cardLimit(formatShort(card.limitPaisa));
@@ -612,78 +892,63 @@ class _BankCard extends StatelessWidget {
       container: true,
       button: true,
       label:
-          '${S.cardShort(card.name)}. ${S.netWorth} ${formatShort(worth)}. $limit',
+          '${S.cardShort(card.name)}. ${S.cardBalance} ${formatShort(state.cashPaisa)}. $limit',
+      excludeSemantics: true,
       child: GestureDetector(
         onTap: () => _showCards(context, engine, state),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppRadius.card + 4),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x40000000),
-                    blurRadius: 18,
-                    offset: Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: _CardPicture(id: card.id),
-            ),
-            const SizedBox(height: AppSpacing.s12),
-            Text(limit, style: muted),
-            const SizedBox(height: AppSpacing.s8),
-            ProgressBar(value: progress),
-            const SizedBox(height: AppSpacing.s4),
-            Text(
-              next == null
-                  ? S.cardTop
-                  : S.cardNext(
-                      next.name,
-                      formatShort(next.netWorthPaisa),
-                      formatShort(worth),
-                    ),
-              style: muted?.numbers,
-            ),
-          ],
-        ),
+        child: _CardFace(card: card, balancePaisa: state.cashPaisa),
       ),
     );
   }
 }
 
-/// Every card from first to last: the player's own, the ones already
-/// passed, and the ones still locked with what they need.
+/// Every card from first to last. Unlocked ones can be picked; locked ones
+/// show what they need.
 void _showCards(BuildContext context, GameEngine engine, GameState s) {
   final p = context.palette;
-  final current = engine.card(s);
   final cards = engine.config.cards;
-  final at = cards.indexOf(current);
+  final best = cards.indexOf(engine.card(s));
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
     builder: (sheet) => SafeArea(
-      child: ListView(
-        shrinkWrap: true,
-        padding: const EdgeInsets.fromLTRB(
-          AppSpacing.s20,
-          0,
-          AppSpacing.s20,
-          AppSpacing.s20,
-        ),
-        children: [
-          Text(S.cardsTitle, style: sheet.text.titleLarge),
-          const SizedBox(height: AppSpacing.s4),
-          Text(
-            S.cardsIntro,
-            style: sheet.text.bodyMedium?.copyWith(color: p.inkMuted),
-          ),
-          const SizedBox(height: AppSpacing.s16),
-          for (final (i, c) in cards.indexed)
-            _CardRow(card: c, index: i, current: at),
-        ],
+      child: Consumer(
+        builder: (context, ref, _) {
+          final used = _usedCard(
+            cards,
+            best,
+            ref.watch(prefsProvider.select((a) => a.value?.cardId)),
+          );
+          return ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.s20,
+              0,
+              AppSpacing.s20,
+              AppSpacing.s20,
+            ),
+            children: [
+              Text(S.cardsTitle, style: sheet.text.titleLarge),
+              const SizedBox(height: AppSpacing.s4),
+              Text(
+                S.cardsIntro,
+                style: sheet.text.bodyMedium?.copyWith(color: p.inkMuted),
+              ),
+              const SizedBox(height: AppSpacing.s16),
+              for (final (i, c) in cards.indexed)
+                _CardRow(
+                  card: c,
+                  locked: i > best,
+                  used: i == used,
+                  onTap: () {
+                    ref.read(prefsProvider.notifier).setCardId(c.id);
+                    Navigator.of(sheet).pop();
+                  },
+                ),
+            ],
+          );
+        },
       ),
     ),
   );
@@ -692,84 +957,89 @@ void _showCards(BuildContext context, GameEngine engine, GameState s) {
 class _CardRow extends StatelessWidget {
   const _CardRow({
     required this.card,
-    required this.index,
-    required this.current,
+    required this.locked,
+    required this.used,
+    required this.onTap,
   });
 
   final CardDef card;
-  final int index;
-  final int current;
+  final bool locked;
+  final bool used;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final locked = index > current;
-    final isCurrent = index == current;
     final limit = card.limitPaisa == noCardLimit
         ? S.cardNoLimit
         : S.cardLimit(formatShort(card.limitPaisa));
     final status = locked
         ? S.cardNeedsWorth(formatShort(card.netWorthPaisa))
-        : isCurrent
-        ? S.cardYours
-        : index == 0
-        ? S.cardStart
-        : S.cardUnlocked;
+        : used
+        ? S.cardInUse
+        : S.cardTapToUse;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.s12),
       child: Opacity(
         opacity: locked ? 0.55 : 1,
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.s12),
-          decoration: BoxDecoration(
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          child: InkWell(
             borderRadius: BorderRadius.circular(AppRadius.card),
-            border: Border.all(
-              color: isCurrent ? p.accent : p.inkMuted.withValues(alpha: 0.25),
-              width: isCurrent ? 1.5 : 1,
+            onTap: locked ? null : onTap,
+            child: Ink(
+              padding: const EdgeInsets.all(AppSpacing.s12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: Border.all(
+                  color: used ? p.accent : p.inkMuted.withValues(alpha: 0.25),
+                  width: used ? 1.5 : 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 80,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        _CardFace(card: card, compact: true),
+                        if (locked)
+                          const Icon(Icons.lock_outline, color: Colors.white),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.s12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          S.cardShort(card.name),
+                          style: context.text.titleSmall,
+                        ),
+                        Text(
+                          limit,
+                          style: context.text.bodySmall?.copyWith(
+                            color: p.inkMuted,
+                          ),
+                        ),
+                        Text(
+                          status,
+                          style: context.text.bodySmall
+                              ?.copyWith(
+                                color: used ? p.accentInk : p.inkMuted,
+                              )
+                              .numbers,
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (used) Icon(Icons.check_circle, color: p.accent, size: 22),
+                ],
+              ),
             ),
-          ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 80,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    _CardPicture(id: card.id, width: 80),
-                    if (locked)
-                      const Icon(Icons.lock_outline, color: Colors.white),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.s12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      S.cardShort(card.name),
-                      style: context.text.titleSmall,
-                    ),
-                    Text(
-                      limit,
-                      style: context.text.bodySmall?.copyWith(
-                        color: p.inkMuted,
-                      ),
-                    ),
-                    Text(
-                      status,
-                      style: context.text.bodySmall
-                          ?.copyWith(
-                            color: isCurrent ? p.accentInk : p.inkMuted,
-                          )
-                          .numbers,
-                    ),
-                  ],
-                ),
-              ),
-              if (!locked && !isCurrent)
-                Icon(Icons.check, color: p.income, size: 20),
-            ],
           ),
         ),
       ),
