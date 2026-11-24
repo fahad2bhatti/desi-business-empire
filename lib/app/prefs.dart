@@ -20,6 +20,7 @@ class AppPrefs {
     this.sound = true,
     this.haptics = true,
     this.themeMode = ThemeMode.light,
+    this.cardId,
   });
 
   /// Chosen by the player on the welcome screen; `null` until then.
@@ -31,18 +32,23 @@ class AppPrefs {
   /// Dark by default; the player can pick light or follow the phone.
   final ThemeMode themeMode;
 
+  /// Card the player chose to show; `null` follows the best one unlocked.
+  final String? cardId;
+
   AppPrefs copyWith({
     String? businessName,
     int? tutorialStep,
     bool? sound,
     bool? haptics,
     ThemeMode? themeMode,
+    String? cardId,
   }) => AppPrefs(
     businessName: businessName ?? this.businessName,
     tutorialStep: tutorialStep ?? this.tutorialStep,
     sound: sound ?? this.sound,
     haptics: haptics ?? this.haptics,
     themeMode: themeMode ?? this.themeMode,
+    cardId: cardId ?? this.cardId,
   );
 }
 
@@ -60,6 +66,7 @@ class PrefsController extends AsyncNotifier<AppPrefs> {
   static const _sound = 'sound';
   static const _haptics = 'haptics';
   static const _theme = 'themeMode';
+  static const _card = 'cardId';
 
   @override
   Future<AppPrefs> build() async {
@@ -70,6 +77,7 @@ class PrefsController extends AsyncNotifier<AppPrefs> {
       sound: m[_sound] != 'false',
       haptics: m[_haptics] != 'false',
       themeMode: ThemeMode.values.asNameMap()[m[_theme]] ?? ThemeMode.light,
+      cardId: m[_card],
     );
   }
 
@@ -95,4 +103,7 @@ class PrefsController extends AsyncNotifier<AppPrefs> {
 
   Future<void> setThemeMode(ThemeMode mode) =>
       _save(_theme, mode.name, state.requireValue.copyWith(themeMode: mode));
+
+  Future<void> setCardId(String id) =>
+      _save(_card, id, state.requireValue.copyWith(cardId: id));
 }
